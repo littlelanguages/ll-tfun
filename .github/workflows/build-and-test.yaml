@@ -1,0 +1,49 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  'deno':
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Install deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Generate parser and scanner
+        run: |
+          cd ./components/deno
+          ./tasks/dev parser
+
+      - name: Lint
+        run: |
+          cd ./components/deno
+          deno lint
+
+      - name: Formatting
+        run: |
+          cd ./components/deno
+          deno fmt --check
+
+      - name: Unit tests
+        run: |
+          cd ./components/deno
+          deno test
+
+      - name: Scenario tests
+        run: |
+          cd ./components/deno
+          ./tasks/dev scenario
