@@ -50,7 +50,7 @@ Factor
     ;
 
 ValueDeclaration
-    : LowerIdentifier {LowerIdentifier} "=" Expression
+    : LowerIdentifier["*"] {LowerIdentifier} "=" Expression
     ;
 
 Case
@@ -72,7 +72,7 @@ DataDeclaration
     ;
 
 TypeDeclaration
-    : UpperIdentifier {LowerIdentifier} "=" ConstructorDeclaration {"|" ConstructorDeclaration}
+    : UpperIdentifier["*" | "-"] {LowerIdentifier} "=" ConstructorDeclaration {"|" ConstructorDeclaration}
     ;
 
 ConstructorDeclaration

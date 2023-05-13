@@ -89,9 +89,10 @@ export interface Visitor<
   ): T_Factor;
   visitValueDeclaration(
     a1: Token,
-    a2: Array<Token>,
-    a3: Token,
-    a4: T_Expression,
+    a2: Token | undefined,
+    a3: Array<Token>,
+    a4: Token,
+    a5: T_Expression,
   ): T_ValueDeclaration;
   visitCase(a1: T_Pattern, a2: Token, a3: T_Expression): T_Case;
   visitPattern1(
@@ -112,10 +113,11 @@ export interface Visitor<
   ): T_DataDeclaration;
   visitTypeDeclaration(
     a1: Token,
-    a2: Array<Token>,
-    a3: Token,
-    a4: T_ConstructorDeclaration,
-    a5: Array<[Token, T_ConstructorDeclaration]>,
+    a2: (Token | Token) | undefined,
+    a3: Array<Token>,
+    a4: Token,
+    a5: T_ConstructorDeclaration,
+    a6: Array<[Token, T_ConstructorDeclaration]>,
   ): T_TypeDeclaration;
   visitConstructorDeclaration(
     a1: Token,
@@ -526,15 +528,21 @@ export const mkParser = <
     },
     valueDeclaration: function (): T_ValueDeclaration {
       const a1: Token = matchToken(TToken.LowerIdentifier);
-      const a2: Array<Token> = [];
+      let a2: Token | undefined = undefined;
+
+      if (isToken(TToken.Star)) {
+        const a2t: Token = matchToken(TToken.Star);
+        a2 = a2t;
+      }
+      const a3: Array<Token> = [];
 
       while (isToken(TToken.LowerIdentifier)) {
-        const a2t: Token = matchToken(TToken.LowerIdentifier);
-        a2.push(a2t);
+        const a3t: Token = matchToken(TToken.LowerIdentifier);
+        a3.push(a3t);
       }
-      const a3: Token = matchToken(TToken.Equal);
-      const a4: T_Expression = this.expression();
-      return visitor.visitValueDeclaration(a1, a2, a3, a4);
+      const a4: Token = matchToken(TToken.Equal);
+      const a5: T_Expression = this.expression();
+      return visitor.visitValueDeclaration(a1, a2, a3, a4, a5);
     },
     case: function (): T_Case {
       const a1: T_Pattern = this.pattern();
@@ -632,23 +640,42 @@ export const mkParser = <
     },
     typeDeclaration: function (): T_TypeDeclaration {
       const a1: Token = matchToken(TToken.UpperIdentifier);
-      const a2: Array<Token> = [];
+      let a2: (Token | Token) | undefined = undefined;
+
+      if (isTokens([TToken.Star, TToken.Dash])) {
+        let a2t: Token | Token;
+        if (isToken(TToken.Star)) {
+          const a2tt: Token = matchToken(TToken.Star);
+          a2t = a2tt;
+        } else if (isToken(TToken.Dash)) {
+          const a2tt: Token = matchToken(TToken.Dash);
+          a2t = a2tt;
+        } else {
+          throw {
+            tag: "SyntaxError",
+            found: scanner.current(),
+            expected: [TToken.Star, TToken.Dash],
+          };
+        }
+        a2 = a2t;
+      }
+      const a3: Array<Token> = [];
 
       while (isToken(TToken.LowerIdentifier)) {
-        const a2t: Token = matchToken(TToken.LowerIdentifier);
-        a2.push(a2t);
+        const a3t: Token = matchToken(TToken.LowerIdentifier);
+        a3.push(a3t);
       }
-      const a3: Token = matchToken(TToken.Equal);
-      const a4: T_ConstructorDeclaration = this.constructorDeclaration();
-      const a5: Array<[Token, T_ConstructorDeclaration]> = [];
+      const a4: Token = matchToken(TToken.Equal);
+      const a5: T_ConstructorDeclaration = this.constructorDeclaration();
+      const a6: Array<[Token, T_ConstructorDeclaration]> = [];
 
       while (isToken(TToken.Bar)) {
-        const a5t1: Token = matchToken(TToken.Bar);
-        const a5t2: T_ConstructorDeclaration = this.constructorDeclaration();
-        const a5t: [Token, T_ConstructorDeclaration] = [a5t1, a5t2];
-        a5.push(a5t);
+        const a6t1: Token = matchToken(TToken.Bar);
+        const a6t2: T_ConstructorDeclaration = this.constructorDeclaration();
+        const a6t: [Token, T_ConstructorDeclaration] = [a6t1, a6t2];
+        a6.push(a6t);
       }
-      return visitor.visitTypeDeclaration(a1, a2, a3, a4, a5);
+      return visitor.visitTypeDeclaration(a1, a2, a3, a4, a5, a6);
     },
     constructorDeclaration: function (): T_ConstructorDeclaration {
       const a1: Token = matchToken(TToken.UpperIdentifier);

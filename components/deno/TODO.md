@@ -41,7 +41,7 @@ Finally packages may not be cyclically dependent.
 
 ## Tasks
 
-- [ ] Add visibility suffixes into the grammar
+- [X] Add visibility suffixes into the grammar
 - [ ] Add `import` statement into grammar
 - [ ] Load the declarations from a source file
 

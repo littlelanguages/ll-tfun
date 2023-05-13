@@ -1,6 +1,8 @@
 import { parseProgram, SyntaxError, Visitor } from "./parser/Parser.ts";
 import { Token } from "./parser/Scanner.ts";
 
+export enum Visibility { Public, Opaque, Private, None };
+
 export type Program = Array<Element>;
 
 export type Element = Expression | DataDeclaration;
@@ -48,6 +50,7 @@ export type LetRecExpression = {
 export type Declaration = {
   type: "Declaration";
   name: string;
+  visibility: Visibility;
   expr: Expression;
 };
 
@@ -169,6 +172,7 @@ export type DataDeclaration = {
 export type TypeDeclaration = {
   type: "TypeDeclaration";
   name: string;
+  visibility: Visibility;
   parameters: Array<string>;
   constructors: Array<ConstructorDeclaration>;
 };
@@ -305,8 +309,8 @@ const visitor: Visitor<
     a2 === undefined
       ? { type: "LUnit" }
       : a2[1].length === 0
-      ? a2[0]
-      : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+        ? a2[0]
+        : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
 
   visitFactor2: (a: Token): Expression => ({
     type: "LInt",
@@ -389,13 +393,15 @@ const visitor: Visitor<
 
   visitValueDeclaration: (
     a1: Token,
-    a2: Array<Token>,
-    _a3: Token,
-    a4: Expression,
+    _a2: Token | undefined,
+    a3: Array<Token>,
+    _a4: Token,
+    a5: Expression,
   ): Declaration => ({
     type: "Declaration",
     name: a1[2],
-    expr: composeLambda(a2.map((n) => n[2]), a4),
+    visibility: _a2 === undefined ? Visibility.Private : Visibility.Public,
+    expr: composeLambda(a3.map((n) => n[2]), a5),
   }),
 
   visitCase: (a1: Pattern, _a2: Token, a3: Expression): MatchCase => ({
@@ -411,8 +417,8 @@ const visitor: Visitor<
     a2 === undefined
       ? { type: "PUnit" }
       : a2[1].length === 0
-      ? a2[0]
-      : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+        ? a2[0]
+        : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
 
   visitPattern2: (a: Token): Pattern => ({
     type: "PInt",
@@ -457,15 +463,17 @@ const visitor: Visitor<
 
   visitTypeDeclaration: (
     a1: Token,
-    a2: Array<Token>,
-    _a3: Token,
-    a4: ConstructorDeclaration,
-    a5: Array<[Token, ConstructorDeclaration]>,
+    a2: (Token | Token) | undefined,
+    a3: Array<Token>,
+    _a4: Token,
+    a5: ConstructorDeclaration,
+    a6: Array<[Token, ConstructorDeclaration]>,
   ): TypeDeclaration => ({
     type: "TypeDeclaration",
     name: a1[2],
-    parameters: a2.map((a) => a[2]),
-    constructors: [a4].concat(a5.map((a) => a[1])),
+    visibility: a2 === undefined ? Visibility.Private : a2[2] === "+" ? Visibility.Public : Visibility.Opaque,
+    parameters: a3.map((a) => a[2]),
+    constructors: [a5].concat(a6.map((a) => a[1])),
   }),
 
   visitConstructorDeclaration: (
