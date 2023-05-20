@@ -2,10 +2,82 @@
 
 A typed functional language with IO side effects.
 
-This littlelanguage builds in [`tlca`](https://github.com/littlelanguages/ll-tlca) by adding:
+This little language builds on
+[`tlca`](https://github.com/littlelanguages/ll-tlca) by adding the following
+macro features:
 
-- packages,
-- record types,
-- sequences of code, and
-- side-effect IO operations
+- Packages,
+- Value type signatures,
+- Record types,
+- Type aliases,
+- Sequences of code,
+- IO Operation side effects, and
+- Standard prelude
 
+Each of the preceding features are to be introduced and built in sequence.
+
+The supported implementation for `tfun` are:
+
+- A deno REPL
+- A Kotlin REPL
+- A Kotlin compiler that produces `tfun` specific bytecode
+- A deno bytecode interpreter
+- A Zig bytecode interpreter
+
+# Packages
+
+Each file consists of declarations where a declaration can be a value or an
+abstract data type (ADT). A value declaration can either be accessible from
+outside the package or not. If accessible outside then that declaration is said
+to be _public_ otherwise it is _private_. ADT's declarations can be one of
+_public_, _opaque_ or _private_. Public ADT's type and constructors are visible
+outside the package, an opaque ADT's type is visible with the constructors
+private and a private ADT is completely hidden.
+
+A value or ADT declaration with a `*` suffix in it's name will be public. An ADT
+declaration with a `-` suffix will be opaque. Note the following code:
+
+```
+data List* 'a = Nil | Cons a (List a) ;
+
+data Result- 'a 'b = Error 'a | Okay 'b ;
+
+data Option 'a = None | Some 'a ;
+
+let rec length* lst =
+  match lst of
+  | Nil -> 0
+  | Cons _ xs -> 1 + length xs ;
+
+let listOf2 = Cons 1 (Cons 2 Nil)
+```
+
+The value `length` is public whilst `listOf2` is private. Similarly `List` and
+its constructors `Nil` and `Cons` are public, `Result` is public however its
+constructors `Error` and `Okay` are private, whilst `Option` and its
+constructors are all private.
+
+The importing of a package has the traditional syntax:
+
+```
+import * as List from "./List";
+import * as Set* from "./Set";
+import * from "./../lib/Array";
+import length*, map as listMap*, foldLeft, List from "./List";
+import size as setSize* from "https://....../blah.tfun";
+```
+
+Some commentary on the above:
+
+- The first two imports import an entire package under the qualifying name
+  `List` and `Set` respectively. With the visibility modifier suffix, `Set` is
+  public making it accessible to a consuming package.
+- The fourth line imports individual names, making `length` and `listMap` public
+  and renaming `map` to `listMap`.
+- The final line imports declarations from a remote package.
+
+Finally packages may not be cyclically dependent.
+
+# See also
+
+- [TODO](TODO.md) lists the tasks to implement this language
