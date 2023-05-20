@@ -62,8 +62,6 @@ class RuntimeEnv {
   }
 }
 
-// type RuntimeEnv = { [key: string]: RuntimeValue };
-
 export type Env = [RuntimeEnv, TypeEnv];
 
 export const emptyRuntimeEnv = () => new RuntimeEnv();
