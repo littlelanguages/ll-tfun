@@ -191,7 +191,7 @@ Deno.test("Error - add visibility ot non-toplevel declaration", () => {
 
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(expression);
-  const [result, _] = executeProgram(ast, defaultEnv);
+  const [result, _] = executeProgram(ast, defaultEnv());
 
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
@@ -212,7 +212,7 @@ type MyError = any;
 const assertError = (expression: string, error: MyError) => {
   const ast = parse(expression);
   try {
-    executeProgram(ast, defaultEnv);
+    executeProgram(ast, defaultEnv());
     assert(false);
   } catch (e) {
     assertEquals(e, error);

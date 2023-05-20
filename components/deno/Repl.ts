@@ -50,6 +50,9 @@ const execute = (line: string, env: Env): Env => {
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
       console.log(result[i][0].toString());
+    }
+    if (e.type === "ImportStatement") {
+      console.log("Unable to display import statement:", e);
     } else {
       const [value, type] = result[i];
 
@@ -71,7 +74,7 @@ if (Deno.args.length === 0) {
   console.log('Type ".quit" to exit.');
   console.log("Enter a multi-line expression with ;; as a terminator.");
 
-  let env = defaultEnv;
+  let env = defaultEnv();
 
   while (true) {
     const line = readline();
@@ -89,7 +92,7 @@ if (Deno.args.length === 0) {
         console.log("Runtime Environment");
         for (const field in env[0]) {
           console.log(
-            `  ${field} = ${valueToString(env[0][field])}: ${
+            `  ${field} = ${valueToString(env[0].get(field))}: ${
               env[1].scheme(field)
             }`,
           );
@@ -106,7 +109,7 @@ if (Deno.args.length === 0) {
     }
   }
 } else if (Deno.args.length === 1) {
-  execute(Deno.readTextFileSync(Deno.args[0]), defaultEnv);
+  execute(Deno.readTextFileSync(Deno.args[0]), defaultEnv());
 } else {
   console.error("Invalid arguments");
 }

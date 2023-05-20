@@ -31,24 +31,58 @@ import {
 } from "./Typing.ts";
 import { mkTuple, RuntimeValue, tupleComponent } from "./Values.ts";
 
-type RuntimeEnv = { [key: string]: RuntimeValue };
+type RuntimeEnvBindings = { [key: string]: RuntimeValue };
+
+class RuntimeEnv {
+  private bindings: RuntimeEnvBindings;
+
+  constructor(
+    bindings: RuntimeEnvBindings = {},
+  ) {
+    this.bindings = bindings;
+  }
+
+  bind(name: string, value: RuntimeValue): RuntimeEnv {
+    this.bindings[name] = value;
+
+    return this;
+  }
+
+  get(name: string): RuntimeValue {
+    const v = this.bindings[name];
+
+    if (v === undefined) {
+      throw { type: "UnknownName", name };
+    } else {
+      return v;
+    }
+  }
+  clone(): RuntimeEnv {
+    return new RuntimeEnv({ ...this.bindings });
+  }
+}
+
+// type RuntimeEnv = { [key: string]: RuntimeValue };
 
 export type Env = [RuntimeEnv, TypeEnv];
 
-export const emptyRuntimeEnv: RuntimeEnv = {};
+export const emptyRuntimeEnv = () => new RuntimeEnv();
 
-export const emptyEnv: Env = [emptyRuntimeEnv, emptyTypeEnv];
+export const emptyEnv: () => Env = () => [emptyRuntimeEnv(), emptyTypeEnv];
 
-export const defaultEnv: Env = [
-  {
-    string_length: (s: string) => s.length,
-    string_concat: (s1: string) => (s2: string) => s1 + s2,
-    string_substring: (s: string) => (start: number) => (end: number) =>
-      s.slice(start, end),
-    string_equal: (s1: string) => (s2: string) => s1 === s2,
-    string_compare: (s1: string) => (s2: string) =>
-      s1 < s2 ? -1 : s1 === s2 ? 0 : 1,
-  },
+export const defaultEnv: () => Env = () => [
+  emptyRuntimeEnv()
+    .bind("string_length", (s: string) => s.length)
+    .bind("string_concat", (s1: string) => (s2: string) => s1 + s2)
+    .bind(
+      "string_substring",
+      (s: string) => (start: number) => (end: number) => s.slice(start, end),
+    )
+    .bind("string_equal", (s1: string) => (s2: string) => s1 === s2)
+    .bind(
+      "string_compare",
+      (s1: string) => (s2: string) => s1 < s2 ? -1 : s1 === s2 ? 0 : 1,
+    ),
   emptyTypeEnv
     .extend(
       "string_length",
@@ -111,8 +145,8 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
   }
   if (expr.type === "Lam") {
     return (x: RuntimeValue): RuntimeValue => {
-      const newRuntimeEnv = { ...runtimeEnv };
-      newRuntimeEnv[expr.name] = x;
+      const newRuntimeEnv = runtimeEnv.clone();
+      newRuntimeEnv.bind(expr.name, x);
       return evaluate(expr.expr, newRuntimeEnv);
     };
   }
@@ -151,7 +185,7 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
     return binaryOps.get(expr.op)!(left, right);
   }
   if (expr.type === "Var") {
-    return runtimeEnv[expr.name];
+    return runtimeEnv.get(expr.name);
   }
 
   return null;
@@ -172,8 +206,8 @@ const matchPattern = (
     return pattern.value === value ? runtimeEnv : null;
   }
   if (pattern.type === "PVar") {
-    const newEnv = { ...runtimeEnv };
-    newEnv[pattern.name] = value;
+    const newEnv = runtimeEnv.clone();
+    newEnv.bind(pattern.name, value);
     return newEnv;
   }
   if (pattern.type === "PTuple") {
@@ -222,7 +256,7 @@ const executeDeclaration = (
   runtimeEnv: RuntimeEnv,
   toplevel: boolean,
 ): [RuntimeValue, RuntimeEnv] => {
-  const newRuntimeEnv = { ...runtimeEnv };
+  const newRuntimeEnv = runtimeEnv.clone();
   const values: Array<RuntimeValue> = [];
 
   expr.declarations.forEach((d) => {
@@ -235,7 +269,7 @@ const executeDeclaration = (
     }
 
     const value = evaluate(d.expr, newRuntimeEnv);
-    newRuntimeEnv[d.name] = value;
+    newRuntimeEnv.bind(d.name, value);
     values.push(value);
   });
 
@@ -364,7 +398,7 @@ const executeDataDeclaration = (
         ),
       );
 
-      runtimeEnv[c.name] = mkConstructorFunction(c.name, c.args.length);
+      runtimeEnv.bind(c.name, mkConstructorFunction(c.name, c.args.length));
     });
 
     env = [runtimeEnv, typeEnv];
@@ -416,6 +450,6 @@ export const executeProgram = (
 
 export const execute = (
   input: string,
-  env: Env = emptyEnv,
+  env: Env = emptyEnv(),
 ): [Array<[RuntimeValue, Type | undefined]>, Env] =>
   executeProgram(parse(input), env);
