@@ -426,7 +426,7 @@ const visitor: Visitor<
   ): Declaration => ({
     type: "Declaration",
     name: a1[2],
-    visibility: a2 === undefined ? Visibility.Private : Visibility.Public,
+    visibility: a2 === undefined ? Visibility.None : Visibility.Public,
     expr: composeLambda(a3.map((n) => n[2]), a5),
   }),
 

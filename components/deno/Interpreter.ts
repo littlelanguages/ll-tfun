@@ -11,6 +11,7 @@ import {
   Pattern,
   Program,
   Type as TypeItem,
+  Visibility,
 } from "./Parser.ts";
 import {
   createFresh,
@@ -116,7 +117,7 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
     };
   }
   if (expr.type === "Let" || expr.type === "LetRec") {
-    return executeDeclaration(expr, runtimeEnv)[0];
+    return executeDeclaration(expr, runtimeEnv, false)[0];
   }
   if (expr.type === "LBool") {
     return expr.value;
@@ -219,11 +220,20 @@ const matchPattern = (
 const executeDeclaration = (
   expr: LetExpression | LetRecExpression,
   runtimeEnv: RuntimeEnv,
+  toplevel: boolean,
 ): [RuntimeValue, RuntimeEnv] => {
   const newRuntimeEnv = { ...runtimeEnv };
   const values: Array<RuntimeValue> = [];
 
   expr.declarations.forEach((d) => {
+    if (!toplevel && d.visibility !== Visibility.None) {
+      throw {
+        type: "VisibilityModifierError",
+        name: d.name,
+        Visibility: d.visibility,
+      };
+    }
+
     const value = evaluate(d.expr, newRuntimeEnv);
     newRuntimeEnv[d.name] = value;
     values.push(value);
@@ -239,7 +249,7 @@ const executeExpression = (
   runtimeEnv: RuntimeEnv,
 ): [RuntimeValue, RuntimeEnv] =>
   (expr.type === "Let" || expr.type === "LetRec")
-    ? executeDeclaration(expr, runtimeEnv)
+    ? executeDeclaration(expr, runtimeEnv, true)
     : [evaluate(expr, runtimeEnv), runtimeEnv];
 
 const mkConstructorFunction = (name: string, arity: number): RuntimeValue => {

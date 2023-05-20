@@ -1,4 +1,7 @@
-import { assertEquals } from "https://deno.land/std@0.137.0/testing/asserts.ts";
+import {
+  assert,
+  assertEquals,
+} from "https://deno.land/std@0.137.0/testing/asserts.ts";
 
 import { defaultEnv, executeProgram } from "./Interpreter.ts";
 import { parse } from "./Parser.ts";
@@ -177,6 +180,15 @@ Deno.test("Data Declaration - match", () => {
   );
 });
 
+Deno.test("Error - add visibility ot non-toplevel declaration", () => {
+  assertError("let x = let y* = 10 in y + y", {
+    type: "VisibilityModifierError",
+    name: "y",
+    Visibility: 0,
+  });
+  assertExecute("let x* = let y = 10 in y + y", [["x = 20: Int"]]);
+});
+
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(expression);
   const [result, _] = executeProgram(ast, defaultEnv);
@@ -192,4 +204,17 @@ const assertExecute = (expression: string, expected: NestedString) => {
       assertEquals(expressionToNestedString(value, type!, e), expected[i]);
     }
   });
+};
+
+// deno-lint-ignore no-explicit-any
+type MyError = any;
+
+const assertError = (expression: string, error: MyError) => {
+  const ast = parse(expression);
+  try {
+    executeProgram(ast, defaultEnv);
+    assert(false);
+  } catch (e) {
+    assertEquals(e, error);
+  }
 };
