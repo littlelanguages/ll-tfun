@@ -50,8 +50,7 @@ const execute = (line: string, env: Env): Env => {
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
       console.log(result[i][0].toString());
-    }
-    if (e.type === "ImportStatement") {
+    } else if (e.type === "ImportStatement") {
       console.log("Unable to display import statement:", e);
     } else {
       const [value, type] = result[i];
