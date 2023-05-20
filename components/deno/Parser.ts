@@ -1,11 +1,16 @@
 import { parseProgram, SyntaxError, Visitor } from "./parser/Parser.ts";
 import { Token } from "./parser/Scanner.ts";
 
-export enum Visibility { Public, Opaque, Private, None };
+export enum Visibility {
+  Public,
+  Opaque,
+  Private,
+  None,
+}
 
 export type Program = Array<Element>;
 
-export type Element = Expression | DataDeclaration;
+export type Element = Expression | DataDeclaration | ImportStatement;
 
 export type Expression =
   | AppExpression
@@ -216,6 +221,23 @@ export type TypeUnit = {
   type: "TypeUnit";
 };
 
+export type ImportStatement = {
+  type: "ImportStatement";
+  items: ImportAll | Array<ImportName>;
+  from: string;
+};
+
+export type ImportAll = {
+  as: string | undefined;
+  visibility: Visibility;
+};
+
+export type ImportName = {
+  name: string;
+  as: string | undefined;
+  visibility: Visibility;
+};
+
 export const transformLiteralString = (s: string): string =>
   s.substring(1, s.length - 1).replaceAll('\\"', '"');
 
@@ -242,7 +264,10 @@ const visitor: Visitor<
   ConstructorDeclaration,
   Type,
   Type,
-  Type
+  Type,
+  ImportStatement,
+  ImportAll | Array<ImportName>,
+  ImportName
 > = {
   visitProgram: (
     a1: Expression,
@@ -251,6 +276,7 @@ const visitor: Visitor<
 
   visitElement1: (a1: Expression): Element => a1,
   visitElement2: (a1: DataDeclaration): Element => a1,
+  visitElement3: (a1: ImportStatement): Element => a1,
 
   visitExpression: (a1: Expression, a2: Array<Expression>): Expression =>
     a2.reduce((acc: Expression, e: Expression): Expression => ({
@@ -309,8 +335,8 @@ const visitor: Visitor<
     a2 === undefined
       ? { type: "LUnit" }
       : a2[1].length === 0
-        ? a2[0]
-        : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+      ? a2[0]
+      : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
 
   visitFactor2: (a: Token): Expression => ({
     type: "LInt",
@@ -393,14 +419,14 @@ const visitor: Visitor<
 
   visitValueDeclaration: (
     a1: Token,
-    _a2: Token | undefined,
+    a2: Token | undefined,
     a3: Array<Token>,
     _a4: Token,
     a5: Expression,
   ): Declaration => ({
     type: "Declaration",
     name: a1[2],
-    visibility: _a2 === undefined ? Visibility.Private : Visibility.Public,
+    visibility: a2 === undefined ? Visibility.Private : Visibility.Public,
     expr: composeLambda(a3.map((n) => n[2]), a5),
   }),
 
@@ -417,8 +443,8 @@ const visitor: Visitor<
     a2 === undefined
       ? { type: "PUnit" }
       : a2[1].length === 0
-        ? a2[0]
-        : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+      ? a2[0]
+      : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
 
   visitPattern2: (a: Token): Pattern => ({
     type: "PInt",
@@ -471,7 +497,11 @@ const visitor: Visitor<
   ): TypeDeclaration => ({
     type: "TypeDeclaration",
     name: a1[2],
-    visibility: a2 === undefined ? Visibility.Private : a2[2] === "+" ? Visibility.Public : Visibility.Opaque,
+    visibility: a2 === undefined
+      ? Visibility.Private
+      : a2[2] === "+"
+      ? Visibility.Public
+      : Visibility.Opaque,
     parameters: a3.map((a) => a[2]),
     constructors: [a5].concat(a6.map((a) => a[1])),
   }),
@@ -508,6 +538,55 @@ const visitor: Visitor<
       type: "TypeTuple",
       values: [a2[0]].concat(a2[1].map(([, e]) => e)),
     },
+
+  visitImportStatement: (
+    _a1: Token,
+    a2: ImportAll | ImportName[],
+    _a3: Token,
+    a4: Token,
+  ): ImportStatement => ({
+    type: "ImportStatement",
+    items: a2,
+    from: a4[2],
+  }),
+
+  visitImportItems1: (
+    _a1: Token,
+    a2: [Token, Token, Token | undefined] | undefined,
+  ): ImportAll | ImportName[] => ({
+    as: a2 === undefined ? undefined : a2[1][2],
+    visibility: a2 === undefined || a2[2] === undefined
+      ? Visibility.None
+      : Visibility.Public,
+  }),
+  visitImportItems2: (
+    a1: ImportName,
+    a2: [Token, ImportName][],
+  ): ImportAll | ImportName[] =>
+    a2 === undefined ? [a1] : [a1].concat(a2.map((i) => i[1])),
+
+  visitImportItem1: (
+    a1: Token,
+    a2: (Token | Token) | undefined,
+    a3: [Token, Token] | undefined,
+  ): ImportName => ({
+    name: a1[2],
+    as: a3 === undefined ? undefined : a3[1][2],
+    visibility: a2 === undefined
+      ? Visibility.Private
+      : a2[2] === "+"
+      ? Visibility.Public
+      : Visibility.Opaque,
+  }),
+  visitImportItem2: (
+    a1: Token,
+    a2: Token | undefined,
+    a3: [Token, Token] | undefined,
+  ): ImportName => ({
+    name: a1[2],
+    as: a3 === undefined ? undefined : a3[1][2],
+    visibility: a2 === undefined ? Visibility.None : Visibility.Public,
+  }),
 };
 
 const composeLambda = (names: Array<string>, expr: Expression): Expression =>

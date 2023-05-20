@@ -7,6 +7,7 @@ Program
 Element
     : Expression
     | DataDeclaration
+    | ImportStatement
     ;
 
 Expression
@@ -91,4 +92,18 @@ ADTType
 TermType
     : LowerIdentifier
     | "(" [Type {"*" Type}] ")"
+    ;
+
+ImportStatement
+    : "import" ImportItems "from" LiteralString
+    ;
+
+ImportItems
+    : "*" ["as" UpperIdentifier ["*"]]
+    | ImportItem {"," ImportItem}
+    ;
+
+ImportItem
+    : UpperIdentifier["*" | "-"] ["as" UpperIdentifier]
+    | LowerIdentifier["*"] ["as" LowerIdentifier]
     ;

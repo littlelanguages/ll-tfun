@@ -184,6 +184,8 @@ const assertExecute = (expression: string, expected: NestedString) => {
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
       assertEquals(result[i][0].toString(), expected[i]);
+    } else if (e.type === "ImportStatement") {
+      throw new Error("TODO: Import statement not yet supported");
     } else {
       const [value, type] = result[i];
 

@@ -37,6 +37,10 @@ export const inferProgram = (
       throw new Error("inferProgram: Data declarations not supported yet");
     }
 
+    if (e.type === "ImportStatement") {
+      throw new Error("TODO: inferProgram: Import statement not supported yet");
+    }
+
     const [, tp, newEnv] = inferExpression(e, env, constraints, pump);
 
     types.push(tp);

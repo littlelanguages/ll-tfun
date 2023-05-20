@@ -370,6 +370,8 @@ const executeElement = (
   if (e.type === "DataDeclaration") {
     const [adts, newEnv] = executeDataDeclaration(e, env);
     return [adts, undefined, newEnv];
+  } else if (e.type === "ImportStatement") {
+    throw new Error("TODO: Interpreter: Import statement not yet supported");
   } else {
     const pump = createFresh();
     const [constraints, type, newTypeEnv] = inferExpression(

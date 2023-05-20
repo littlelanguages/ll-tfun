@@ -24,10 +24,14 @@ export interface Visitor<
   T_Type,
   T_ADTType,
   T_TermType,
+  T_ImportStatement,
+  T_ImportItems,
+  T_ImportItem,
 > {
   visitProgram(a1: T_Element, a2: Array<[Token, T_Element]>): T_Program;
   visitElement1(a: T_Expression): T_Element;
   visitElement2(a: T_DataDeclaration): T_Element;
+  visitElement3(a: T_ImportStatement): T_Element;
   visitExpression(a1: T_Relational, a2: Array<T_Relational>): T_Expression;
   visitRelational(
     a1: T_Additive,
@@ -132,6 +136,30 @@ export interface Visitor<
     a2: [T_Type, Array<[Token, T_Type]>] | undefined,
     a3: Token,
   ): T_TermType;
+  visitImportStatement(
+    a1: Token,
+    a2: T_ImportItems,
+    a3: Token,
+    a4: Token,
+  ): T_ImportStatement;
+  visitImportItems1(
+    a1: Token,
+    a2: [Token, Token, Token | undefined] | undefined,
+  ): T_ImportItems;
+  visitImportItems2(
+    a1: T_ImportItem,
+    a2: Array<[Token, T_ImportItem]>,
+  ): T_ImportItems;
+  visitImportItem1(
+    a1: Token,
+    a2: (Token | Token) | undefined,
+    a3: [Token, Token] | undefined,
+  ): T_ImportItem;
+  visitImportItem2(
+    a1: Token,
+    a2: Token | undefined,
+    a3: [Token, Token] | undefined,
+  ): T_ImportItem;
 }
 
 export const parseProgram = <
@@ -153,6 +181,9 @@ export const parseProgram = <
   T_Type,
   T_ADTType,
   T_TermType,
+  T_ImportStatement,
+  T_ImportItems,
+  T_ImportItem,
 >(
   input: string,
   visitor: Visitor<
@@ -173,7 +204,10 @@ export const parseProgram = <
     T_ConstructorDeclaration,
     T_Type,
     T_ADTType,
-    T_TermType
+    T_TermType,
+    T_ImportStatement,
+    T_ImportItems,
+    T_ImportItem
   >,
 ): Either<SyntaxError, T_Program> => {
   try {
@@ -202,6 +236,9 @@ export const mkParser = <
   T_Type,
   T_ADTType,
   T_TermType,
+  T_ImportStatement,
+  T_ImportItems,
+  T_ImportItem,
 >(
   scanner: Scanner,
   visitor: Visitor<
@@ -222,7 +259,10 @@ export const mkParser = <
     T_ConstructorDeclaration,
     T_Type,
     T_ADTType,
-    T_TermType
+    T_TermType,
+    T_ImportStatement,
+    T_ImportItems,
+    T_ImportItem
   >,
 ) => {
   const matchToken = (ttoken: TToken): Token => {
@@ -282,6 +322,8 @@ export const mkParser = <
         return visitor.visitElement1(this.expression());
       } else if (isToken(TToken.Data)) {
         return visitor.visitElement2(this.dataDeclaration());
+      } else if (isToken(TToken.Import)) {
+        return visitor.visitElement3(this.importStatement());
       } else {
         throw {
           tag: "SyntaxError",
@@ -299,6 +341,7 @@ export const mkParser = <
             TToken.UpperIdentifier,
             TToken.Match,
             TToken.Data,
+            TToken.Import,
           ],
         };
       }
@@ -768,6 +811,110 @@ export const mkParser = <
           tag: "SyntaxError",
           found: scanner.current(),
           expected: [TToken.LowerIdentifier, TToken.LParen],
+        };
+      }
+    },
+    importStatement: function (): T_ImportStatement {
+      const a1: Token = matchToken(TToken.Import);
+      const a2: T_ImportItems = this.importItems();
+      const a3: Token = matchToken(TToken.From);
+      const a4: Token = matchToken(TToken.LiteralString);
+      return visitor.visitImportStatement(a1, a2, a3, a4);
+    },
+    importItems: function (): T_ImportItems {
+      if (isToken(TToken.Star)) {
+        const a1: Token = matchToken(TToken.Star);
+        let a2: [Token, Token, Token | undefined] | undefined = undefined;
+
+        if (isToken(TToken.As)) {
+          const a2t1: Token = matchToken(TToken.As);
+          const a2t2: Token = matchToken(TToken.UpperIdentifier);
+          let a2t3: Token | undefined = undefined;
+
+          if (isToken(TToken.Star)) {
+            const a2t3t: Token = matchToken(TToken.Star);
+            a2t3 = a2t3t;
+          }
+          const a2t: [Token, Token, Token | undefined] = [a2t1, a2t2, a2t3];
+          a2 = a2t;
+        }
+        return visitor.visitImportItems1(a1, a2);
+      } else if (isTokens([TToken.UpperIdentifier, TToken.LowerIdentifier])) {
+        const a1: T_ImportItem = this.importItem();
+        const a2: Array<[Token, T_ImportItem]> = [];
+
+        while (isToken(TToken.Comma)) {
+          const a2t1: Token = matchToken(TToken.Comma);
+          const a2t2: T_ImportItem = this.importItem();
+          const a2t: [Token, T_ImportItem] = [a2t1, a2t2];
+          a2.push(a2t);
+        }
+        return visitor.visitImportItems2(a1, a2);
+      } else {
+        throw {
+          tag: "SyntaxError",
+          found: scanner.current(),
+          expected: [
+            TToken.Star,
+            TToken.UpperIdentifier,
+            TToken.LowerIdentifier,
+          ],
+        };
+      }
+    },
+    importItem: function (): T_ImportItem {
+      if (isToken(TToken.UpperIdentifier)) {
+        const a1: Token = matchToken(TToken.UpperIdentifier);
+        let a2: (Token | Token) | undefined = undefined;
+
+        if (isTokens([TToken.Star, TToken.Dash])) {
+          let a2t: Token | Token;
+          if (isToken(TToken.Star)) {
+            const a2tt: Token = matchToken(TToken.Star);
+            a2t = a2tt;
+          } else if (isToken(TToken.Dash)) {
+            const a2tt: Token = matchToken(TToken.Dash);
+            a2t = a2tt;
+          } else {
+            throw {
+              tag: "SyntaxError",
+              found: scanner.current(),
+              expected: [TToken.Star, TToken.Dash],
+            };
+          }
+          a2 = a2t;
+        }
+        let a3: [Token, Token] | undefined = undefined;
+
+        if (isToken(TToken.As)) {
+          const a3t1: Token = matchToken(TToken.As);
+          const a3t2: Token = matchToken(TToken.UpperIdentifier);
+          const a3t: [Token, Token] = [a3t1, a3t2];
+          a3 = a3t;
+        }
+        return visitor.visitImportItem1(a1, a2, a3);
+      } else if (isToken(TToken.LowerIdentifier)) {
+        const a1: Token = matchToken(TToken.LowerIdentifier);
+        let a2: Token | undefined = undefined;
+
+        if (isToken(TToken.Star)) {
+          const a2t: Token = matchToken(TToken.Star);
+          a2 = a2t;
+        }
+        let a3: [Token, Token] | undefined = undefined;
+
+        if (isToken(TToken.As)) {
+          const a3t1: Token = matchToken(TToken.As);
+          const a3t2: Token = matchToken(TToken.LowerIdentifier);
+          const a3t: [Token, Token] = [a3t1, a3t2];
+          a3 = a3t;
+        }
+        return visitor.visitImportItem2(a1, a2, a3);
+      } else {
+        throw {
+          tag: "SyntaxError",
+          found: scanner.current(),
+          expected: [TToken.UpperIdentifier, TToken.LowerIdentifier],
         };
       }
     },
