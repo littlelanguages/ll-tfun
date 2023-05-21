@@ -49,6 +49,10 @@ class RuntimeEnv {
     return this;
   }
 
+  has(name: string): boolean {
+    return this.bindings[name] !== undefined;
+  }
+
   get(name: string): RuntimeValue {
     const v = this.bindings[name];
 
@@ -445,12 +449,48 @@ const executeElement = (
         let type = env.type;
 
         imports.forEach(([n, v, t]) => {
+          if (runtime.has(n)) {
+            throw {
+              type: "ImportNameAlreadyDeclared",
+              name: n,
+            };
+          }
+
           runtime.bind(n, v);
           type = type.extend(n, new Scheme(t.ftv(), t));
         });
 
         return [null, undefined, { ...env, runtime, type }];
       }
+    }
+    if (e.items.type === "ImportNames") {
+      const runtime = env.runtime.clone();
+      let type = env.type;
+
+      e.items.items.forEach(({ name, as }) => {
+        const item = imports.find((v) => v[0] === name);
+
+        if (item === undefined) {
+          throw {
+            type: "UnknownImportName",
+            name,
+            names: imports.map((v) => v[0]),
+          };
+        }
+        const n = as === undefined ? item[0] : as;
+
+        if (runtime.has(n)) {
+          throw {
+            type: "ImportNameAlreadyDeclared",
+            name: n,
+          };
+        }
+
+        runtime.bind(n, item[1]);
+        type = type.extend(n, new Scheme(item[2].ftv(), item[2]));
+      });
+
+      return [null, undefined, { ...env, runtime, type }];
     }
 
     throw new Error("TODO: Interpreter: Import statement not yet supported");

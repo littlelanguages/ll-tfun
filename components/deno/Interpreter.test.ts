@@ -190,7 +190,7 @@ Deno.test("Error - add visibility ot non-toplevel declaration", () => {
   assertExecute("let x* = let y = 10 in y + y", [["x = 20: Int"]]);
 });
 
-Deno.test("stuff", () => {
+Deno.test("Import - raw mechanism using simple.tfun", () => {
   const ip = executeImport("./tests/simple.tfun", home());
 
   assertEquals(ip.length, 4);
@@ -208,6 +208,39 @@ Deno.test("stuff", () => {
   assertEquals(ip[3][1](5), 25);
 });
 
+Deno.test("Import - simple values", () => {
+  assertExecute('import * from "./tests/simple.tfun"; double x ; square y', [
+    "import",
+    "20: Int",
+    "400: Int",
+  ]);
+  assertError('let y = 1 ; import * from "./tests/simple.tfun"', {
+    type: "ImportNameAlreadyDeclared",
+    name: "y",
+  });
+
+  assertExecute('import x, double from "./tests/simple.tfun"; double x', [
+    "import",
+    "20: Int",
+  ]);
+  assertError(
+    'import x, double from "./tests/simple.tfun"; square y',
+    "Unknown name: square",
+  );
+
+  assertExecute(
+    'import x as value, double as fun from "./tests/simple.tfun"; fun value',
+    ["import", "20: Int"],
+  );
+  assertError(
+    'let value = 1 ; import x as value, double as fun from "./tests/simple.tfun"',
+    {
+      type: "ImportNameAlreadyDeclared",
+      name: "value",
+    },
+  );
+});
+
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(expression);
   const [result, _] = executeProgram(ast, defaultEnv(home()));
@@ -215,9 +248,7 @@ const assertExecute = (expression: string, expected: NestedString) => {
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
       assertEquals(result[i][0].toString(), expected[i]);
-    } else if (e.type === "ImportStatement") {
-      throw new Error("TODO: Import statement not yet supported");
-    } else {
+    } else if (e.type !== "ImportStatement") {
       const [value, type] = result[i];
 
       assertEquals(expressionToNestedString(value, type!, e), expected[i]);
