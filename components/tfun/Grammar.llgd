@@ -45,9 +45,13 @@ Factor
     | "\" LowerIdentifier {LowerIdentifier} "->" Expression
     | "let" ["rec"] ValueDeclaration {"and" ValueDeclaration} ["in" Expression]
     | "if" "(" Expression ")" Expression "else" Expression
-    | LowerIdentifier
-    | UpperIdentifier
+    | Identifier
     | "match" Expression "with" ["|"] Case {"|" Case}
+    ;
+
+Identifier
+    : LowerIdentifier
+    | UpperIdentifier
     ;
 
 ValueDeclaration

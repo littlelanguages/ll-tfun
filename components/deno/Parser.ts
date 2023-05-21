@@ -262,6 +262,7 @@ const visitor: Visitor<
   Expression,
   string,
   Expression,
+  string,
   Declaration,
   MatchCase,
   Pattern,
@@ -400,17 +401,12 @@ const visitor: Visitor<
     else: a7,
   }),
 
-  visitFactor9: (a: Token): Expression => ({
+  visitFactor9: (a: string): Expression => ({
     type: "Var",
-    name: a[2],
+    name: a,
   }),
 
-  visitFactor10: (a: Token): Expression => ({
-    type: "Var",
-    name: a[2],
-  }),
-
-  visitFactor11: (
+  visitFactor10: (
     _a1: Token,
     a2: Expression,
     _a3: Token,
@@ -422,6 +418,9 @@ const visitor: Visitor<
     expr: a2,
     cases: [a5].concat(a6.map((a) => a[1])),
   }),
+
+  visitIdentifier1: (a: Token): string => a[2],
+  visitIdentifier2: (a: Token): string => a[2],
 
   visitValueDeclaration: (
     a1: Token,

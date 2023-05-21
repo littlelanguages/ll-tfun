@@ -15,6 +15,7 @@ export interface Visitor<
   T_Multiplicative,
   T_MultiplicativeOps,
   T_Factor,
+  T_Identifier,
   T_ValueDeclaration,
   T_Case,
   T_Pattern,
@@ -81,9 +82,8 @@ export interface Visitor<
     a6: Token,
     a7: T_Expression,
   ): T_Factor;
-  visitFactor9(a: Token): T_Factor;
-  visitFactor10(a: Token): T_Factor;
-  visitFactor11(
+  visitFactor9(a: T_Identifier): T_Factor;
+  visitFactor10(
     a1: Token,
     a2: T_Expression,
     a3: Token,
@@ -91,6 +91,8 @@ export interface Visitor<
     a5: T_Case,
     a6: Array<[Token, T_Case]>,
   ): T_Factor;
+  visitIdentifier1(a: Token): T_Identifier;
+  visitIdentifier2(a: Token): T_Identifier;
   visitValueDeclaration(
     a1: Token,
     a2: Token | undefined,
@@ -172,6 +174,7 @@ export const parseProgram = <
   T_Multiplicative,
   T_MultiplicativeOps,
   T_Factor,
+  T_Identifier,
   T_ValueDeclaration,
   T_Case,
   T_Pattern,
@@ -196,6 +199,7 @@ export const parseProgram = <
     T_Multiplicative,
     T_MultiplicativeOps,
     T_Factor,
+    T_Identifier,
     T_ValueDeclaration,
     T_Case,
     T_Pattern,
@@ -227,6 +231,7 @@ export const mkParser = <
   T_Multiplicative,
   T_MultiplicativeOps,
   T_Factor,
+  T_Identifier,
   T_ValueDeclaration,
   T_Case,
   T_Pattern,
@@ -251,6 +256,7 @@ export const mkParser = <
     T_Multiplicative,
     T_MultiplicativeOps,
     T_Factor,
+    T_Identifier,
     T_ValueDeclaration,
     T_Case,
     T_Pattern,
@@ -314,9 +320,9 @@ export const mkParser = <
           TToken.Backslash,
           TToken.Let,
           TToken.If,
+          TToken.Match,
           TToken.LowerIdentifier,
           TToken.UpperIdentifier,
-          TToken.Match,
         ])
       ) {
         return visitor.visitElement1(this.expression());
@@ -337,9 +343,9 @@ export const mkParser = <
             TToken.Backslash,
             TToken.Let,
             TToken.If,
+            TToken.Match,
             TToken.LowerIdentifier,
             TToken.UpperIdentifier,
-            TToken.Match,
             TToken.Data,
             TToken.Import,
           ],
@@ -360,9 +366,9 @@ export const mkParser = <
           TToken.Backslash,
           TToken.Let,
           TToken.If,
+          TToken.Match,
           TToken.LowerIdentifier,
           TToken.UpperIdentifier,
-          TToken.Match,
         ])
       ) {
         const a2t: T_Relational = this.relational();
@@ -448,9 +454,9 @@ export const mkParser = <
             TToken.Backslash,
             TToken.Let,
             TToken.If,
+            TToken.Match,
             TToken.LowerIdentifier,
             TToken.UpperIdentifier,
-            TToken.Match,
           ])
         ) {
           const a2t1: T_Expression = this.expression();
@@ -525,10 +531,8 @@ export const mkParser = <
         const a6: Token = matchToken(TToken.Else);
         const a7: T_Expression = this.expression();
         return visitor.visitFactor8(a1, a2, a3, a4, a5, a6, a7);
-      } else if (isToken(TToken.LowerIdentifier)) {
-        return visitor.visitFactor9(matchToken(TToken.LowerIdentifier));
-      } else if (isToken(TToken.UpperIdentifier)) {
-        return visitor.visitFactor10(matchToken(TToken.UpperIdentifier));
+      } else if (isTokens([TToken.LowerIdentifier, TToken.UpperIdentifier])) {
+        return visitor.visitFactor9(this.identifier());
       } else if (isToken(TToken.Match)) {
         const a1: Token = matchToken(TToken.Match);
         const a2: T_Expression = this.expression();
@@ -548,7 +552,7 @@ export const mkParser = <
           const a6t: [Token, T_Case] = [a6t1, a6t2];
           a6.push(a6t);
         }
-        return visitor.visitFactor11(a1, a2, a3, a4, a5, a6);
+        return visitor.visitFactor10(a1, a2, a3, a4, a5, a6);
       } else {
         throw {
           tag: "SyntaxError",
@@ -566,6 +570,19 @@ export const mkParser = <
             TToken.UpperIdentifier,
             TToken.Match,
           ],
+        };
+      }
+    },
+    identifier: function (): T_Identifier {
+      if (isToken(TToken.LowerIdentifier)) {
+        return visitor.visitIdentifier1(matchToken(TToken.LowerIdentifier));
+      } else if (isToken(TToken.UpperIdentifier)) {
+        return visitor.visitIdentifier2(matchToken(TToken.UpperIdentifier));
+      } else {
+        throw {
+          tag: "SyntaxError",
+          found: scanner.current(),
+          expected: [TToken.LowerIdentifier, TToken.UpperIdentifier],
         };
       }
     },
