@@ -25,6 +25,7 @@ export type Expression =
   | LUnitExpression
   | MatchExpression
   | OpExpression
+  | QVarExpression
   | VarExpression;
 
 export type AppExpression = {
@@ -109,6 +110,11 @@ export enum Op {
   Times,
   Divide,
 }
+
+export type QVarExpression = {
+  type: "QVar";
+  names: Array<string>;
+};
 
 export type VarExpression = {
   type: "Var";
@@ -401,10 +407,16 @@ const visitor: Visitor<
     else: a7,
   }),
 
-  visitFactor9: (a: string): Expression => ({
-    type: "Var",
-    name: a,
-  }),
+  visitFactor9: (a1: string, a2: Array<[Token, string]>): Expression =>
+    a2.length === 0
+      ? {
+        type: "Var",
+        name: a1,
+      }
+      : {
+        type: "QVar",
+        names: [a1].concat(a2.map((v) => v[1])),
+      },
 
   visitFactor10: (
     _a1: Token,

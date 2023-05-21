@@ -206,6 +206,13 @@ export const inferExpression = (
       constraints.add(u1, u2);
       return [tv, env];
     }
+    if (expr.type === "QVar") {
+      throw {
+        type: "NotImplemented",
+        file: "Infer.ts",
+        context: "QVar inference",
+      };
+    }
     if (expr.type === "Var") {
       const scheme = env.scheme(expr.name);
 

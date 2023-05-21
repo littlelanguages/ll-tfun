@@ -82,7 +82,7 @@ export interface Visitor<
     a6: Token,
     a7: T_Expression,
   ): T_Factor;
-  visitFactor9(a: T_Identifier): T_Factor;
+  visitFactor9(a1: T_Identifier, a2: Array<[Token, T_Identifier]>): T_Factor;
   visitFactor10(
     a1: Token,
     a2: T_Expression,
@@ -532,7 +532,16 @@ export const mkParser = <
         const a7: T_Expression = this.expression();
         return visitor.visitFactor8(a1, a2, a3, a4, a5, a6, a7);
       } else if (isTokens([TToken.LowerIdentifier, TToken.UpperIdentifier])) {
-        return visitor.visitFactor9(this.identifier());
+        const a1: T_Identifier = this.identifier();
+        const a2: Array<[Token, T_Identifier]> = [];
+
+        while (isToken(TToken.Period)) {
+          const a2t1: Token = matchToken(TToken.Period);
+          const a2t2: T_Identifier = this.identifier();
+          const a2t: [Token, T_Identifier] = [a2t1, a2t2];
+          a2.push(a2t);
+        }
+        return visitor.visitFactor9(a1, a2);
       } else if (isToken(TToken.Match)) {
         const a1: Token = matchToken(TToken.Match);
         const a2: T_Expression = this.expression();
