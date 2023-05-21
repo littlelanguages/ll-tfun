@@ -112,6 +112,6 @@ ImportItems
     ;
 
 ImportItem
-    : UpperIdentifier["*" | "-"] ["as" UpperIdentifier]
-    | LowerIdentifier["*"] ["as" LowerIdentifier]
+    : UpperIdentifier ["as" UpperIdentifier] ["*" | "-"]
+    | LowerIdentifier ["as" LowerIdentifier] ["*"]
     ;

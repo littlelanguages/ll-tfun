@@ -590,25 +590,25 @@ const visitor: Visitor<
 
   visitImportItem1: (
     a1: Token,
-    a2: (Token | Token) | undefined,
-    a3: [Token, Token] | undefined,
+    a2: [Token, Token] | undefined,
+    a3: (Token | Token) | undefined,
   ): ImportName => ({
     name: a1[2],
-    as: a3 === undefined ? undefined : a3[1][2],
-    visibility: a2 === undefined
+    as: a2 === undefined ? undefined : a2[1][2],
+    visibility: a3 === undefined
       ? Visibility.Private
-      : a2[2] === "+"
+      : a3[2] === "+"
       ? Visibility.Public
       : Visibility.Opaque,
   }),
   visitImportItem2: (
     a1: Token,
-    a2: Token | undefined,
-    a3: [Token, Token] | undefined,
+    a2: [Token, Token] | undefined,
+    a3: Token | undefined,
   ): ImportName => ({
     name: a1[2],
-    as: a3 === undefined ? undefined : a3[1][2],
-    visibility: a2 === undefined ? Visibility.None : Visibility.Public,
+    as: a2 === undefined ? undefined : a2[1][2],
+    visibility: a3 === undefined ? Visibility.None : Visibility.Public,
   }),
 };
 

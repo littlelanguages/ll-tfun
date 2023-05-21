@@ -156,13 +156,13 @@ export interface Visitor<
   ): T_ImportItems;
   visitImportItem1(
     a1: Token,
-    a2: (Token | Token) | undefined,
-    a3: [Token, Token] | undefined,
+    a2: [Token, Token] | undefined,
+    a3: (Token | Token) | undefined,
   ): T_ImportItem;
   visitImportItem2(
     a1: Token,
-    a2: Token | undefined,
-    a3: [Token, Token] | undefined,
+    a2: [Token, Token] | undefined,
+    a3: Token | undefined,
   ): T_ImportItem;
 }
 
@@ -900,16 +900,24 @@ export const mkParser = <
     importItem: function (): T_ImportItem {
       if (isToken(TToken.UpperIdentifier)) {
         const a1: Token = matchToken(TToken.UpperIdentifier);
-        let a2: (Token | Token) | undefined = undefined;
+        let a2: [Token, Token] | undefined = undefined;
+
+        if (isToken(TToken.As)) {
+          const a2t1: Token = matchToken(TToken.As);
+          const a2t2: Token = matchToken(TToken.UpperIdentifier);
+          const a2t: [Token, Token] = [a2t1, a2t2];
+          a2 = a2t;
+        }
+        let a3: (Token | Token) | undefined = undefined;
 
         if (isTokens([TToken.Star, TToken.Dash])) {
-          let a2t: Token | Token;
+          let a3t: Token | Token;
           if (isToken(TToken.Star)) {
-            const a2tt: Token = matchToken(TToken.Star);
-            a2t = a2tt;
+            const a3tt: Token = matchToken(TToken.Star);
+            a3t = a3tt;
           } else if (isToken(TToken.Dash)) {
-            const a2tt: Token = matchToken(TToken.Dash);
-            a2t = a2tt;
+            const a3tt: Token = matchToken(TToken.Dash);
+            a3t = a3tt;
           } else {
             throw {
               tag: "SyntaxError",
@@ -917,31 +925,23 @@ export const mkParser = <
               expected: [TToken.Star, TToken.Dash],
             };
           }
-          a2 = a2t;
-        }
-        let a3: [Token, Token] | undefined = undefined;
-
-        if (isToken(TToken.As)) {
-          const a3t1: Token = matchToken(TToken.As);
-          const a3t2: Token = matchToken(TToken.UpperIdentifier);
-          const a3t: [Token, Token] = [a3t1, a3t2];
           a3 = a3t;
         }
         return visitor.visitImportItem1(a1, a2, a3);
       } else if (isToken(TToken.LowerIdentifier)) {
         const a1: Token = matchToken(TToken.LowerIdentifier);
-        let a2: Token | undefined = undefined;
-
-        if (isToken(TToken.Star)) {
-          const a2t: Token = matchToken(TToken.Star);
-          a2 = a2t;
-        }
-        let a3: [Token, Token] | undefined = undefined;
+        let a2: [Token, Token] | undefined = undefined;
 
         if (isToken(TToken.As)) {
-          const a3t1: Token = matchToken(TToken.As);
-          const a3t2: Token = matchToken(TToken.LowerIdentifier);
-          const a3t: [Token, Token] = [a3t1, a3t2];
+          const a2t1: Token = matchToken(TToken.As);
+          const a2t2: Token = matchToken(TToken.LowerIdentifier);
+          const a2t: [Token, Token] = [a2t1, a2t2];
+          a2 = a2t;
+        }
+        let a3: Token | undefined = undefined;
+
+        if (isToken(TToken.Star)) {
+          const a3t: Token = matchToken(TToken.Star);
           a3 = a3t;
         }
         return visitor.visitImportItem2(a1, a2, a3);

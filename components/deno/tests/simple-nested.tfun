@@ -1,4 +1,4 @@
-import compose, constant*, identity* as id from "./nested/simple.tfun" ;
+import compose, constant*, identity as id* from "./nested/simple.tfun" ;
 
 let one* = constant 1 ;
 
