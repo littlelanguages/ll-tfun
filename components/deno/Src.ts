@@ -42,12 +42,10 @@ export const from = (name: string, base: string = Deno.cwd()): Src => {
     } else if (name.startsWith("../")) {
       name = name.substring(3);
       base = dropLastComponent(base);
+    } else if (base.endsWith("/")) {
+      return new Src(`${base}${name}`);
     } else {
-      if (base.endsWith("/")) {
-        return new Src(`${base}${name}`);
-      } else {
-        return new Src(`${base}/${name}`);
-      }
+      return new Src(`${base}/${name}`);
     }
   }
 };
