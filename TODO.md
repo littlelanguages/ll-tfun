@@ -3,7 +3,7 @@ The tasks are built out according to the packages listed in [README](README.md)
 # Tasks
 
 - [X] Add visibility suffixes into the grammar
-- [ ] Incorporate into the deno implementation
+- [X] Incorporate into the deno implementation
 - [X] Add `import` statement into grammar
 - [ ] Incorporate into the deno implementation
 - [ ] Load declarations from a source file
