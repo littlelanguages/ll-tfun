@@ -561,6 +561,28 @@ export const executeImport = (
             importPackage.push([d.name, value[i2], tt.types[i2]]);
           }
         });
+      } else if (e.type === "ImportStatement") {
+        const imports = executeImport(e.from, src, importEnv);
+
+        if (e.items.type === "ImportNames") {
+          e.items.items.forEach(({ name, as, visibility }) => {
+            if (visibility === Visibility.Public) {
+              const item = imports.find((v) => v[0] === name);
+
+              if (item === undefined) {
+                throw {
+                  type: "UnknownImportName",
+                  name,
+                  names: imports.map((v) => v[0]),
+                };
+              }
+
+              const n = as === undefined ? item[0] : as;
+
+              importPackage.push([n, item[1], item[2]]);
+            }
+          });
+        }
       }
     });
 

@@ -241,6 +241,19 @@ Deno.test("Import - simple values", () => {
   );
 });
 
+Deno.test("Import - nested simple values", () => {
+  assertExecute(
+    'import * from "./tests/simple-nested.tfun" ; constant ; quad 10 ; id ; id 47',
+    [
+      "import",
+      "function: V1 -> V2 -> V1",
+      "10000: Int",
+      "function: V1 -> V1",
+      "47: Int",
+    ],
+  );
+});
+
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(expression);
   const [result, _] = executeProgram(ast, defaultEnv(home()));

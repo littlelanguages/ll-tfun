@@ -1,0 +1,7 @@
+import compose, constant*, identity* as id from "./nested/simple.tfun" ;
+
+let one* = constant 1 ;
+
+let square* n = n * n ;
+
+let quad* = compose square square
