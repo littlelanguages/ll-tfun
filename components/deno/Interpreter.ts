@@ -63,14 +63,22 @@ class RuntimeEnv {
   }
 }
 
-export type Env = [RuntimeEnv, TypeEnv];
+export type Env = {
+  runtime: RuntimeEnv;
+  type: TypeEnv;
+  src: Src;
+};
 
 export const emptyRuntimeEnv = () => new RuntimeEnv();
 
-export const emptyEnv: () => Env = () => [emptyRuntimeEnv(), emptyTypeEnv];
+export const emptyEnv = (src: Src): Env => ({
+  runtime: emptyRuntimeEnv(),
+  type: emptyTypeEnv,
+  src,
+});
 
-export const defaultEnv: () => Env = () => [
-  emptyRuntimeEnv()
+export const defaultEnv = (src: Src): Env => ({
+  runtime: emptyRuntimeEnv()
     .bind("string_length", (s: string) => s.length)
     .bind("string_concat", (s1: string) => (s2: string) => s1 + s2)
     .bind(
@@ -82,7 +90,7 @@ export const defaultEnv: () => Env = () => [
       "string_compare",
       (s1: string) => (s2: string) => s1 < s2 ? -1 : s1 === s2 ? 0 : 1,
     ),
-  emptyTypeEnv
+  type: emptyTypeEnv
     .extend(
       "string_length",
       new Scheme(new Set(), new TArr(typeString, typeInt)),
@@ -118,7 +126,8 @@ export const defaultEnv: () => Env = () => [
     .addData(new DataDefinition("Int", [], []))
     .addData(new DataDefinition("String", [], []))
     .addData(new DataDefinition("Bool", [], [])),
-];
+  src,
+});
 
 const binaryOps = new Map<
   number,
@@ -326,7 +335,7 @@ const executeDataDeclaration = (
 ): [Array<DataDefinition>, Env] => {
   const translate = (t: TypeItem): Type => {
     if (t.type === "TypeConstructor") {
-      const tc = env[1].data(t.name);
+      const tc = env.type.data(t.name);
       if (tc === undefined) {
         throw { type: "UnknownDataError", name: t.name };
       }
@@ -360,13 +369,13 @@ const executeDataDeclaration = (
   const adts: Array<DataDefinition> = [];
 
   dd.declarations.forEach((d) => {
-    if (env[1].data(d.name) !== undefined) {
+    if (env.type.data(d.name) !== undefined) {
       throw { type: "DuplicateDataDeclaration", name: d.name };
     }
 
     const adt = new DataDefinition(d.name, d.parameters, []);
 
-    env = [env[0], env[1].addData(adt)];
+    env = { ...env, type: env.type.addData(adt) };
   });
 
   dd.declarations.forEach((d) => {
@@ -377,8 +386,8 @@ const executeDataDeclaration = (
     );
 
     adts.push(adt);
-    const runtimeEnv = env[0];
-    let typeEnv = env[1].addData(adt);
+    const runtimeEnv = env.runtime;
+    let typeEnv = env.type.addData(adt);
 
     const parameters = new Set(adt.parameters);
     const constructorResultType = new TCon(
@@ -400,7 +409,7 @@ const executeDataDeclaration = (
       runtimeEnv.bind(c.name, mkConstructorFunction(c.name, c.args.length));
     });
 
-    env = [runtimeEnv, typeEnv];
+    env = { ...env, runtime: runtimeEnv, type: typeEnv };
   });
 
   return [adts, env];
@@ -419,16 +428,16 @@ const executeElement = (
     const pump = createFresh();
     const [constraints, type, newTypeEnv] = inferExpression(
       e,
-      env[1],
+      env.type,
       new Constraints(),
       pump,
     );
     const subst = constraints.solve();
     const newType = type.apply(subst);
 
-    const [value, newRuntime] = executeExpression(e, env[0]);
+    const [value, newRuntime] = executeExpression(e, env.runtime);
 
-    return [value, newType, [newRuntime, newTypeEnv]];
+    return [value, newType, { ...env, runtime: newRuntime, type: newTypeEnv }];
   }
 };
 
@@ -451,7 +460,7 @@ export type ExecuteResult = [Array<[RuntimeValue, Type | undefined]>, Env];
 
 export const execute = (
   input: string,
-  env: Env = emptyEnv(),
+  env: Env,
 ): ExecuteResult => executeProgram(parse(input), env);
 
 type ImportPackage = Array<[string, RuntimeValue, Type]>;
@@ -473,7 +482,7 @@ export const executeImport = (
     const importPackage: ImportPackage = [];
 
     const ast = parse(Deno.readTextFileSync(urn));
-    const [result, _] = executeProgram(ast, defaultEnv());
+    const [result, _] = executeProgram(ast, defaultEnv(src));
 
     ast.forEach((e, i) => {
       if (e.type === "Let" || e.type === "LetRec") {

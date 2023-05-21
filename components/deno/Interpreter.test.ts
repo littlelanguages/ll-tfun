@@ -204,7 +204,7 @@ Deno.test("stuff", () => {
 
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(expression);
-  const [result, _] = executeProgram(ast, defaultEnv());
+  const [result, _] = executeProgram(ast, defaultEnv(home()));
 
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
@@ -225,7 +225,7 @@ type MyError = any;
 const assertError = (expression: string, error: MyError) => {
   const ast = parse(expression);
   try {
-    executeProgram(ast, defaultEnv());
+    executeProgram(ast, defaultEnv(home()));
     assert(false);
   } catch (e) {
     assertEquals(e, error);
