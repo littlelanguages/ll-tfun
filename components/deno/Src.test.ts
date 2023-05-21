@@ -22,6 +22,36 @@ Deno.test("file system init will compute absolute off of CWD", () => {
   );
 });
 
+Deno.test("base directory as a src can be combined", () => {
+  assertEquals(
+    new Src.Src("/Users/graeme.lockley/deno/").newSrc("tfun/Scanner.llld")
+      .urn(),
+    "/Users/graeme.lockley/deno/tfun/Scanner.llld",
+  );
+
+  assertEquals(
+    new Src.Src("/Users/graeme.lockley/deno").newSrc("tfun/Scanner.llld")
+      .urn(),
+    "/Users/graeme.lockley/tfun/Scanner.llld",
+  );
+});
+
+Deno.test("srcs can be combined", () => {
+  assertEquals(
+    Src.from("tfun/Grammar.llgd", "/Users/graeme.lockley/deno/").newSrc(
+      "./Scanner.llld",
+    ).urn(),
+    "/Users/graeme.lockley/deno/tfun/Scanner.llld",
+  );
+
+  assertEquals(
+    Src.from("tfun/Grammar.llgd", "/Users/graeme.lockley/deno").newSrc(
+      "./Scanner.llld",
+    ).urn(),
+    "/Users/graeme.lockley/deno/tfun/Scanner.llld",
+  );
+});
+
 const assertUrn = (name: string, base: string, expected: string): void => {
   const src = Src.from(
     name,

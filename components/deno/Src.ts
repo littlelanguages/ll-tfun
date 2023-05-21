@@ -8,6 +8,14 @@ export class Src {
   urn(): string {
     return this.name;
   }
+
+  newSrc(name: string): Src {
+    if (this.name.endsWith("/")) {
+      return from(name, this.name);
+    } else {
+      return from(name, dropLastComponent(this.name));
+    }
+  }
 }
 
 const dropLastComponent = (n: string): string => {
@@ -43,3 +51,5 @@ export const from = (name: string, base: string = Deno.cwd()): Src => {
     }
   }
 };
+
+export const home = (): Src => new Src(`${Deno.cwd()}/`);
