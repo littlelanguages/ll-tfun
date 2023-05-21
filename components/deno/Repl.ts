@@ -1,5 +1,6 @@
 import { defaultEnv, Env, executeProgram } from "./Interpreter.ts";
 import { parse } from "./Parser.ts";
+import { from, home } from "./Src.ts";
 import { Subst, TVar, Type } from "./Typing.ts";
 import {
   expressionToNestedString,
@@ -50,9 +51,7 @@ const execute = (line: string, env: Env): Env => {
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
       console.log(result[i][0].toString());
-    } else if (e.type === "ImportStatement") {
-      console.log("Unable to display import statement:", e);
-    } else {
+    } else if (e.type !== "ImportStatement") {
       const [value, type] = result[i];
 
       console.log(
@@ -73,7 +72,7 @@ if (Deno.args.length === 0) {
   console.log('Type ".quit" to exit.');
   console.log("Enter a multi-line expression with ;; as a terminator.");
 
-  let env = defaultEnv();
+  let env = defaultEnv(home());
 
   while (true) {
     const line = readline();
@@ -89,15 +88,21 @@ if (Deno.args.length === 0) {
         break;
       case ".env":
         console.log("Runtime Environment");
-        for (const field in env[0]) {
-          console.log(
-            `  ${field} = ${valueToString(env[0].get(field))}: ${
-              env[1].scheme(field)
-            }`,
-          );
+        for (const field of env.runtime.names()) {
+          try {
+            console.log(
+              `  ${field} = ${valueToString(env.runtime.get(field))}: ${
+                env.type.scheme(field)
+              }`,
+            );
+          } catch (_e) {
+            console.log(
+              `  ${field} = ...: ${env.type.scheme(field)}`,
+            );
+          }
         }
         console.log("Data Declarations");
-        console.log(env[1].adts.map((a) => `  ${a}`).join("\n"));
+        console.log(env.type.adts.map((a) => `  ${a}`).join("\n"));
         break;
       default:
         try {
@@ -108,7 +113,7 @@ if (Deno.args.length === 0) {
     }
   }
 } else if (Deno.args.length === 1) {
-  execute(Deno.readTextFileSync(Deno.args[0]), defaultEnv());
+  execute(Deno.readTextFileSync(Deno.args[0]), defaultEnv(from(Deno.args[0])));
 } else {
   console.error("Invalid arguments");
 }

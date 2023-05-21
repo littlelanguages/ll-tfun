@@ -193,13 +193,19 @@ Deno.test("Error - add visibility ot non-toplevel declaration", () => {
 Deno.test("stuff", () => {
   const ip = executeImport("./tests/simple.tfun", home());
 
-  assertEquals(ip.length, 2);
+  assertEquals(ip.length, 4);
 
   assertEquals(ip[0][0], "x");
   assertEquals(ip[0][1], 10);
 
   assertEquals(ip[1][0], "y");
   assertEquals(ip[1][1], 20);
+
+  assertEquals(ip[2][0], "double");
+  assertEquals(ip[2][1](5), 10);
+
+  assertEquals(ip[3][0], "square");
+  assertEquals(ip[3][1](5), 25);
 });
 
 const assertExecute = (expression: string, expected: NestedString) => {

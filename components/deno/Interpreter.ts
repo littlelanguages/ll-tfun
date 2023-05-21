@@ -58,23 +58,36 @@ class RuntimeEnv {
       return v;
     }
   }
+
   clone(): RuntimeEnv {
     return new RuntimeEnv({ ...this.bindings });
   }
+
+  names(): Array<string> {
+    return Object.keys(this.bindings);
+  }
 }
+
+type ImportPackage = Array<[string, RuntimeValue, Type]>;
+
+type ImportEnv = { [key: string]: ImportPackage };
 
 export type Env = {
   runtime: RuntimeEnv;
   type: TypeEnv;
   src: Src;
+  imports: ImportEnv;
 };
 
 export const emptyRuntimeEnv = () => new RuntimeEnv();
+
+export const emptyImportEnv: ImportEnv = {};
 
 export const emptyEnv = (src: Src): Env => ({
   runtime: emptyRuntimeEnv(),
   type: emptyTypeEnv,
   src,
+  imports: emptyImportEnv,
 });
 
 export const defaultEnv = (src: Src): Env => ({
@@ -127,6 +140,7 @@ export const defaultEnv = (src: Src): Env => ({
     .addData(new DataDefinition("String", [], []))
     .addData(new DataDefinition("Bool", [], [])),
   src,
+  imports: emptyImportEnv,
 });
 
 const binaryOps = new Map<
@@ -423,6 +437,22 @@ const executeElement = (
     const [adts, newEnv] = executeDataDeclaration(e, env);
     return [adts, undefined, newEnv];
   } else if (e.type === "ImportStatement") {
+    const imports = executeImport(e.from, env.src, env.imports);
+
+    if (e.items.type === "ImportAll") {
+      if (e.items.as === undefined) {
+        const runtime = env.runtime.clone();
+        let type = env.type;
+
+        imports.forEach(([n, v, t]) => {
+          runtime.bind(n, v);
+          type = type.extend(n, new Scheme(t.ftv(), t));
+        });
+
+        return [null, undefined, { ...env, runtime, type }];
+      }
+    }
+
     throw new Error("TODO: Interpreter: Import statement not yet supported");
   } else {
     const pump = createFresh();
@@ -462,10 +492,6 @@ export const execute = (
   input: string,
   env: Env,
 ): ExecuteResult => executeProgram(parse(input), env);
-
-type ImportPackage = Array<[string, RuntimeValue, Type]>;
-
-type ImportEnv = { [key: string]: ImportPackage };
 
 export const executeImport = (
   name: string,

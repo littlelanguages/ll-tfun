@@ -223,13 +223,19 @@ export type TypeUnit = {
 
 export type ImportStatement = {
   type: "ImportStatement";
-  items: ImportAll | Array<ImportName>;
+  items: ImportAll | ImportNames;
   from: string;
 };
 
 export type ImportAll = {
+  type: "ImportAll";
   as: string | undefined;
   visibility: Visibility;
+};
+
+export type ImportNames = {
+  type: "ImportNames";
+  items: Array<ImportName>;
 };
 
 export type ImportName = {
@@ -266,7 +272,7 @@ const visitor: Visitor<
   Type,
   Type,
   ImportStatement,
-  ImportAll | Array<ImportName>,
+  ImportAll | ImportNames,
   ImportName
 > = {
   visitProgram: (
@@ -541,19 +547,20 @@ const visitor: Visitor<
 
   visitImportStatement: (
     _a1: Token,
-    a2: ImportAll | ImportName[],
+    a2: ImportAll | ImportNames,
     _a3: Token,
     a4: Token,
   ): ImportStatement => ({
     type: "ImportStatement",
     items: a2,
-    from: a4[2],
+    from: transformLiteralString(a4[2]),
   }),
 
   visitImportItems1: (
     _a1: Token,
     a2: [Token, Token, Token | undefined] | undefined,
-  ): ImportAll | ImportName[] => ({
+  ): ImportAll | ImportNames => ({
+    type: "ImportAll",
     as: a2 === undefined ? undefined : a2[1][2],
     visibility: a2 === undefined || a2[2] === undefined
       ? Visibility.None
@@ -562,8 +569,10 @@ const visitor: Visitor<
   visitImportItems2: (
     a1: ImportName,
     a2: [Token, ImportName][],
-  ): ImportAll | ImportName[] =>
-    a2 === undefined ? [a1] : [a1].concat(a2.map((i) => i[1])),
+  ): ImportAll | ImportNames => ({
+    type: "ImportNames",
+    items: a2 === undefined ? [a1] : [a1].concat(a2.map((i) => i[1])),
+  }),
 
   visitImportItem1: (
     a1: Token,
