@@ -25,7 +25,7 @@ export type Expression =
   | LUnitExpression
   | MatchExpression
   | OpExpression
-  | QVarExpression
+  | QExpression
   | VarExpression;
 
 export type AppExpression = {
@@ -111,8 +111,9 @@ export enum Op {
   Divide,
 }
 
-export type QVarExpression = {
-  type: "QVar";
+export type QExpression = {
+  type: "QExpr";
+  expr: Expression;
   names: Array<string>;
 };
 
@@ -268,6 +269,7 @@ const visitor: Visitor<
   Expression,
   string,
   Expression,
+  Expression,
   string,
   Declaration,
   MatchCase,
@@ -340,6 +342,13 @@ const visitor: Visitor<
   visitAdditiveOps1: (a: Token): string => a[2],
   visitAdditiveOps2: (a: Token): string => a[2],
 
+  visitQualified: (a1: Expression, a2: Array<[Token, string]>): Expression =>
+    a2.length === 0 ? a1 : {
+      type: "QExpr",
+      expr: a1,
+      names: a2.map(v => v[1])
+    },
+
   visitFactor1: (
     _a1: Token,
     a2: [Expression, Array<[Token, Expression]>] | undefined,
@@ -348,8 +357,8 @@ const visitor: Visitor<
     a2 === undefined
       ? { type: "LUnit" }
       : a2[1].length === 0
-      ? a2[0]
-      : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+        ? a2[0]
+        : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
 
   visitFactor2: (a: Token): Expression => ({
     type: "LInt",
@@ -407,16 +416,10 @@ const visitor: Visitor<
     else: a7,
   }),
 
-  visitFactor9: (a1: string, a2: Array<[Token, string]>): Expression =>
-    a2.length === 0
-      ? {
-        type: "Var",
-        name: a1,
-      }
-      : {
-        type: "QVar",
-        names: [a1].concat(a2.map((v) => v[1])),
-      },
+  visitFactor9: (a1: string): Expression => ({
+    type: "Var",
+    name: a1,
+  }),
 
   visitFactor10: (
     _a1: Token,
@@ -460,8 +463,8 @@ const visitor: Visitor<
     a2 === undefined
       ? { type: "PUnit" }
       : a2[1].length === 0
-      ? a2[0]
-      : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+        ? a2[0]
+        : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
 
   visitPattern2: (a: Token): Pattern => ({
     type: "PInt",
@@ -517,8 +520,8 @@ const visitor: Visitor<
     visibility: a2 === undefined
       ? Visibility.Private
       : a2[2] === "+"
-      ? Visibility.Public
-      : Visibility.Opaque,
+        ? Visibility.Public
+        : Visibility.Opaque,
     parameters: a3.map((a) => a[2]),
     constructors: [a5].concat(a6.map((a) => a[1])),
   }),
@@ -595,8 +598,8 @@ const visitor: Visitor<
     visibility: a2 === undefined
       ? Visibility.Private
       : a2[2] === "+"
-      ? Visibility.Public
-      : Visibility.Opaque,
+        ? Visibility.Public
+        : Visibility.Opaque,
   }),
   visitImportItem2: (
     a1: Token,
