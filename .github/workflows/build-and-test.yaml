@@ -41,7 +41,7 @@ jobs:
       - name: Unit tests
         run: |
           cd ./components/deno
-          deno test
+          deno test --allow-read
 
       - name: Scenario tests
         run: |

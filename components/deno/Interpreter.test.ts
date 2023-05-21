@@ -3,9 +3,10 @@ import {
   assertEquals,
 } from "https://deno.land/std@0.137.0/testing/asserts.ts";
 
-import { defaultEnv, executeProgram } from "./Interpreter.ts";
+import { defaultEnv, executeImport, executeProgram } from "./Interpreter.ts";
 import { parse } from "./Parser.ts";
 import { expressionToNestedString, NestedString } from "./Values.ts";
+import { home } from "./Src.ts";
 
 Deno.test("App 1", () => {
   assertExecute("(\\n -> n + 1) 1", ["2: Int"]);
@@ -187,6 +188,18 @@ Deno.test("Error - add visibility ot non-toplevel declaration", () => {
     Visibility: 0,
   });
   assertExecute("let x* = let y = 10 in y + y", [["x = 20: Int"]]);
+});
+
+Deno.test("stuff", () => {
+  const ip = executeImport("./tests/simple.tfun", home());
+
+  assertEquals(ip.length, 2);
+
+  assertEquals(ip[0][0], "x");
+  assertEquals(ip[0][1], 10);
+
+  assertEquals(ip[1][0], "y");
+  assertEquals(ip[1][1], 20);
 });
 
 const assertExecute = (expression: string, expected: NestedString) => {

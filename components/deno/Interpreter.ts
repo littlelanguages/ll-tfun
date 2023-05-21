@@ -13,6 +13,7 @@ import {
   Type as TypeItem,
   Visibility,
 } from "./Parser.ts";
+import { Src } from "./Src.ts";
 import {
   createFresh,
   DataDefinition,
@@ -446,8 +447,50 @@ export const executeProgram = (
   return [results, env];
 };
 
+export type ExecuteResult = [Array<[RuntimeValue, Type | undefined]>, Env];
+
 export const execute = (
   input: string,
   env: Env = emptyEnv(),
-): [Array<[RuntimeValue, Type | undefined]>, Env] =>
-  executeProgram(parse(input), env);
+): ExecuteResult => executeProgram(parse(input), env);
+
+type ImportPackage = Array<[string, RuntimeValue, Type]>;
+
+type ImportEnv = { [key: string]: ImportPackage };
+
+export const executeImport = (
+  name: string,
+  referencedFrom: Src,
+  importEnv: ImportEnv = {},
+): ImportPackage => {
+  const src = referencedFrom.newSrc(name);
+  const urn = src.urn();
+
+  const env = importEnv[urn];
+  if (env !== undefined) {
+    return env;
+  } else {
+    const importPackage: ImportPackage = [];
+
+    const ast = parse(Deno.readTextFileSync(urn));
+    const [result, _] = executeProgram(ast, defaultEnv());
+
+    ast.forEach((e, i) => {
+      if (e.type === "Let" || e.type === "LetRec") {
+        const [value, type] = result[i];
+
+        const tt = type as TTuple;
+
+        e.declarations.forEach((d, i2) => {
+          if (d.visibility === Visibility.Public) {
+            importPackage.push([d.name, value[i2], tt.types[i2]]);
+          }
+        });
+      }
+    });
+
+    importEnv[urn] = importPackage;
+
+    return importPackage;
+  }
+};

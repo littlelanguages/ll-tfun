@@ -44,7 +44,7 @@ scenario_tests() {
 unit_tests() {
     echo "---| unit tests"
 
-    deno test || exit 1
+    deno test --allow-read || exit 1
 }
 
 case "$1" in
