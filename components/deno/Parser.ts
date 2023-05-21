@@ -519,7 +519,7 @@ const visitor: Visitor<
     name: a1[2],
     visibility: a2 === undefined
       ? Visibility.Private
-      : a2[2] === "+"
+      : a2[2] === "*"
       ? Visibility.Public
       : Visibility.Opaque,
     parameters: a3.map((a) => a[2]),

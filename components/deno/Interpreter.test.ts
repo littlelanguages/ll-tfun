@@ -208,6 +208,13 @@ Deno.test("Import - raw mechanism using simple.tfun", () => {
   assertEquals(ip[3][1](5), 25);
 });
 
+Deno.test("Import - raw mechanism using adt.tfun", () => {
+  const ip = executeImport("./tests/adt.tfun", home());
+
+  assertEquals(ip.length, 9);
+  // console.log(ip);
+});
+
 Deno.test("Import - simple values", () => {
   assertExecute('import * from "./tests/simple.tfun"; double x ; square y', [
     "import",
@@ -238,6 +245,35 @@ Deno.test("Import - simple values", () => {
       type: "ImportNameAlreadyDeclared",
       name: "value",
     },
+  );
+});
+
+Deno.test("Import - simple ADT", () => {
+  assertExecute('import * from "./tests/adt.tfun"; length ; sum ; map', [
+    "import",
+    "function: List V1 -> Int",
+    "function: List Int -> Int",
+    "function: (V1 -> V2) -> List V1 -> List V2",
+  ]);
+
+  assertExecute(
+    'import * from "./tests/adt.tfun"; Nil ; Cons ; Cons 1 Nil',
+    [
+      "import",
+      "Nil: List V1",
+      "function: V1 -> List V1 -> List V1",
+      "Cons 1 Nil: List Int",
+    ],
+  );
+
+  assertExecute(
+    'import * from "./tests/adt.tfun"; find (\\n -> n == 1) (Cons 1 Nil) ; let v = find (\\n -> n == 10) (Cons 1 Nil) ;  withDefault 0 v',
+    [
+      "import",
+      "Some 1: Option Int",
+      ["v = None: Option Int"],
+      "0: Int",
+    ],
   );
 });
 

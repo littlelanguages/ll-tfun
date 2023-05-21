@@ -548,7 +548,7 @@ export const executeImport = (
     const importPackage: ImportPackage = [];
 
     const ast = parse(Deno.readTextFileSync(urn));
-    const [result, _] = executeProgram(ast, defaultEnv(src));
+    const [result, resultEnv] = executeProgram(ast, defaultEnv(src));
 
     ast.forEach((e, i) => {
       if (e.type === "Let" || e.type === "LetRec") {
@@ -559,6 +559,18 @@ export const executeImport = (
         e.declarations.forEach((d, i2) => {
           if (d.visibility === Visibility.Public) {
             importPackage.push([d.name, value[i2], tt.types[i2]]);
+          }
+        });
+      } else if (e.type === "DataDeclaration") {
+        e.declarations.forEach((d) => {
+          if (d.visibility === Visibility.Public) {
+            d.constructors.forEach((c) => {
+              importPackage.push([
+                c.name,
+                resultEnv.runtime.get(c.name),
+                resultEnv.type.scheme(c.name)!.instantiate(createFresh()), // new TCon(d.name, d.parameters.map((p) => new TVar(p))),
+              ]);
+            });
           }
         });
       } else if (e.type === "ImportStatement") {
