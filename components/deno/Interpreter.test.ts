@@ -191,7 +191,7 @@ Deno.test("Error - add visibility ot non-toplevel declaration", () => {
 });
 
 Deno.test("Import - raw mechanism using simple.tfun", () => {
-  const ip = executeImport("./tests/simple.tfun", home());
+  const ip = executeImport("./tests/simple.tfun", home()).values;
 
   assertEquals(ip.length, 4);
 
@@ -209,7 +209,7 @@ Deno.test("Import - raw mechanism using simple.tfun", () => {
 });
 
 Deno.test("Import - raw mechanism using adt.tfun", () => {
-  const ip = executeImport("./tests/adt.tfun", home());
+  const ip = executeImport("./tests/adt.tfun", home()).values;
 
   assertEquals(ip.length, 9);
   // console.log(ip);
@@ -270,9 +270,30 @@ Deno.test("Import - simple ADT", () => {
     'import * from "./tests/adt.tfun"; find (\\n -> n == 1) (Cons 1 Nil) ; let v = find (\\n -> n == 10) (Cons 1 Nil) ;  withDefault 0 v',
     [
       "import",
-      "Some 1: Option Int",
-      ["v = None: Option Int"],
+      "Just 1: Maybe Int",
+      ["v = Nothing: Maybe Int"],
       "0: Int",
+    ],
+  );
+
+  assertExecute(
+    'import * from "./tests/adt.tfun"; match (Cons 1 Nil) with | Nil -> 0 | Cons v _ -> v',
+    [
+      "import",
+      "1: Int",
+    ],
+  );
+
+  assertError(
+    'import * from "./tests/adt.tfun"; let v = find (\\n -> n == 10) (Cons 1 Nil); match v with | None -> 0 | Some v -> v',
+    { type: "UnknownConstructorError", name: "None" },
+  );
+
+  assertExecute(
+    'import List from "./tests/adt.tfun"; match (Cons 1 Nil) with | Nil -> 0 | Cons v _ -> v',
+    [
+      "import",
+      "1: Int",
     ],
   );
 });
@@ -287,6 +308,26 @@ Deno.test("Import - nested simple values", () => {
       "function: V1 -> V1",
       "47: Int",
     ],
+  );
+});
+
+Deno.test("Import - nested ADT", () => {
+  assertExecute(
+    'import * from "./tests/maybe-nested.tfun" ; Nothing ; Just 10 ; isJust (Just 10) ; isJust Nothing ; range 3 ; sum (range 10)',
+    [
+      "import",
+      "Nothing: Maybe V1",
+      "Just 10: Maybe Int",
+      "true: Bool",
+      "false: Bool",
+      "Cons 0 (Cons 1 (Cons 2 Nil)): List Int",
+      "45: Int",
+    ],
+  );
+
+  assertError(
+    'import * from "./tests/maybe-nested.tfun" ; Nothing ; Cons',
+    "Unknown name: Cons",
   );
 });
 

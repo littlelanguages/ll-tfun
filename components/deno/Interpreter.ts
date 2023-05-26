@@ -72,7 +72,11 @@ class RuntimeEnv {
   }
 }
 
-type ImportPackage = Array<[string, RuntimeValue, Type]>;
+type ImportValues = Array<[string, RuntimeValue, Type]>;
+type ImportPackage = {
+  values: ImportValues;
+  types: TypeEnv;
+};
 
 type ImportEnv = { [key: string]: ImportPackage };
 
@@ -433,6 +437,9 @@ const executeDataDeclaration = (
   return [adts, env];
 };
 
+const startsWithUppercase = (str: string) =>
+  str.length > 0 && str.charCodeAt(0) >= 65 && str.charCodeAt(0) <= 90;
+
 const executeElement = (
   e: Element,
   env: Env,
@@ -448,7 +455,7 @@ const executeElement = (
         const runtime = env.runtime.clone();
         let type = env.type;
 
-        imports.forEach(([n, v, t]) => {
+        imports.values.forEach(([n, v, t]) => {
           if (runtime.has(n)) {
             throw {
               type: "ImportNameAlreadyDeclared",
@@ -460,6 +467,10 @@ const executeElement = (
           type = type.extend(n, new Scheme(t.ftv(), t));
         });
 
+        imports.types.adts.forEach((adt) => {
+          type = type.addData(adt);
+        });
+
         return [null, undefined, { ...env, runtime, type }];
       }
     }
@@ -468,26 +479,59 @@ const executeElement = (
       let type = env.type;
 
       e.items.items.forEach(({ name, as }) => {
-        const item = imports.find((v) => v[0] === name);
+        if (startsWithUppercase(name[0])) {
+          const adt = imports.types.adts.find((a) => a.name === name);
+          if (adt === undefined) {
+            throw {
+              type: "UnknownImportName",
+              name,
+              names: imports.values.map((v) => v[0]),
+            };
+          }
+          if (type.data(adt.name) !== undefined) {
+            throw {
+              type: "ImportNameAlreadyDeclared",
+              name: adt.name,
+            };
+          }
+          type = type.addData(adt);
 
-        if (item === undefined) {
-          throw {
-            type: "UnknownImportName",
-            name,
-            names: imports.map((v) => v[0]),
-          };
+          adt.constructors.forEach((c) => {
+            if (runtime.has(c.name)) {
+              throw {
+                type: "ImportNameAlreadyDeclared",
+                name: adt.name,
+              };
+            }
+            const v = imports.values.find((v) => v[0] === c.name)!;
+            runtime.bind(
+              c.name,
+              v[1],
+            );
+            type = type.extend(c.name, new Scheme(v[2].ftv(), v[2]));
+          });
+        } else {
+          const item = imports.values.find((v) => v[0] === name);
+
+          if (item === undefined) {
+            throw {
+              type: "UnknownImportName",
+              name,
+              names: imports.values.map((v) => v[0]),
+            };
+          }
+          const n = as === undefined ? item[0] : as;
+
+          if (runtime.has(n)) {
+            throw {
+              type: "ImportNameAlreadyDeclared",
+              name: n,
+            };
+          }
+
+          runtime.bind(n, item[1]);
+          type = type.extend(n, new Scheme(item[2].ftv(), item[2]));
         }
-        const n = as === undefined ? item[0] : as;
-
-        if (runtime.has(n)) {
-          throw {
-            type: "ImportNameAlreadyDeclared",
-            name: n,
-          };
-        }
-
-        runtime.bind(n, item[1]);
-        type = type.extend(n, new Scheme(item[2].ftv(), item[2]));
       });
 
       return [null, undefined, { ...env, runtime, type }];
@@ -542,10 +586,9 @@ export const executeImport = (
   const urn = src.urn();
 
   const env = importEnv[urn];
-  if (env !== undefined) {
-    return env;
-  } else {
-    const importPackage: ImportPackage = [];
+  if (env === undefined) {
+    const importValues: ImportValues = [];
+    let env = emptyTypeEnv;
 
     const ast = parse(Deno.readTextFileSync(urn));
     const [result, resultEnv] = executeProgram(ast, defaultEnv(src));
@@ -558,19 +601,28 @@ export const executeImport = (
 
         e.declarations.forEach((d, i2) => {
           if (d.visibility === Visibility.Public) {
-            importPackage.push([d.name, value[i2], tt.types[i2]]);
+            importValues.push([d.name, value[i2], tt.types[i2]]);
           }
         });
       } else if (e.type === "DataDeclaration") {
         e.declarations.forEach((d) => {
           if (d.visibility === Visibility.Public) {
             d.constructors.forEach((c) => {
-              importPackage.push([
+              importValues.push([
                 c.name,
                 resultEnv.runtime.get(c.name),
                 resultEnv.type.scheme(c.name)!.instantiate(createFresh()), // new TCon(d.name, d.parameters.map((p) => new TVar(p))),
               ]);
             });
+            env = env.addData(resultEnv.type.data(d.name)!);
+          } else if (d.visibility === Visibility.Opaque) {
+            env = env.addData(
+              new DataDefinition(
+                d.name,
+                d.parameters,
+                [],
+              ),
+            );
           }
         });
       } else if (e.type === "ImportStatement") {
@@ -579,27 +631,46 @@ export const executeImport = (
         if (e.items.type === "ImportNames") {
           e.items.items.forEach(({ name, as, visibility }) => {
             if (visibility === Visibility.Public) {
-              const item = imports.find((v) => v[0] === name);
+              if (startsWithUppercase(name[0])) {
+                const adt = imports.types.adts.find((a) => a.name === name);
+                if (adt === undefined) {
+                  throw {
+                    type: "UnknownImportName",
+                    name,
+                    names: imports.values.map((v) => v[0]),
+                  };
+                }
+                env = env.addData(adt);
 
-              if (item === undefined) {
-                throw {
-                  type: "UnknownImportName",
-                  name,
-                  names: imports.map((v) => v[0]),
-                };
+                adt.constructors.forEach((c) => {
+                  const v = imports.values.find((v) => v[0] === c.name)!;
+                  importValues.push([c.name, v[1], v[2]]);
+                });
+              } else {
+                const item = imports.values.find((v) => v[0] === name);
+
+                if (item === undefined) {
+                  throw {
+                    type: "UnknownImportName",
+                    name,
+                    names: imports.values.map((v) => v[0]),
+                  };
+                }
+
+                const n = as === undefined ? item[0] : as;
+
+                importValues.push([n, item[1], item[2]]);
               }
-
-              const n = as === undefined ? item[0] : as;
-
-              importPackage.push([n, item[1], item[2]]);
             }
           });
         }
       }
     });
 
-    importEnv[urn] = importPackage;
-
-    return importPackage;
+    const r: ImportPackage = { values: importValues, types: env };
+    importEnv[urn] = r;
+    return r;
+  } else {
+    return env;
   }
 };

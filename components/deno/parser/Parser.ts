@@ -154,11 +154,7 @@ export interface Visitor<
     a1: T_ImportItem,
     a2: Array<[Token, T_ImportItem]>,
   ): T_ImportItems;
-  visitImportItem1(
-    a1: Token,
-    a2: [Token, Token] | undefined,
-    a3: (Token | Token) | undefined,
-  ): T_ImportItem;
+  visitImportItem1(a1: Token, a2: (Token | Token) | undefined): T_ImportItem;
   visitImportItem2(
     a1: Token,
     a2: [Token, Token] | undefined,
@@ -900,24 +896,16 @@ export const mkParser = <
     importItem: function (): T_ImportItem {
       if (isToken(TToken.UpperIdentifier)) {
         const a1: Token = matchToken(TToken.UpperIdentifier);
-        let a2: [Token, Token] | undefined = undefined;
-
-        if (isToken(TToken.As)) {
-          const a2t1: Token = matchToken(TToken.As);
-          const a2t2: Token = matchToken(TToken.UpperIdentifier);
-          const a2t: [Token, Token] = [a2t1, a2t2];
-          a2 = a2t;
-        }
-        let a3: (Token | Token) | undefined = undefined;
+        let a2: (Token | Token) | undefined = undefined;
 
         if (isTokens([TToken.Star, TToken.Dash])) {
-          let a3t: Token | Token;
+          let a2t: Token | Token;
           if (isToken(TToken.Star)) {
-            const a3tt: Token = matchToken(TToken.Star);
-            a3t = a3tt;
+            const a2tt: Token = matchToken(TToken.Star);
+            a2t = a2tt;
           } else if (isToken(TToken.Dash)) {
-            const a3tt: Token = matchToken(TToken.Dash);
-            a3t = a3tt;
+            const a2tt: Token = matchToken(TToken.Dash);
+            a2t = a2tt;
           } else {
             throw {
               tag: "SyntaxError",
@@ -925,9 +913,9 @@ export const mkParser = <
               expected: [TToken.Star, TToken.Dash],
             };
           }
-          a3 = a3t;
+          a2 = a2t;
         }
-        return visitor.visitImportItem1(a1, a2, a3);
+        return visitor.visitImportItem1(a1, a2);
       } else if (isToken(TToken.LowerIdentifier)) {
         const a1: Token = matchToken(TToken.LowerIdentifier);
         let a2: [Token, Token] | undefined = undefined;

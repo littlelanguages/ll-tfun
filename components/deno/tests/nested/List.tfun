@@ -1,6 +1,6 @@
-data List* a = Nil | Cons a (List a) ;
+import * from "./Maybe.tfun" ;
 
-data Maybe- a = Nothing | Just a ;
+data List* a = Nil | Cons a (List a) ;
 
 let range* n = 
   let rec helper m =
@@ -24,9 +24,4 @@ let map* f =
 let rec find* p lst =
   match lst with
   | Nil -> Nothing
-  | Cons x xs -> if (p x) Just x else find p xs ;
-
-let withDefault* d opt =
-  match opt with
-  | Nothing -> d
-  | Just x -> x
+  | Cons x xs -> if (p x) Just x else find p xs
