@@ -163,122 +163,102 @@ const binaryOps = new Map<
 ]);
 
 const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
-  if (expr.type === "App") {
-    const operator = evaluate(expr.e1, runtimeEnv);
-    const operand = evaluate(expr.e2, runtimeEnv);
-    return operator(operand);
-  }
-  if (expr.type === "If") {
-    return evaluate(expr.guard, runtimeEnv)
-      ? evaluate(expr.then, runtimeEnv)
-      : evaluate(expr.else, runtimeEnv);
-  }
-  if (expr.type === "Lam") {
-    return (x: RuntimeValue): RuntimeValue => {
-      const newRuntimeEnv = runtimeEnv.clone();
-      newRuntimeEnv.bind(expr.name, x);
-      return evaluate(expr.expr, newRuntimeEnv);
-    };
-  }
-  if (expr.type === "Let" || expr.type === "LetRec") {
-    return executeDeclaration(expr, runtimeEnv, false)[0];
-  }
-  if (expr.type === "LBool") {
-    return expr.value;
-  }
-  if (expr.type === "LInt") {
-    return expr.value;
-  }
-  if (expr.type === "LString") {
-    return expr.value;
-  }
-  if (expr.type === "LTuple") {
-    return mkTuple(expr.values.map((v) => evaluate(v, runtimeEnv)));
-  }
-  if (expr.type === "LUnit") {
-    return null;
-  }
-  if (expr.type === "Match") {
-    const e = evaluate(expr.expr, runtimeEnv);
+  switch (expr.type) {
+    case "App":
+      const operator = evaluate(expr.e1, runtimeEnv);
+      const operand = evaluate(expr.e2, runtimeEnv);
+      return operator(operand);
+    case "If":
+      return evaluate(expr.guard, runtimeEnv)
+        ? evaluate(expr.then, runtimeEnv)
+        : evaluate(expr.else, runtimeEnv);
+    case "Lam":
+      return (x: RuntimeValue): RuntimeValue => {
+        const newRuntimeEnv = runtimeEnv.clone();
+        newRuntimeEnv.bind(expr.name, x);
+        return evaluate(expr.expr, newRuntimeEnv);
+      };
+    case "Let":
+    case "LetRec":
+      return executeDeclaration(expr, runtimeEnv, false)[0];
+    case "LBool":
+    case "LInt":
+    case "LString":
+      return expr.value;
+    case "LTuple":
+      return mkTuple(expr.values.map((v) => evaluate(v, runtimeEnv)));
+    case "LUnit":
+      return null;
+    case "Match":
+      const e = evaluate(expr.expr, runtimeEnv);
 
-    for (const c of expr.cases) {
-      const newEnv = matchPattern(c.pattern, e, runtimeEnv);
-      if (newEnv !== null) {
-        return evaluate(c.expr, newEnv);
+      for (const c of expr.cases) {
+        const newEnv = matchPattern(c.pattern, e, runtimeEnv);
+        if (newEnv !== null) {
+          return evaluate(c.expr, newEnv);
+        }
       }
-    }
-    throw new Error("Match failed");
-  }
-  if (expr.type === "Op") {
-    const left = evaluate(expr.left, runtimeEnv);
-    const right = evaluate(expr.right, runtimeEnv);
-    return binaryOps.get(expr.op)!(left, right);
-  }
-  if (expr.type === "Var") {
-    return runtimeEnv.get(expr.name);
-  }
-
-  return null;
-};
+      throw new Error("Match failed");
+    case "Op":
+      const left = evaluate(expr.left, runtimeEnv);
+      const right = evaluate(expr.right, runtimeEnv);
+      return binaryOps.get(expr.op)!(left, right);
+    case "Var":
+      return runtimeEnv.get(expr.name);
+    default: return null;
+  };
+}
 
 const matchPattern = (
   pattern: Pattern,
   value: RuntimeValue,
   runtimeEnv: RuntimeEnv,
 ): RuntimeEnv | null => {
-  if (pattern.type === "PBool") {
-    return pattern.value === value ? runtimeEnv : null;
-  }
-  if (pattern.type === "PInt") {
-    return pattern.value === value ? runtimeEnv : null;
-  }
-  if (pattern.type === "PString") {
-    return pattern.value === value ? runtimeEnv : null;
-  }
-  if (pattern.type === "PVar") {
-    const newEnv = runtimeEnv.clone();
-    newEnv.bind(pattern.name, value);
-    return newEnv;
-  }
-  if (pattern.type === "PTuple") {
-    let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
-    for (let i = 0; i < pattern.values.length; i++) {
-      newRuntimeEnv = matchPattern(
-        pattern.values[i],
-        tupleComponent(value, i),
-        newRuntimeEnv,
-      );
-      if (newRuntimeEnv === null) {
-        return null;
-      }
+  switch (pattern.type) {
+    case "PVar": {
+      const newEnv = runtimeEnv.clone();
+      newEnv.bind(pattern.name, value);
+      return newEnv;
     }
-    return newRuntimeEnv;
-  }
-  if (pattern.type === "PUnit") {
-    return value === null ? runtimeEnv : null;
-  }
-  if (pattern.type === "PWildcard") {
-    return runtimeEnv;
-  }
-  if (pattern.type === "PCons") {
-    let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
+    case "PCons": {
+      let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
 
-    if (value[0] !== pattern.name) {
-      return null;
-    }
-    for (let i = 0; i < pattern.args.length; i++) {
-      newRuntimeEnv = matchPattern(
-        pattern.args[i],
-        value[i + 1],
-        newRuntimeEnv,
-      );
-      if (newRuntimeEnv === null) {
+      if (value[0] !== pattern.name) {
         return null;
       }
+      for (let i = 0; i < pattern.args.length; i++) {
+        newRuntimeEnv = matchPattern(
+          pattern.args[i],
+          value[i + 1],
+          newRuntimeEnv,
+        );
+        if (newRuntimeEnv === null) {
+          return null;
+        }
+      }
+      return newRuntimeEnv;
     }
-    return newRuntimeEnv;
+    case "PTuple": {
+      let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
+      for (let i = 0; i < pattern.values.length; i++) {
+        newRuntimeEnv = matchPattern(
+          pattern.values[i],
+          tupleComponent(value, i),
+          newRuntimeEnv,
+        );
+        if (newRuntimeEnv === null) {
+          return null;
+        }
+      }
+      return newRuntimeEnv;
+    }
+    case "PUnit":
+      return value === null ? runtimeEnv : null;
+    case "PWildcard":
+      return runtimeEnv;
+    default:
+      return pattern.value === value ? runtimeEnv : null;
   }
-  return null;
 };
 
 const executeDeclaration = (
@@ -336,16 +316,16 @@ const mkConstructorFunction = (name: string, arity: number): RuntimeValue => {
   }
   if (arity === 4) {
     return (x1: RuntimeValue) =>
-    (x2: RuntimeValue) =>
-    (x3: RuntimeValue) =>
-    (x4: RuntimeValue) => [name, x1, x2, x3, x4];
+      (x2: RuntimeValue) =>
+        (x3: RuntimeValue) =>
+          (x4: RuntimeValue) => [name, x1, x2, x3, x4];
   }
   if (arity === 5) {
     return (x1: RuntimeValue) =>
-    (x2: RuntimeValue) =>
-    (x3: RuntimeValue) =>
-    (x4: RuntimeValue) =>
-    (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
+      (x2: RuntimeValue) =>
+        (x3: RuntimeValue) =>
+          (x4: RuntimeValue) =>
+            (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
   }
 
   throw { type: "TooManyConstructorArgumentsErrors", name, arity };
@@ -561,11 +541,11 @@ export const executeProgram = (
 ): [Array<[RuntimeValue, Type | undefined]>, Env] => {
   const results: Array<[RuntimeValue, Type | undefined]> = [];
 
-  program.forEach((e) => {
-    const [value, type, newEnv] = executeElement(e, env);
+  for (const element of program) {
+    const [value, type, newEnv] = executeElement(element, env);
     results.push([value, type]);
     env = newEnv;
-  });
+  }
 
   return [results, env];
 };
