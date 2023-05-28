@@ -22,7 +22,11 @@ const unifies = (t1: Type, t2: Type): Unifier => {
     return unifyMany(t1.types, t2.types);
   }
   if (t1 instanceof TCon && t2 instanceof TCon && t1.name === t2.name) {
-    return unifyMany(t1.args, t2.args);
+    if (t1.qualifiedName() === t2.qualifiedName()) {
+      return unifyMany(t1.args, t2.args);
+    } else {
+      throw { type: "UnificationMismatch", t1, t2 };
+    }
   }
 
   throw `Unification Mismatch: ${JSON.stringify(t1)} ${JSON.stringify(t2)}`;

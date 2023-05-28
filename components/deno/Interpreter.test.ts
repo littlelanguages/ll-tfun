@@ -191,7 +191,7 @@ Deno.test("Error - add visibility ot non-toplevel declaration", () => {
 });
 
 Deno.test("Import - raw mechanism using simple.tfun", () => {
-  const ip = executeImport("./tests/simple.tfun", home()).values;
+  const ip = executeImport("./tests/simple.tfun", home).values;
 
   assertEquals(ip.length, 4);
 
@@ -209,7 +209,7 @@ Deno.test("Import - raw mechanism using simple.tfun", () => {
 });
 
 Deno.test("Import - raw mechanism using adt.tfun", () => {
-  const ip = executeImport("./tests/adt.tfun", home()).values;
+  const ip = executeImport("./tests/adt.tfun", home).values;
 
   assertEquals(ip.length, 9);
 });
@@ -348,6 +348,20 @@ Deno.test("Import - qualified simple type in data declaration", () => {
   );
 });
 
+Deno.test("Import - values of the same name from different packages do not inter-operate", () => {
+  // This test should fail - for now leaving it in whilst I refactor and reshape the type
+  // code to make it easier to handle this case.
+
+  assertExecute(
+    'import * as ADT from "./tests/adt.tfun" ; import * as List from "./tests/nested/List.tfun" ; ADT.sum (List.range 10)',
+    [
+      "import",
+      "import",
+      "45: Int",
+    ],
+  );
+});
+
 Deno.test("Import - nested values", () => {
   assertExecute(
     'import * from "./tests/simple-nested.tfun" ; constant ; quad 10 ; id ; id 47',
@@ -407,7 +421,7 @@ Deno.test("Import - nested types", () => {
 
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(expression);
-  const [result, _] = executeProgram(ast, defaultEnv(home()));
+  const [result, _] = executeProgram(ast, defaultEnv(home));
 
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
@@ -426,7 +440,7 @@ type MyError = any;
 const assertError = (expression: string, error: MyError) => {
   const ast = parse(expression);
   try {
-    executeProgram(ast, defaultEnv(home()));
+    executeProgram(ast, defaultEnv(home));
     assert(false);
   } catch (e) {
     assertEquals(e, error);

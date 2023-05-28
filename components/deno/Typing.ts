@@ -47,6 +47,7 @@ export class TCon implements Type {
 
     return new TCon(this.name, applyArray(s, this.args));
   }
+
   ftv(): Set<Var> {
     return Sets.flatUnion(this.args.map((t) => t.ftv()));
   }
@@ -59,6 +60,10 @@ export class TCon implements Type {
           : t.toString()
       ).join(" ")
     }`;
+  }
+
+  qualifiedName(): string {
+    return this.name;
   }
 }
 

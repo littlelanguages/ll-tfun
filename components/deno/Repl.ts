@@ -72,7 +72,7 @@ if (Deno.args.length === 0) {
   console.log('Type ".quit" to exit.');
   console.log("Enter a multi-line expression with ;; as a terminator.");
 
-  let env = defaultEnv(home());
+  let env = defaultEnv(home);
 
   while (true) {
     const line = readline();
