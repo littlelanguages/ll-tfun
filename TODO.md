@@ -1,13 +1,13 @@
 The tasks are built out according to the packages listed in [README](README.md)
 
-# Tasks
+# Package Tasks
 
 - [x] Add visibility suffixes into the grammar
 - [x] Incorporate into the deno implementation
 - [x] Add `import` statement into grammar
-- [ ] Incorporate into the deno implementation
-- [ ] Load declarations from a source file
-- [ ] Incorporate into the deno REPL
+- [x] Incorporate into the deno implementation
+- [x] Load declarations from a source file
+- [x] Incorporate into the deno REPL
 - [ ] Incorporate into the Kotlin REPL
 - [ ] Incorporate into the deno BCI
 - [ ] Incorporate into the Zig BCI
