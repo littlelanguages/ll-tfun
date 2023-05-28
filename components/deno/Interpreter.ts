@@ -343,39 +343,37 @@ const executeDataDeclaration = (
   env: Env,
 ): [Array<DataDefinition>, Env] => {
   const translate = (t: TypeItem): Type => {
-    if (t.type === "TypeConstructor") {
-      const qualifiedEnv = t.qualifier === undefined
-        ? env.type
-        : env.type.import(t.qualifier);
-      const tc = qualifiedEnv?.data(t.name);
-      if (tc === undefined) {
-        throw { type: "UnknownDataError", name: t.name };
-      }
-      if (t.arguments.length !== tc.parameters.length) {
-        throw {
-          type: "IncorrectTypeArguments",
-          name: t.name,
-          expected: tc.parameters.length,
-          actual: t.arguments.length,
-        };
-      }
+    switch (t.type) {
+      case "TypeConstructor": {
+        const qualifiedEnv = t.qualifier === undefined
+          ? env.type
+          : env.type.import(t.qualifier);
+        const tc = qualifiedEnv?.data(t.name);
+        if (tc === undefined) {
+          throw { type: "UnknownDataError", name: t.name };
+        }
+        if (t.arguments.length !== tc.parameters.length) {
+          throw {
+            type: "IncorrectTypeArguments",
+            name: t.name,
+            expected: tc.parameters.length,
+            actual: t.arguments.length,
+          };
+        }
 
-      return new TCon(tc, t.arguments.map(translate));
+        return new TCon(tc, t.arguments.map(translate));
+      }
+      case "TypeVariable":
+        return new TVar(t.name);
+      case "TypeFunction":
+        return new TArr(translate(t.left), translate(t.right));
+      case "TypeTuple":
+        return new TTuple(t.values.map(translate));
+      case "TypeUnit":
+        return typeUnit;
+      default:
+        throw { type: "UnknownTypeItemError", item: t };
     }
-    if (t.type === "TypeVariable") {
-      return new TVar(t.name);
-    }
-    if (t.type === "TypeFunction") {
-      return new TArr(translate(t.left), translate(t.right));
-    }
-    if (t.type === "TypeTuple") {
-      return new TTuple(t.values.map(translate));
-    }
-    if (t.type === "TypeUnit") {
-      return typeUnit;
-    }
-
-    throw { type: "UnknownTypeItemError", item: t };
   };
 
   const adts: Array<DataDefinition> = [];
