@@ -4,15 +4,20 @@ import { home, Src } from "./Src.ts";
 
 export type Var = string;
 
-export interface Type {
-  apply: (s: Subst) => Type;
-  ftv: () => Set<Var>;
+export abstract class Type {
+  abstract apply(s: Subst): Type;
+  abstract ftv(): Set<Var>;
+
+  toScheme(): Scheme {
+    return new Scheme(this.ftv(), this);
+  }
 }
 
-export class TVar implements Type {
+export class TVar extends Type {
   name: Var;
 
   constructor(name: Var) {
+    super();
     this.name = name;
   }
 
@@ -29,7 +34,7 @@ export class TVar implements Type {
   }
 }
 
-export class TCon implements Type {
+export class TCon extends Type {
   adt: DataDefinition;
   args: Array<Type>;
 
@@ -37,6 +42,7 @@ export class TCon implements Type {
     adt: DataDefinition,
     args: Array<Type> = [],
   ) {
+    super();
     this.adt = adt;
     this.args = args;
   }
@@ -68,11 +74,12 @@ export class TCon implements Type {
   }
 }
 
-export class TArr implements Type {
+export class TArr extends Type {
   domain: Type;
   range: Type;
 
   constructor(domain: Type, range: Type) {
+    super();
     this.domain = domain;
     this.range = range;
   }
@@ -94,10 +101,11 @@ export class TArr implements Type {
   }
 }
 
-export class TTuple implements Type {
+export class TTuple extends Type {
   types: Type[];
 
   constructor(types: Type[]) {
+    super();
     this.types = types;
   }
 

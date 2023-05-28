@@ -114,35 +114,24 @@ export const defaultEnv = (src: Src): Env => ({
   type: emptyTypeEnv
     .extend(
       "string_length",
-      new Scheme(new Set(), new TArr(typeString, typeInt)),
+      (new TArr(typeString, typeInt)).toScheme(),
     )
     .extend(
       "string_concat",
-      new Scheme(
-        new Set(),
-        new TArr(typeString, new TArr(typeString, typeString)),
-      ),
+      (new TArr(typeString, new TArr(typeString, typeString))).toScheme(),
     )
     .extend(
       "string_substring",
-      new Scheme(
-        new Set(),
-        new TArr(typeString, new TArr(typeInt, new TArr(typeInt, typeString))),
-      ),
+      (new TArr(typeString, new TArr(typeInt, new TArr(typeInt, typeString))))
+        .toScheme(),
     )
     .extend(
       "string_equal",
-      new Scheme(
-        new Set(),
-        new TArr(typeString, new TArr(typeString, typeBool)),
-      ),
+      (new TArr(typeString, new TArr(typeString, typeBool))).toScheme(),
     )
     .extend(
       "string_compare",
-      new Scheme(
-        new Set(),
-        new TArr(typeString, new TArr(typeString, typeInt)),
-      ),
+      (new TArr(typeString, new TArr(typeString, typeInt))).toScheme(),
     ),
   src,
   imports: emptyImportEnv,
@@ -204,13 +193,11 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
       return binaryOps.get(expr.op)!(left, right);
     }
     case "Var":
-      if (expr.qualifier === undefined) {
-        return runtimeEnv.get(expr.name);
-      } else {
-        return runtimeEnv.get(expr.qualifier).find((v: RuntimeValue) =>
+      return (expr.qualifier === undefined)
+        ? runtimeEnv.get(expr.name)
+        : runtimeEnv.get(expr.qualifier).find((v: RuntimeValue) =>
           v[0] === expr.name
         )![1];
-      }
     default:
       return null;
   }
@@ -452,7 +439,7 @@ const executeElement = (
           }
 
           runtime.bind(n, v);
-          type = type.extend(n, new Scheme(t.ftv(), t));
+          type = type.extend(n, t.toScheme());
         });
 
         imports.types.datas().forEach((adt) => {
@@ -510,7 +497,7 @@ const executeElement = (
               c.name,
               v[1],
             );
-            type = type.extend(c.name, new Scheme(v[2].ftv(), v[2]));
+            type = type.extend(c.name, v[2].toScheme());
           });
         } else {
           const item = imports.values.find((v) => v[0] === name);
@@ -532,7 +519,7 @@ const executeElement = (
           }
 
           runtime.bind(n, item[1]);
-          type = type.extend(n, new Scheme(item[2].ftv(), item[2]));
+          type = type.extend(n, item[2].toScheme());
         }
       });
 
@@ -607,7 +594,7 @@ export const executeImport = (
             const vType = tt.types[i2];
 
             importValues.push([d.name, v, vType]);
-            env = env.extend(d.name, new Scheme(vType.ftv(), vType));
+            env = env.extend(d.name, vType.toScheme());
           }
         });
       } else if (e.type === "DataDeclaration") {
@@ -658,7 +645,7 @@ export const executeImport = (
                 adt.constructors.forEach((c) => {
                   const v = imports.values.find((v) => v[0] === c.name)!;
                   importValues.push([c.name, v[1], v[2]]);
-                  env = env.extend(c.name, new Scheme(v[2].ftv(), v[2]));
+                  env = env.extend(c.name, v[2].toScheme());
                 });
               } else {
                 const item = imports.values.find((v) => v[0] === name);
@@ -674,7 +661,7 @@ export const executeImport = (
                 const n = as === undefined ? item[0] : as;
 
                 importValues.push([n, item[1], item[2]]);
-                env = env.extend(n, new Scheme(item[2].ftv(), item[2]));
+                env = env.extend(n, item[2].toScheme());
               }
             }
           });
