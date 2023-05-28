@@ -349,16 +349,11 @@ Deno.test("Import - qualified simple type in data declaration", () => {
 });
 
 Deno.test("Import - values of the same name from different packages do not inter-operate", () => {
-  // This test should fail - for now leaving it in whilst I refactor and reshape the type
-  // code to make it easier to handle this case.
-
-  assertExecute(
+  assertCatchError(
     'import * as ADT from "./tests/adt.tfun" ; import * as List from "./tests/nested/List.tfun" ; ADT.sum (List.range 10)',
-    [
-      "import",
-      "import",
-      "45: Int",
-    ],
+    (e: MyError) =>
+      e.type === "UnificationMismatch" &&
+      e.reason === "Types have same name but declared in different packages",
   );
 });
 
@@ -444,5 +439,18 @@ const assertError = (expression: string, error: MyError) => {
     assert(false);
   } catch (e) {
     assertEquals(e, error);
+  }
+};
+
+const assertCatchError = (
+  expression: string,
+  error: (error: MyError) => void,
+) => {
+  const ast = parse(expression);
+  try {
+    executeProgram(ast, defaultEnv(home));
+    assert(false);
+  } catch (e) {
+    assertEquals(error(e), true);
   }
 };

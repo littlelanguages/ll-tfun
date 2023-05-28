@@ -1,5 +1,6 @@
 import * as Sets from "./Set.ts";
 import * as Maps from "./Map.ts";
+import { home, Src } from "./Src.ts";
 
 export type Var = string;
 
@@ -29,14 +30,14 @@ export class TVar implements Type {
 }
 
 export class TCon implements Type {
-  name: string;
+  adt: DataDefinition;
   args: Array<Type>;
 
   constructor(
-    name: string,
+    adt: DataDefinition,
     args: Array<Type> = [],
   ) {
-    this.name = name;
+    this.adt = adt;
     this.args = args;
   }
 
@@ -45,7 +46,7 @@ export class TCon implements Type {
       return this;
     }
 
-    return new TCon(this.name, applyArray(s, this.args));
+    return new TCon(this.adt, applyArray(s, this.args));
   }
 
   ftv(): Set<Var> {
@@ -53,7 +54,7 @@ export class TCon implements Type {
   }
 
   toString(): string {
-    return `${this.name}${this.args.length > 0 ? " " : ""}${
+    return `${this.adt.name}${this.args.length > 0 ? " " : ""}${
       this.args.map((t) =>
         (t instanceof TCon && t.args.length > 0 || t instanceof TArr)
           ? `(${t.toString()})`
@@ -63,7 +64,7 @@ export class TCon implements Type {
   }
 
   qualifiedName(): string {
-    return this.name;
+    return `${this.adt.src.urn()}#${this.adt.name}`;
   }
 }
 
@@ -112,12 +113,6 @@ export class TTuple implements Type {
     return `(${this.types.join(" * ")})`;
   }
 }
-
-export const typeBool = new TCon("Bool");
-export const typeError = new TCon("Error");
-export const typeInt = new TCon("Int");
-export const typeString = new TCon("String");
-export const typeUnit = new TCon("()");
 
 export class Subst {
   protected items: Map<Var, Type>;
@@ -188,30 +183,49 @@ interface DataConstructor {
 }
 
 export class DataDefinition {
+  src: Src;
   name: string;
   parameters: Array<string>;
   constructors: Array<DataConstructor>;
 
   constructor(
+    src: Src,
     name: string,
     parameters: Array<string>,
     constructors: Array<DataConstructor>,
   ) {
+    this.src = src;
     this.name = name;
     this.parameters = parameters;
     this.constructors = constructors;
   }
 
+  addConstructor(name: string, args: Array<Type>): DataConstructor {
+    const c = { name, args };
+    this.constructors.push(c);
+    return c;
+  }
+
   toString(): string {
     return `${this.name}${this.parameters.length > 0 ? " " : ""}${
       this.parameters.join(" ")
-    } = ${this.constructors.map((c) => c.toString()).join(" | ")}`;
+    } = ${
+      this.constructors.map((c) =>
+        [c.name].concat(c.args.map((a) =>
+          (a instanceof TCon && a.args.length > 0 || a instanceof TArr)
+            ? `(${a.toString()})`
+            : a.toString()
+        )).join(" ")
+      ).join(" | ")
+    }`;
   }
 
-  instantiate(pump: Pump): Subst {
-    return new Subst(
-      new Map([...this.parameters].map((n) => [n, pump.next()])),
-    );
+  instantiate(pump: Pump | undefined = undefined): Type {
+    return new TCon(this, this.parameters.map(() => pump!.next()));
+  }
+
+  instantiateWith(): Type {
+    return new TCon(this, this.parameters.map((p) => new TVar(p)));
   }
 }
 
@@ -305,7 +319,12 @@ export class TypeEnv {
   }
 }
 
-export const emptyTypeEnv = new TypeEnv(new Map(), [], new Map());
+export const emptyTypeEnv = new TypeEnv(new Map(), [], new Map())
+  .addData(new DataDefinition(home, "Bool", [], []))
+  .addData(new DataDefinition(home, "Error", [], []))
+  .addData(new DataDefinition(home, "Int", [], []))
+  .addData(new DataDefinition(home, "String", [], []))
+  .addData(new DataDefinition(home, "()", [], []));
 
 export type Pump = { next: () => TVar; nextN: (n: number) => Array<TVar> };
 
@@ -318,3 +337,9 @@ export const createFresh = (): Pump => {
       Array(n).fill(0).map(() => new TVar("V" + ++count)),
   };
 };
+
+export const typeBool = emptyTypeEnv.data("Bool")!.instantiate();
+export const typeError = emptyTypeEnv.data("Error")!.instantiate();
+export const typeInt = emptyTypeEnv.data("Int")!.instantiate();
+export const typeString = emptyTypeEnv.data("String")!.instantiate();
+export const typeUnit = emptyTypeEnv.data("()")!.instantiate();

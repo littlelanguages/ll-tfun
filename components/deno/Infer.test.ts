@@ -8,13 +8,13 @@ import {
   emptyTypeEnv,
   Scheme,
   TArr,
-  TCon,
   TVar,
   Type,
   typeBool,
   TypeEnv,
   typeInt,
 } from "./Typing.ts";
+import { home } from "./Src.ts";
 
 const assertTypeEquals = (ts: Array<Type>, expected: Array<string>) => {
   assertEquals(ts.map((t) => t.toString()), expected);
@@ -183,12 +183,11 @@ Deno.test("infer PBool pattern", () => {
 });
 
 Deno.test("infer PCons pattern", () => {
-  const origEnv = emptyTypeEnv.addData(
-    new DataDefinition("List", ["a"], [
-      new TCon("Nil", []),
-      new TCon("Cons", [new TVar("a"), new TCon("List", [new TVar("a")])]),
-    ]),
-  );
+  const adt = new DataDefinition(home, "List", ["a"], []);
+  adt.addConstructor("Nil", []);
+  adt.addConstructor("Cons", [new TVar("a"), adt.instantiateWith()]);
+
+  const origEnv = emptyTypeEnv.addData(adt);
 
   assertInferPatternWithEnv(
     origEnv,

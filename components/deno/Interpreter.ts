@@ -143,10 +143,7 @@ export const defaultEnv = (src: Src): Env => ({
         new Set(),
         new TArr(typeString, new TArr(typeString, typeInt)),
       ),
-    )
-    .addData(new DataDefinition("Int", [], []))
-    .addData(new DataDefinition("String", [], []))
-    .addData(new DataDefinition("Bool", [], [])),
+    ),
   src,
   imports: emptyImportEnv,
 });
@@ -363,7 +360,7 @@ const executeDataDeclaration = (
         };
       }
 
-      return new TCon(tc.name, t.arguments.map(translate));
+      return new TCon(tc, t.arguments.map(translate));
     }
     if (t.type === "TypeVariable") {
       return new TVar(t.name);
@@ -388,17 +385,17 @@ const executeDataDeclaration = (
       throw { type: "DuplicateDataDeclaration", name: d.name };
     }
 
-    const adt = new DataDefinition(d.name, d.parameters, []);
+    const adt = new DataDefinition(env.src, d.name, d.parameters, []);
 
     env = { ...env, type: env.type.addData(adt) };
   });
 
   dd.declarations.forEach((d) => {
-    const adt = new DataDefinition(
-      d.name,
-      d.parameters,
-      d.constructors.map((c) => new TCon(c.name, c.parameters.map(translate))),
-    );
+    const adt = env.type.data(d.name)!;
+
+    d.constructors.forEach((c) => {
+      adt.addConstructor(c.name, c.parameters.map(translate));
+    });
 
     adts.push(adt);
     const runtimeEnv = env.runtime;
@@ -406,7 +403,7 @@ const executeDataDeclaration = (
 
     const parameters = new Set(adt.parameters);
     const constructorResultType = new TCon(
-      adt.name,
+      adt,
       adt.parameters.map((p) => new TVar(p)),
     );
     adt.constructors.forEach((c) => {
@@ -635,6 +632,7 @@ export const executeImport = (
           } else if (d.visibility === Visibility.Opaque) {
             env = env.addData(
               new DataDefinition(
+                src,
                 d.name,
                 d.parameters,
                 [],

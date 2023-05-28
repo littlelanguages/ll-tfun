@@ -21,11 +21,16 @@ const unifies = (t1: Type, t2: Type): Unifier => {
   if (t1 instanceof TTuple && t2 instanceof TTuple) {
     return unifyMany(t1.types, t2.types);
   }
-  if (t1 instanceof TCon && t2 instanceof TCon && t1.name === t2.name) {
+  if (t1 instanceof TCon && t2 instanceof TCon && t1.adt.name === t2.adt.name) {
     if (t1.qualifiedName() === t2.qualifiedName()) {
       return unifyMany(t1.args, t2.args);
     } else {
-      throw { type: "UnificationMismatch", t1, t2 };
+      throw {
+        type: "UnificationMismatch",
+        reason: "Types have same name but declared in different packages",
+        t1,
+        t2,
+      };
     }
   }
 

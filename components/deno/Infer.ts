@@ -293,7 +293,7 @@ export const inferPattern = (
       newEnv = e;
     });
 
-    return [new TCon(adt.name, parameters), newEnv];
+    return [new TCon(adt, parameters), newEnv];
   }
 
   return [typeError, env];
