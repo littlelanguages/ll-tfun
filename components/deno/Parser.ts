@@ -133,6 +133,7 @@ export type Pattern =
 
 export type ConsPattern = {
   type: "PCons";
+  qualifier: string | undefined;
   name: string;
   args: Array<Pattern>;
 };
@@ -487,6 +488,7 @@ const visitor: Visitor<
 
   visitPattern7: (a1: Token, a2: Array<Pattern>): Pattern => ({
     type: "PCons",
+    qualifier: undefined,
     name: a1[2],
     args: a2,
   }),

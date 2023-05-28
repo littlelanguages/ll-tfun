@@ -192,7 +192,7 @@ Deno.test("infer PCons pattern", () => {
 
   assertInferPatternWithEnv(
     origEnv,
-    { type: "PCons", name: "Nil", args: [] },
+    { type: "PCons", qualifier: undefined, name: "Nil", args: [] },
     [],
     "List V1",
     origEnv,
@@ -202,6 +202,7 @@ Deno.test("infer PCons pattern", () => {
     origEnv,
     {
       type: "PCons",
+      qualifier: undefined,
       name: "Cons",
       args: [{ type: "PVar", name: "x" }, { type: "PVar", name: "xs" }],
     },
