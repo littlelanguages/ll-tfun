@@ -61,7 +61,6 @@ The importing of a package has the traditional syntax:
 
 ```
 import * as List from "./List";
-import * as Set* from "./Set";
 import * from "./../lib/Array";
 import length*, map as listMap*, foldLeft, List from "./List";
 import size as setSize* from "https://....../blah.tfun";
@@ -69,11 +68,11 @@ import size as setSize* from "https://....../blah.tfun";
 
 Some commentary on the above:
 
-- The first two imports import an entire package under the qualifying name
-  `List` and `Set` respectively. With the visibility modifier suffix, `Set` is
-  public making it accessible to a consuming package.
-- The fourth line imports individual names, making `length` and `listMap` public
-  and renaming `map` to `listMap`.
+- The first imports an entire package under the qualifying name `List`. It is
+  not possible to add scope qualifyers when importing a package in this manner
+  with the declaration limited to the current package.
+- The third line imports individual names, making `length` and `listMap` public
+  while renaming `map` to `listMap`.
 - The final line imports declarations from a remote package.
 
 Finally packages may not be cyclically dependent.
