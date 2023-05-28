@@ -164,10 +164,11 @@ const binaryOps = new Map<
 
 const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
   switch (expr.type) {
-    case "App":
+    case "App": {
       const operator = evaluate(expr.e1, runtimeEnv);
       const operand = evaluate(expr.e2, runtimeEnv);
       return operator(operand);
+    }
     case "If":
       return evaluate(expr.guard, runtimeEnv)
         ? evaluate(expr.then, runtimeEnv)
@@ -189,7 +190,7 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
       return mkTuple(expr.values.map((v) => evaluate(v, runtimeEnv)));
     case "LUnit":
       return null;
-    case "Match":
+    case "Match": {
       const e = evaluate(expr.expr, runtimeEnv);
 
       for (const c of expr.cases) {
@@ -199,15 +200,18 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
         }
       }
       throw new Error("Match failed");
-    case "Op":
+    }
+    case "Op": {
       const left = evaluate(expr.left, runtimeEnv);
       const right = evaluate(expr.right, runtimeEnv);
       return binaryOps.get(expr.op)!(left, right);
+    }
     case "Var":
       return runtimeEnv.get(expr.name);
-    default: return null;
-  };
-}
+    default:
+      return null;
+  }
+};
 
 const matchPattern = (
   pattern: Pattern,
@@ -316,16 +320,16 @@ const mkConstructorFunction = (name: string, arity: number): RuntimeValue => {
   }
   if (arity === 4) {
     return (x1: RuntimeValue) =>
-      (x2: RuntimeValue) =>
-        (x3: RuntimeValue) =>
-          (x4: RuntimeValue) => [name, x1, x2, x3, x4];
+    (x2: RuntimeValue) =>
+    (x3: RuntimeValue) =>
+    (x4: RuntimeValue) => [name, x1, x2, x3, x4];
   }
   if (arity === 5) {
     return (x1: RuntimeValue) =>
-      (x2: RuntimeValue) =>
-        (x3: RuntimeValue) =>
-          (x4: RuntimeValue) =>
-            (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
+    (x2: RuntimeValue) =>
+    (x3: RuntimeValue) =>
+    (x4: RuntimeValue) =>
+    (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
   }
 
   throw { type: "TooManyConstructorArgumentsErrors", name, arity };
