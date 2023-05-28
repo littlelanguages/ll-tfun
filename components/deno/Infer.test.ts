@@ -32,9 +32,9 @@ Deno.test("infer Apply", () => {
     emptyTypeEnv
       .extend(
         "a",
-        new Scheme(new Set(["T"]), new TArr(new TVar("T"), new TVar("T"))),
+        new TArr(new TVar("T"), new TVar("T")).toScheme(),
       )
-      .extend("b", new Scheme(new Set(), typeInt)),
+      .extend("b", typeInt.toScheme()),
     parse("a b"),
     new Constraints(),
     createFresh(),
@@ -49,9 +49,9 @@ Deno.test("infer Apply", () => {
 Deno.test("infer If", () => {
   const [constraints, type] = inferProgram(
     emptyTypeEnv
-      .extend("a", new Scheme(new Set(["S"]), new TVar("S")))
-      .extend("b", new Scheme(new Set(), typeInt))
-      .extend("c", new Scheme(new Set(["T"]), new TVar("T"))),
+      .extend("a", new TVar("S").toScheme())
+      .extend("b", typeInt.toScheme())
+      .extend("c", new TVar("T").toScheme()),
     parse("if (a) b else c"),
     new Constraints(),
     createFresh(),
@@ -274,8 +274,8 @@ Deno.test("infer Op", () => {
   const scenario = (input: string, resultType: Type) => {
     const [constraints, type] = inferProgram(
       emptyTypeEnv
-        .extend("a", new Scheme(new Set(["T"]), new TVar("T")))
-        .extend("b", new Scheme(new Set(["T"]), new TVar("T"))),
+        .extend("a", new TVar("T").toScheme())
+        .extend("b", new TVar("T").toScheme()),
       parse(input),
       new Constraints(),
       createFresh(),
@@ -298,7 +298,7 @@ Deno.test("infer Var", () => {
   const [constraints, type] = inferProgram(
     emptyTypeEnv.extend(
       "a",
-      new Scheme(new Set(["T"]), new TArr(new TVar("T"), new TVar("T"))),
+      new TArr(new TVar("T"), new TVar("T")).toScheme(),
     ),
     parse("a"),
     new Constraints(),
