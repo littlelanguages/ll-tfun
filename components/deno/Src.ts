@@ -50,4 +50,4 @@ export const from = (name: string, base: string = Deno.cwd()): Src => {
   }
 };
 
-export const home = (): Src => new Src(`${Deno.cwd()}/`);
+export const home = new Src(`${Deno.cwd()}/`);
