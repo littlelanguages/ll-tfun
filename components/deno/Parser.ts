@@ -572,13 +572,11 @@ const visitor: Visitor<
 
   visitImportItems1: (
     _a1: Token,
-    a2: [Token, Token, Token | undefined] | undefined,
+    a2: [Token, Token] | undefined,
   ): ImportAll | ImportNames => ({
     type: "ImportAll",
     as: a2 === undefined ? undefined : a2[1][2],
-    visibility: a2 === undefined || a2[2] === undefined
-      ? Visibility.None
-      : Visibility.Public,
+    visibility: Visibility.None,
   }),
   visitImportItems2: (
     a1: ImportName,

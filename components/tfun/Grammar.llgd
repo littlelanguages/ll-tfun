@@ -107,7 +107,7 @@ ImportStatement
     ;
 
 ImportItems
-    : "*" ["as" UpperIdentifier ["*"]]
+    : "*" ["as" UpperIdentifier]
     | ImportItem {"," ImportItem}
     ;
 
