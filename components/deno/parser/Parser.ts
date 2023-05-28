@@ -92,6 +92,13 @@ export interface Visitor<
     a5: T_Case,
     a6: Array<[Token, T_Case]>,
   ): T_Factor;
+  visitFactor12(
+    a1: Token,
+    a2:
+      | [Token, Token, T_Expression, Array<[Token, Token, Token, T_Expression]>]
+      | undefined,
+    a3: Token,
+  ): T_Factor;
   visitIdentifier1(a: Token): T_Identifier;
   visitIdentifier2(a: Token): T_Identifier;
   visitValueDeclaration(
@@ -325,6 +332,7 @@ export const mkParser = <
           TToken.UpperIdentifier,
           TToken.LowerIdentifier,
           TToken.Match,
+          TToken.LCurly,
         ])
       ) {
         return visitor.visitElement1(this.expression());
@@ -348,6 +356,7 @@ export const mkParser = <
             TToken.UpperIdentifier,
             TToken.LowerIdentifier,
             TToken.Match,
+            TToken.LCurly,
             TToken.Data,
             TToken.Import,
           ],
@@ -371,6 +380,7 @@ export const mkParser = <
           TToken.UpperIdentifier,
           TToken.LowerIdentifier,
           TToken.Match,
+          TToken.LCurly,
         ])
       ) {
         const a2t: T_Relational = this.relational();
@@ -459,6 +469,7 @@ export const mkParser = <
             TToken.UpperIdentifier,
             TToken.LowerIdentifier,
             TToken.Match,
+            TToken.LCurly,
           ])
         ) {
           const a2t1: T_Expression = this.expression();
@@ -566,6 +577,44 @@ export const mkParser = <
           a6.push(a6t);
         }
         return visitor.visitFactor11(a1, a2, a3, a4, a5, a6);
+      } else if (isToken(TToken.LCurly)) {
+        const a1: Token = matchToken(TToken.LCurly);
+        let a2: [
+          Token,
+          Token,
+          T_Expression,
+          Array<[Token, Token, Token, T_Expression]>,
+        ] | undefined = undefined;
+
+        if (isToken(TToken.LowerIdentifier)) {
+          const a2t1: Token = matchToken(TToken.LowerIdentifier);
+          const a2t2: Token = matchToken(TToken.Colon);
+          const a2t3: T_Expression = this.expression();
+          const a2t4: Array<[Token, Token, Token, T_Expression]> = [];
+
+          while (isToken(TToken.Comma)) {
+            const a2t4t1: Token = matchToken(TToken.Comma);
+            const a2t4t2: Token = matchToken(TToken.LowerIdentifier);
+            const a2t4t3: Token = matchToken(TToken.Colon);
+            const a2t4t4: T_Expression = this.expression();
+            const a2t4t: [Token, Token, Token, T_Expression] = [
+              a2t4t1,
+              a2t4t2,
+              a2t4t3,
+              a2t4t4,
+            ];
+            a2t4.push(a2t4t);
+          }
+          const a2t: [
+            Token,
+            Token,
+            T_Expression,
+            Array<[Token, Token, Token, T_Expression]>,
+          ] = [a2t1, a2t2, a2t3, a2t4];
+          a2 = a2t;
+        }
+        const a3: Token = matchToken(TToken.RCurly);
+        return visitor.visitFactor12(a1, a2, a3);
       } else {
         throw {
           tag: "SyntaxError",
@@ -582,6 +631,7 @@ export const mkParser = <
             TToken.UpperIdentifier,
             TToken.LowerIdentifier,
             TToken.Match,
+            TToken.LCurly,
           ],
         };
       }

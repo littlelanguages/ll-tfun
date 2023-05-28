@@ -20,6 +20,7 @@ export type Expression =
   | LetRecExpression
   | LBoolExpression
   | LIntExpression
+  | LRecordExpression
   | LStringExpression
   | LTupleExpression
   | LUnitExpression
@@ -73,6 +74,11 @@ export type LBoolExpression = {
 export type LIntExpression = {
   type: "LInt";
   value: number;
+};
+
+export type LRecordExpression = {
+  type: "LRecord";
+  fields: Array<[string, Expression]>;
 };
 
 export type LStringExpression = {
@@ -428,6 +434,26 @@ const visitor: Visitor<
     expr: a2,
     cases: [a5].concat(a6.map((a) => a[1])),
   }),
+
+  visitFactor12: (
+    _a1: Token,
+    a2:
+      | [Token, Token, Expression, Array<[Token, Token, Token, Expression]>]
+      | undefined,
+    _a3: Token,
+  ): Expression => {
+    const firstFields: Array<[string, Expression]> = a2 === undefined
+      ? []
+      : [[a2[0][2], a2[2]]];
+    const remainingFields: Array<[string, Expression]> = a2 === undefined
+      ? []
+      : a2[3].map(([_1, n, _3, e]) => [n[2], e]);
+
+    return {
+      type: "LRecord",
+      fields: firstFields.concat(remainingFields),
+    };
+  },
 
   visitIdentifier1: (a: Token): string => a[2],
   visitIdentifier2: (a: Token): string => a[2],

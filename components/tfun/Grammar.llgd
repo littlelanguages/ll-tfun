@@ -48,6 +48,7 @@ Factor
     | UpperIdentifier ["." Identifier]
     | LowerIdentifier
     | "match" Expression "with" ["|"] Case {"|" Case}
+    | "{" [LowerIdentifier ":" Expression {"," LowerIdentifier ":" Expression}] "}"
     ;
 
 Identifier

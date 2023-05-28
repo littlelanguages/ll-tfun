@@ -101,6 +101,31 @@ export class TArr extends Type {
   }
 }
 
+export class TRecord extends Type {
+  fields: Array<[string, Type]>;
+
+  constructor(fields: Array<[string, Type]>) {
+    super();
+    this.fields = fields;
+  }
+
+  apply(s: Subst): Type {
+    return new TRecord(
+      this.fields.map(([name, type]) => [name, type.apply(s)]),
+    );
+  }
+
+  ftv(): Set<Var> {
+    return new Set(this.fields.flatMap(([, t]) => [...t.ftv()]));
+  }
+
+  toString(): string {
+    return `{${
+      this.fields.map(([n, t]) => `${n}: ${t.toString()}`).join(", ")
+    }}`;
+  }
+}
+
 export class TTuple extends Type {
   types: Type[];
 

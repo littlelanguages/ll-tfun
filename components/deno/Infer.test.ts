@@ -128,6 +128,18 @@ Deno.test("infer LString", () => {
   assertTypeEquals(type, ["String"]);
 });
 
+Deno.test("infer LRecord", () => {
+  const [constraints, type] = inferProgram(
+    emptyTypeEnv,
+    parse('{ x: 1, y: "hello" }'),
+    new Constraints(),
+    createFresh(),
+  );
+
+  assertEquals(constraints.constraints.length, 0);
+  assertTypeEquals(type, ["{x: Int, y: String}"]);
+});
+
 Deno.test("infer LTuple", () => {
   const [constraints, type] = inferProgram(
     emptyTypeEnv,

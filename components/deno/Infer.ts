@@ -7,6 +7,7 @@ import {
   Subst,
   TArr,
   TCon,
+  TRecord,
   TTuple,
   Type,
   typeBool,
@@ -173,6 +174,12 @@ export const inferExpression = (
     }
     if (expr.type === "LInt") {
       return [typeInt, env];
+    }
+    if (expr.type === "LRecord") {
+      const namedTypes: Array<[string, Type]> = expr.fields.map((
+        v,
+      ) => [v[0], infer(v[1], env)[0]]);
+      return [new TRecord(namedTypes), env];
     }
     if (expr.type === "LString") {
       return [typeString, env];
