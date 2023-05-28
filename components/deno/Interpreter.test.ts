@@ -313,14 +313,6 @@ Deno.test("Import - simple types", () => {
     ],
   );
 
-  assertExecute(
-    'import * as T from "./tests/adt.tfun"; match (T.Cons 1 T.Nil) with | T.Nil -> 0 | T.Cons v _ -> v',
-    [
-      "import",
-      "1: Int",
-    ],
-  );
-
   assertError(
     'import * from "./tests/adt.tfun"; let v = find (\\n -> n == 10) (Cons 1 Nil); match v with | None -> 0 | Some v -> v',
     { type: "UnknownConstructorError", name: "None" },
@@ -331,6 +323,27 @@ Deno.test("Import - simple types", () => {
     [
       "import",
       "1: Int",
+    ],
+  );
+});
+
+Deno.test("Import - qualified simple type in pattern matching", () => {
+  assertExecute(
+    'import * as T from "./tests/adt.tfun"; match (T.Cons 1 T.Nil) with | T.Nil -> 0 | T.Cons v _ -> v',
+    [
+      "import",
+      "1: Int",
+    ],
+  );
+});
+
+Deno.test("Import - qualified simple type in data declaration", () => {
+  assertExecute(
+    'import * as T from "./tests/adt.tfun"; data Fred a = None | Other (T.List a) ; Other (T.Cons 1 T.Nil)',
+    [
+      "import",
+      "Fred a = None | Other (List a)",
+      "Other (Cons 1 Nil): Fred Int",
     ],
   );
 });

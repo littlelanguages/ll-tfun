@@ -204,6 +204,7 @@ export type TypeVariable = {
 
 export type TypeConstructor = {
   type: "TypeConstructor";
+  qualifier: string | undefined;
   name: string;
   arguments: Array<Type>;
 };
@@ -537,10 +538,15 @@ const visitor: Visitor<
   visitType: (a1: Type, a2: Array<[Token, Type]>): Type =>
     composeFunctionType([a1].concat(a2.map((a) => a[1]))),
 
-  visitADTType1: (a1: Token, a2: Array<Type>): Type => ({
+  visitADTType1: (
+    a1: Token,
+    a2: [Token, Token] | undefined,
+    a3: Array<Type>,
+  ): Type => ({
     type: "TypeConstructor",
-    name: a1[2],
-    arguments: a2,
+    qualifier: a2 === undefined ? undefined : a1[2],
+    name: a2 === undefined ? a1[2] : a2[1][2],
+    arguments: a3,
   }),
   visitADTType2: (a: Type): Type => a,
 

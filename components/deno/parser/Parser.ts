@@ -135,7 +135,11 @@ export interface Visitor<
     a2: Array<T_Type>,
   ): T_ConstructorDeclaration;
   visitType(a1: T_ADTType, a2: Array<[Token, T_ADTType]>): T_Type;
-  visitADTType1(a1: Token, a2: Array<T_Type>): T_ADTType;
+  visitADTType1(
+    a1: Token,
+    a2: [Token, Token] | undefined,
+    a3: Array<T_Type>,
+  ): T_ADTType;
   visitADTType2(a: T_TermType): T_ADTType;
   visitTermType1(a: Token): T_TermType;
   visitTermType2(
@@ -783,7 +787,15 @@ export const mkParser = <
     aDTType: function (): T_ADTType {
       if (isToken(TToken.UpperIdentifier)) {
         const a1: Token = matchToken(TToken.UpperIdentifier);
-        const a2: Array<T_Type> = [];
+        let a2: [Token, Token] | undefined = undefined;
+
+        if (isToken(TToken.Period)) {
+          const a2t1: Token = matchToken(TToken.Period);
+          const a2t2: Token = matchToken(TToken.UpperIdentifier);
+          const a2t: [Token, Token] = [a2t1, a2t2];
+          a2 = a2t;
+        }
+        const a3: Array<T_Type> = [];
 
         while (
           isTokens([
@@ -792,10 +804,10 @@ export const mkParser = <
             TToken.LParen,
           ])
         ) {
-          const a2t: T_Type = this.type();
-          a2.push(a2t);
+          const a3t: T_Type = this.type();
+          a3.push(a3t);
         }
-        return visitor.visitADTType1(a1, a2);
+        return visitor.visitADTType1(a1, a2, a3);
       } else if (isTokens([TToken.LowerIdentifier, TToken.LParen])) {
         return visitor.visitADTType2(this.termType());
       } else {

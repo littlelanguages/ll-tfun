@@ -90,7 +90,7 @@ Type
     ;
 
 ADTType
-    : UpperIdentifier {Type}
+    : UpperIdentifier ["." UpperIdentifier] {Type}
     | TermType
     ;
 

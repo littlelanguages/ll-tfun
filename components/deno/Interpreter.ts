@@ -347,7 +347,10 @@ const executeDataDeclaration = (
 ): [Array<DataDefinition>, Env] => {
   const translate = (t: TypeItem): Type => {
     if (t.type === "TypeConstructor") {
-      const tc = env.type.data(t.name);
+      const qualifiedEnv = t.qualifier === undefined
+        ? env.type
+        : env.type.import(t.qualifier);
+      const tc = qualifiedEnv?.data(t.name);
       if (tc === undefined) {
         throw { type: "UnknownDataError", name: t.name };
       }
