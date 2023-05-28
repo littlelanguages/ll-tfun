@@ -15,3 +15,12 @@ The tasks are built out according to the packages listed in [README](README.md)
 - [ ] Extend Kotlin implementation to support remote imports
 - [ ] Extend deno BCI to support remote imports
 - [ ] Extend Zig BCI to support remote imports
+
+# Record Type Tasks
+
+- [ ] Add literal record into grammar
+- [ ] Incorporate into deno REPL implementation
+- [ ] Add get a field from a record into grammar
+- [ ] Incorporate into deno REPL implementation
+- [ ] Add update record into grammar
+- [ ] Incorporate into deno REPL implementation

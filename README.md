@@ -7,8 +7,8 @@ This little language builds on
 macro features:
 
 - Packages,
-- Value type signatures,
 - Record types,
+- Value type signatures,
 - Type aliases,
 - Sequences of code,
 - IO Operation side effects, and
@@ -76,6 +76,27 @@ Some commentary on the above:
 - The final line imports declarations from a remote package.
 
 Finally packages may not be cyclically dependent.
+
+# Records
+
+Records operate as expected and mimics what is commonly available in functional languages.  Literal records are defined as follows:
+
+```
+let me = { name: "Graeme Lockley", age: 55, height: 180 } 
+```
+
+Fields within a record can be referenced using the standard `.`-notation.
+
+```
+me.name
+```
+
+Finally, on my birthday, my age can be ticked over.
+
+```
+{ me | age: me.age + 1 }
+```
+
 
 # See also
 
