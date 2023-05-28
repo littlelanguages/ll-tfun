@@ -25,7 +25,6 @@ export type Expression =
   | LUnitExpression
   | MatchExpression
   | OpExpression
-  | QExpression
   | VarExpression;
 
 export type AppExpression = {
@@ -111,14 +110,9 @@ export enum Op {
   Divide,
 }
 
-export type QExpression = {
-  type: "QExpr";
-  expr: Expression;
-  names: Array<string>;
-};
-
 export type VarExpression = {
   type: "Var";
+  qualifier: string | undefined;
   name: string;
 };
 
@@ -410,11 +404,13 @@ const visitor: Visitor<
 
   visitFactor9: (a1: Token, a2: [Token, string] | undefined): Expression => ({
     type: "Var",
+    qualifier: undefined,
     name: a2 === undefined ? a1[2] : a2[1],
   }),
 
   visitFactor10: (a1: Token): Expression => ({
     type: "Var",
+    qualifier: undefined,
     name: a1[2],
   }),
 

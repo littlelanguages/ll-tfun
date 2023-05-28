@@ -206,13 +206,6 @@ export const inferExpression = (
       constraints.add(u1, u2);
       return [tv, env];
     }
-    if (expr.type === "QExpr") {
-      throw {
-        type: "NotImplemented",
-        file: "Infer.ts",
-        context: "QExpr inference",
-      };
-    }
     if (expr.type === "Var") {
       const scheme = env.scheme(expr.name);
 
