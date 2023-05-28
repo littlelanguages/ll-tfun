@@ -416,12 +416,17 @@ const visitor: Visitor<
     else: a7,
   }),
 
-  visitFactor9: (a1: string): Expression => ({
+  visitFactor9: (a1: Token, a2: [Token, string] | undefined): Expression => ({
     type: "Var",
-    name: a1,
+    name: a2 === undefined ? a1[2] : a2[1],
   }),
 
-  visitFactor10: (
+  visitFactor10: (a1: Token): Expression => ({
+    type: "Var",
+    name: a1[2],
+  }),
+
+  visitFactor11: (
     _a1: Token,
     a2: Expression,
     _a3: Token,
