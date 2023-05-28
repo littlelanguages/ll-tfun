@@ -1,0 +1,27 @@
+import * from "./Maybe.tfun" ;
+
+data List* a = Nil | Cons a (List a) ;
+
+let range* n = 
+  let rec helper m =
+     if (n == m) Nil else Cons m (helper m + 1)
+   in helper 0 ;
+
+let rec foldRight* f z lst =
+  match lst with
+  | Nil -> z
+  | Cons x xs -> f x (foldRight f z xs) ;
+
+let length* =
+  foldRight (\a b -> b + 1) 0 ;
+
+let sum* = 
+  foldRight (\a b -> a + b) 0 ;
+
+let map* f =
+  foldRight (\a -> Cons (f a)) Nil ;
+
+let rec find* p lst =
+  match lst with
+  | Nil -> Nothing
+  | Cons x xs -> if (p x) Just x else find p xs

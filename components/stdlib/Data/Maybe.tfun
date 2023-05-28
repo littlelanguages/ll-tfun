@@ -1,0 +1,22 @@
+data Maybe* a = Just a | Nothing ;
+
+let withDefault* default maybe =
+  match maybe with
+  | Nothing -> default
+  | Just v -> v ;
+
+let map* f maybe =
+  match maybe with
+  | Nothing -> Nothing
+  | Just v -> Just (f v) ;
+
+let andThen* callback maybe =
+  match maybe with
+  | Nothing -> Nothing
+  | Just v -> callback v ;
+
+let isJust* maybe =
+  match maybe with
+  | Nothing -> False
+  | Just _ -> True
+
