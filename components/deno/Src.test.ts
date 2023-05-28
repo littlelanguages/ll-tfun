@@ -52,6 +52,20 @@ Deno.test("srcs can be combined", () => {
   );
 });
 
+Deno.test("special case that isn't working", () => {
+  const directory =
+    "/Users/graemelockley/Projects/little-languages-project/ll-tfun/components/deno/";
+  const s1 = Src.from(directory);
+  assertEquals(directory, s1.urn());
+
+  const s2 = s1.newSrc("../stdlib/Prelude.tfun");
+
+  assertEquals(
+    "/Users/graemelockley/Projects/little-languages-project/ll-tfun/components/stdlib/Prelude.tfun",
+    s2.urn(),
+  );
+});
+
 const assertUrn = (name: string, base: string, expected: string): void => {
   const src = Src.from(
     name,

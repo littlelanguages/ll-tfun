@@ -10,11 +10,7 @@ export class Src {
   }
 
   newSrc(name: string): Src {
-    if (this.name.endsWith("/")) {
-      return from(name, this.name);
-    } else {
-      return from(name, dropLastComponent(this.name));
-    }
+    return from(name, dropLastComponent(this.name));
   }
 }
 
