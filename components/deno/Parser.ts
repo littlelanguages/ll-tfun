@@ -26,6 +26,7 @@ export type Expression =
   | LUnitExpression
   | MatchExpression
   | OpExpression
+  | ProjectionExpression
   | VarExpression;
 
 export type AppExpression = {
@@ -106,6 +107,12 @@ export type OpExpression = {
   left: Expression;
   op: Op;
   right: Expression;
+};
+
+export type ProjectionExpression = {
+  type: "Projection";
+  expr: Expression;
+  field: string;
 };
 
 export enum Op {
@@ -271,6 +278,7 @@ const visitor: Visitor<
   Expression,
   string,
   Expression,
+  Expression,
   string,
   Declaration,
   MatchCase,
@@ -342,6 +350,13 @@ const visitor: Visitor<
 
   visitAdditiveOps1: (a: Token): string => a[2],
   visitAdditiveOps2: (a: Token): string => a[2],
+
+  visitProjection: (a1: Expression, a2: Array<[Token, Token]>): Expression =>
+    a2.length === 0 ? a1 : a2.reduce((acc, field) => ({
+      type: "Projection",
+      expr: acc,
+      field: field[1][2],
+    }), a1),
 
   visitFactor1: (
     _a1: Token,
@@ -655,3 +670,4 @@ const composeFunctionType = (types: Array<Type>): Type =>
   }), types[0]);
 
 // console.log(JSON.stringify(parse("data List n = Nil | Cons n (List n) ; let compose f g x = f(g x) ; compose"), null, 2));
+// console.log(JSON.stringify(parse("let recs a = { x: 1, y: a } ; let y = recs 10 ; y ; y.x.z"), null, 2));

@@ -213,6 +213,15 @@ export const inferExpression = (
       constraints.add(u1, u2);
       return [tv, env];
     }
+    if (expr.type === "Projection") {
+      const [t1] = infer(expr.expr, env);
+      const tv = pump.next();
+
+      const constraint = new TRecord([[expr.field, tv]], true);
+      constraints.add(t1, constraint);
+
+      return [tv, env];
+    }
     if (expr.type === "Var") {
       let varEnv: TypeEnv | undefined = env;
       if (expr.qualifier !== undefined) {

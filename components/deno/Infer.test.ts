@@ -180,6 +180,36 @@ Deno.test("infer Match", () => {
   assertTypeEquals(type, ["V1"]);
 });
 
+Deno.test("infer Projection", () => {
+  const [constraints, type] = inferProgram(
+    emptyTypeEnv,
+    parse("{ x: 1, y: 2 }.x"),
+    new Constraints(),
+    createFresh(),
+  );
+
+  assertConstraintsEquals(constraints, [
+    "{x: Int, y: Int} ~ {x: V1, ...}",
+  ]);
+
+  assertTypeEquals(type, ["V1"]);
+});
+
+Deno.test("infer Projection 2", () => {
+  const [constraints, type] = inferProgram(
+    emptyTypeEnv,
+    parse("\\x -> x.y"),
+    new Constraints(),
+    createFresh(),
+  );
+
+  assertConstraintsEquals(constraints, [
+    "V1 ~ {y: V2, ...}",
+  ]);
+
+  assertTypeEquals(type, ["V1 -> V2"]);
+});
+
 Deno.test("infer PBool pattern", () => {
   assertInferPattern(
     { type: "PBool", value: true },

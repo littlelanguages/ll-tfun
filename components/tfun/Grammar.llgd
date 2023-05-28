@@ -28,12 +28,16 @@ AdditiveOps
     ;
 
 Multiplicative
-    : Factor {MultiplicativeOps Factor}
+    : Projection {MultiplicativeOps Projection}
     ;
 
 MultiplicativeOps
     : "*"
     | "/"
+    ;
+
+Projection
+    : Factor {"." LowerIdentifier}
     ;
 
 Factor

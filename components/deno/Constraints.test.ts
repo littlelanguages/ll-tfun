@@ -168,3 +168,23 @@ Deno.test("solve let rec? identity a = a ; let rec? v1 = identity 10 and v2 = id
     ["(V3 -> V3)", "(Int * Bool)", "Bool"],
   );
 });
+
+Deno.test("solve { x: 1, y: 2 }.x", () => {
+  assertType(
+    "{ x: 1, y: 2 }.x",
+    ["Int"],
+  );
+});
+
+Deno.test('solve let recs a = { x: 1, y: a } ; let y = recs "10" ; y ; y.x ; y.y', () => {
+  assertType(
+    'let recs a = { x: 1, y: a } ; let y = recs "10" ; y ; y.x ; y.y',
+    [
+      "(V1 -> {x: Int, y: V1})",
+      "({x: Int, y: String})",
+      "{x: Int, y: String}",
+      "Int",
+      "String",
+    ],
+  );
+});

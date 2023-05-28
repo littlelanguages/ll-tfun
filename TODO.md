@@ -20,8 +20,8 @@ The tasks are built out according to the packages listed in [README](README.md)
 
 - [x] Add literal record into grammar
 - [x] Incorporate into deno REPL implementation
-- [ ] Add get a field from a record into grammar
-- [ ] Incorporate into deno REPL implementation
+- [x] Add get a field from a record into grammar
+- [x] Incorporate into deno REPL implementation
 - [ ] Add update record into grammar
 - [ ] Incorporate into deno REPL implementation
 - [ ] Add literal type into ADTs

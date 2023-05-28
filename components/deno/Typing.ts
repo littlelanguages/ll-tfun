@@ -102,16 +102,19 @@ export class TArr extends Type {
 }
 
 export class TRecord extends Type {
-  fields: Array<[string, Type]>;
+  readonly fields: Array<[string, Type]>;
+  readonly open: boolean;
 
-  constructor(fields: Array<[string, Type]>) {
+  constructor(fields: Array<[string, Type]>, open: boolean = false) {
     super();
     this.fields = fields;
+    this.open = open;
   }
 
   apply(s: Subst): Type {
     return new TRecord(
       this.fields.map(([name, type]) => [name, type.apply(s)]),
+      this.open,
     );
   }
 
@@ -122,7 +125,7 @@ export class TRecord extends Type {
   toString(): string {
     return `{${
       this.fields.map(([n, t]) => `${n}: ${t.toString()}`).join(", ")
-    }}`;
+    }${this.open ? ", ..." : ""}}`;
   }
 }
 

@@ -1,5 +1,14 @@
-import { nullSubs, Subst, TArr, TCon, TTuple, TVar, Var } from "./Typing.ts";
-import { Type } from "./Typing.ts";
+import {
+  nullSubs,
+  Subst,
+  TArr,
+  TCon,
+  TRecord,
+  TTuple,
+  TVar,
+  Type,
+  Var,
+} from "./Typing.ts";
 
 type Constraint = [Type, Type];
 type Unifier = [Subst, Array<Constraint>];
@@ -31,6 +40,94 @@ const unifies = (t1: Type, t2: Type): Unifier => {
         t1,
         t2,
       };
+    }
+  }
+  if (t1 instanceof TRecord && t2 instanceof TRecord) {
+    if (t1.open && t2.open) {
+      const t2Fields = new Map(t2.fields);
+      const t1Types: Array<Type> = [];
+      const t2Types: Array<Type> = [];
+
+      for (const [name, t1Type] of t1.fields) {
+        if (t2Fields.has(name)) {
+          t1Types.push(t1Type);
+          t2Types.push(t2Fields.get(name)!);
+        }
+      }
+      return unifyMany(t1Types, t2Types);
+    }
+    if (t1.open && !t2.open) {
+      const t2Fields = new Map(t2.fields);
+      const t1Types: Array<Type> = [];
+      const t2Types: Array<Type> = [];
+
+      for (const [name, t1Type] of t1.fields) {
+        if (t2Fields.has(name)) {
+          t1Types.push(t1Type);
+          t2Types.push(t2Fields.get(name)!);
+        } else {
+          throw {
+            type: "UnificationMismatch",
+            reason: "Record types have different fields",
+            t1,
+            t2,
+          };
+        }
+      }
+
+      return unifyMany(t1Types, t2Types);
+    }
+
+    if (!t1.open && t2.open) {
+      const t1Fields = new Map(t1.fields);
+      const t1Types: Array<Type> = [];
+      const t2Types: Array<Type> = [];
+
+      for (const [name, t2Type] of t2.fields) {
+        if (t1Fields.has(name)) {
+          t1Types.push(t1Fields.get(name)!);
+          t2Types.push(t2Type);
+        } else {
+          throw {
+            type: "UnificationMismatch",
+            reason: "Record types have different fields",
+            t1,
+            t2,
+          };
+        }
+      }
+
+      return unifyMany(t1Types, t2Types);
+    }
+    if (!t1.open && !t2.open) {
+      if (t1.fields.length !== t2.fields.length) {
+        throw {
+          type: "UnificationMismatch",
+          reason: "Record types have different fields",
+          t1,
+          t2,
+        };
+      }
+
+      const t2Fields = new Map(t2.fields);
+      const t1Types: Array<Type> = [];
+      const t2Types: Array<Type> = [];
+
+      for (const [name, t1Type] of t1.fields) {
+        if (t2Fields.has(name)) {
+          t1Types.push(t1Type);
+          t2Types.push(t2Fields.get(name)!);
+        } else {
+          throw {
+            type: "UnificationMismatch",
+            reason: "Record types have different fields",
+            t1,
+            t2,
+          };
+        }
+      }
+
+      return unifyMany(t1Types, t2Types);
     }
   }
 
