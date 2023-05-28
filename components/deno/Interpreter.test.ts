@@ -247,7 +247,7 @@ Deno.test("Import - simple values", () => {
   );
 });
 
-Deno.test("Import - simple ADT", () => {
+Deno.test("Import - simple types", () => {
   assertExecute('import * from "./tests/adt.tfun"; length ; sum ; map', [
     "import",
     "function: List V1 -> Int",
@@ -335,7 +335,7 @@ Deno.test("Import - simple ADT", () => {
   );
 });
 
-Deno.test("Import - nested simple values", () => {
+Deno.test("Import - nested values", () => {
   assertExecute(
     'import * from "./tests/simple-nested.tfun" ; constant ; quad 10 ; id ; id 47',
     [
@@ -347,19 +347,19 @@ Deno.test("Import - nested simple values", () => {
     ],
   );
 
-  // assertExecute(
-  //   'import * as T from "./tests/simple-nested.tfun" ; T.constant ; T.quad 10 ; T.id ; T.id 47',
-  //   [
-  //     "import",
-  //     "function: V1 -> V2 -> V1",
-  //     "10000: Int",
-  //     "function: V1 -> V1",
-  //     "47: Int",
-  //   ],
-  // );
+  assertExecute(
+    'import * as T from "./tests/simple-nested.tfun" ; T.constant ; T.quad 10 ; T.id ; T.id 47',
+    [
+      "import",
+      "function: V1 -> V2 -> V1",
+      "10000: Int",
+      "function: V1 -> V1",
+      "47: Int",
+    ],
+  );
 });
 
-Deno.test("Import - nested ADT", () => {
+Deno.test("Import - nested types", () => {
   assertExecute(
     'import * from "./tests/maybe-nested.tfun" ; Nothing ; Just 10 ; isJust (Just 10) ; isJust Nothing ; range 3 ; sum (range 10)',
     [
@@ -373,18 +373,18 @@ Deno.test("Import - nested ADT", () => {
     ],
   );
 
-  // assertExecute(
-  //   'import * as T from "./tests/maybe-nested.tfun" ; T.Nothing ; T.Just 10 ; T.isJust (T.Just 10) ; T.isJust T.Nothing ; T.range 3 ; T.sum (T.range 10)',
-  //   [
-  //     "import",
-  //     "Nothing: Maybe V1",
-  //     "Just 10: Maybe Int",
-  //     "true: Bool",
-  //     "false: Bool",
-  //     "Cons 0 (Cons 1 (Cons 2 Nil)): List Int",
-  //     "45: Int",
-  //   ],
-  // );
+  assertExecute(
+    'import * as T from "./tests/maybe-nested.tfun" ; T.Nothing ; T.Just 10 ; T.isJust (T.Just 10) ; T.isJust T.Nothing ; T.range 3 ; T.sum (T.range 10)',
+    [
+      "import",
+      "Nothing: Maybe V1",
+      "Just 10: Maybe Int",
+      "true: Bool",
+      "false: Bool",
+      "Cons 0 (Cons 1 (Cons 2 Nil)): List Int",
+      "45: Int",
+    ],
+  );
 
   assertError(
     'import * from "./tests/maybe-nested.tfun" ; Nothing ; Cons',

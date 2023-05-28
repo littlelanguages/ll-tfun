@@ -675,6 +675,7 @@ export const executeImport = (
                 const n = as === undefined ? item[0] : as;
 
                 importValues.push([n, item[1], item[2]]);
+                env = env.extend(n, new Scheme(item[2].ftv(), item[2]));
               }
             }
           });
