@@ -36,10 +36,6 @@ MultiplicativeOps
     | "/"
     ;
 
-Qualified
-    : Factor {"." Identifier}
-    ;
-
 Factor
     : "(" [Expression {"," Expression}] ")"
     | LiteralInt

@@ -269,7 +269,6 @@ const visitor: Visitor<
   Expression,
   string,
   Expression,
-  Expression,
   string,
   Declaration,
   MatchCase,
@@ -341,13 +340,6 @@ const visitor: Visitor<
 
   visitAdditiveOps1: (a: Token): string => a[2],
   visitAdditiveOps2: (a: Token): string => a[2],
-
-  visitQualified: (a1: Expression, a2: Array<[Token, string]>): Expression =>
-    a2.length === 0 ? a1 : {
-      type: "QExpr",
-      expr: a1,
-      names: a2.map((v) => v[1]),
-    },
 
   visitFactor1: (
     _a1: Token,

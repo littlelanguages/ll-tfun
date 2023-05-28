@@ -14,7 +14,6 @@ export interface Visitor<
   T_AdditiveOps,
   T_Multiplicative,
   T_MultiplicativeOps,
-  T_Qualified,
   T_Factor,
   T_Identifier,
   T_ValueDeclaration,
@@ -51,7 +50,6 @@ export interface Visitor<
   ): T_Multiplicative;
   visitMultiplicativeOps1(a: Token): T_MultiplicativeOps;
   visitMultiplicativeOps2(a: Token): T_MultiplicativeOps;
-  visitQualified(a1: T_Factor, a2: Array<[Token, T_Identifier]>): T_Qualified;
   visitFactor1(
     a1: Token,
     a2: [T_Expression, Array<[Token, T_Expression]>] | undefined,
@@ -169,7 +167,6 @@ export const parseProgram = <
   T_AdditiveOps,
   T_Multiplicative,
   T_MultiplicativeOps,
-  T_Qualified,
   T_Factor,
   T_Identifier,
   T_ValueDeclaration,
@@ -195,7 +192,6 @@ export const parseProgram = <
     T_AdditiveOps,
     T_Multiplicative,
     T_MultiplicativeOps,
-    T_Qualified,
     T_Factor,
     T_Identifier,
     T_ValueDeclaration,
@@ -228,7 +224,6 @@ export const mkParser = <
   T_AdditiveOps,
   T_Multiplicative,
   T_MultiplicativeOps,
-  T_Qualified,
   T_Factor,
   T_Identifier,
   T_ValueDeclaration,
@@ -254,7 +249,6 @@ export const mkParser = <
     T_AdditiveOps,
     T_Multiplicative,
     T_MultiplicativeOps,
-    T_Qualified,
     T_Factor,
     T_Identifier,
     T_ValueDeclaration,
@@ -437,18 +431,6 @@ export const mkParser = <
           expected: [TToken.Star, TToken.Slash],
         };
       }
-    },
-    qualified: function (): T_Qualified {
-      const a1: T_Factor = this.factor();
-      const a2: Array<[Token, T_Identifier]> = [];
-
-      while (isToken(TToken.Period)) {
-        const a2t1: Token = matchToken(TToken.Period);
-        const a2t2: T_Identifier = this.identifier();
-        const a2t: [Token, T_Identifier] = [a2t1, a2t2];
-        a2.push(a2t);
-      }
-      return visitor.visitQualified(a1, a2);
     },
     factor: function (): T_Factor {
       if (isToken(TToken.LParen)) {
