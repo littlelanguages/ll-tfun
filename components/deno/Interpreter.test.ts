@@ -313,13 +313,13 @@ Deno.test("Import - simple types", () => {
     ],
   );
 
-  // assertExecute(
-  //   'import * as T from "./tests/adt.tfun"; match (T.Cons 1 T.Nil) with | T.Nil -> 0 | T.Cons v _ -> v',
-  //   [
-  //     "import",
-  //     "1: Int",
-  //   ],
-  // );
+  assertExecute(
+    'import * as T from "./tests/adt.tfun"; match (T.Cons 1 T.Nil) with | T.Nil -> 0 | T.Cons v _ -> v',
+    [
+      "import",
+      "1: Int",
+    ],
+  );
 
   assertError(
     'import * from "./tests/adt.tfun"; let v = find (\\n -> n == 10) (Cons 1 Nil); match v with | None -> 0 | Some v -> v',

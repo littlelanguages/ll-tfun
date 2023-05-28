@@ -486,11 +486,15 @@ const visitor: Visitor<
       name: a[2],
     },
 
-  visitPattern7: (a1: Token, a2: Array<Pattern>): Pattern => ({
+  visitPattern7: (
+    a1: Token,
+    a2: [Token, Token] | undefined,
+    a3: Array<Pattern>,
+  ): Pattern => ({
     type: "PCons",
-    qualifier: undefined,
-    name: a1[2],
-    args: a2,
+    qualifier: a2 === undefined ? undefined : a1[2],
+    name: a2 === undefined ? a1[2] : a2[1][2],
+    args: a3,
   }),
 
   visitDataDeclaration: (

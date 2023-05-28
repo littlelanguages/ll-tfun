@@ -265,7 +265,9 @@ export const inferPattern = (
     return [pump.next(), env];
   }
   if (pattern.type === "PCons") {
-    const c = env.findConstructor(pattern.name);
+    const c = pattern.qualifier === undefined
+      ? env.findConstructor(pattern.name)
+      : env.import(pattern.qualifier)?.findConstructor(pattern.name);
 
     if (c === undefined) {
       throw { type: "UnknownConstructorError", name: pattern.name };

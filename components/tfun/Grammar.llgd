@@ -70,7 +70,7 @@ Pattern
     | "True"
     | "False"
     | LowerIdentifier
-    | UpperIdentifier {Pattern}
+    | UpperIdentifier ["." UpperIdentifier] {Pattern}
     ;
 
 DataDeclaration

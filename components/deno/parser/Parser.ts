@@ -112,7 +112,11 @@ export interface Visitor<
   visitPattern4(a: Token): T_Pattern;
   visitPattern5(a: Token): T_Pattern;
   visitPattern6(a: Token): T_Pattern;
-  visitPattern7(a1: Token, a2: Array<T_Pattern>): T_Pattern;
+  visitPattern7(
+    a1: Token,
+    a2: [Token, Token] | undefined,
+    a3: Array<T_Pattern>,
+  ): T_Pattern;
   visitDataDeclaration(
     a1: Token,
     a2: T_TypeDeclaration,
@@ -657,7 +661,15 @@ export const mkParser = <
         return visitor.visitPattern6(matchToken(TToken.LowerIdentifier));
       } else if (isToken(TToken.UpperIdentifier)) {
         const a1: Token = matchToken(TToken.UpperIdentifier);
-        const a2: Array<T_Pattern> = [];
+        let a2: [Token, Token] | undefined = undefined;
+
+        if (isToken(TToken.Period)) {
+          const a2t1: Token = matchToken(TToken.Period);
+          const a2t2: Token = matchToken(TToken.UpperIdentifier);
+          const a2t: [Token, Token] = [a2t1, a2t2];
+          a2 = a2t;
+        }
+        const a3: Array<T_Pattern> = [];
 
         while (
           isTokens([
@@ -670,10 +682,10 @@ export const mkParser = <
             TToken.UpperIdentifier,
           ])
         ) {
-          const a2t: T_Pattern = this.pattern();
-          a2.push(a2t);
+          const a3t: T_Pattern = this.pattern();
+          a3.push(a3t);
         }
-        return visitor.visitPattern7(a1, a2);
+        return visitor.visitPattern7(a1, a2, a3);
       } else {
         throw {
           tag: "SyntaxError",
