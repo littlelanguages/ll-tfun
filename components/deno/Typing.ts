@@ -211,12 +211,25 @@ export class DataDefinition {
 }
 
 export class TypeEnv {
-  values: Map<string, Scheme>;
-  adts: Array<DataDefinition>;
+  private values: Map<string, Scheme>;
+  private adts: Array<DataDefinition>;
+  private imports: Map<string, TypeEnv>;
 
-  constructor(values: Map<string, Scheme>, adts: Array<DataDefinition>) {
+  constructor(
+    values: Map<string, Scheme>,
+    adts: Array<DataDefinition>,
+    imports: Map<string, TypeEnv>,
+  ) {
     this.values = values;
     this.adts = adts;
+    this.imports = imports;
+  }
+
+  combine(other: TypeEnv): TypeEnv {
+    return new TypeEnv(Maps.union(this.values, other.values), [
+      ...this.adts,
+      ...other.adts,
+    ], Maps.union(this.imports, other.imports));
   }
 
   extend(name: string, scheme: Scheme): TypeEnv {
@@ -224,13 +237,20 @@ export class TypeEnv {
 
     result.set(name, scheme);
 
-    return new TypeEnv(result, this.adts);
+    return new TypeEnv(result, this.adts, this.imports);
   }
 
   addData(adt: DataDefinition): TypeEnv {
     const adts = [adt, ...this.adts.filter((a) => a.name !== adt.name)];
 
-    return new TypeEnv(this.values, adts);
+    return new TypeEnv(this.values, adts, this.imports);
+  }
+
+  addImport(name: string, env: TypeEnv): TypeEnv {
+    const imports = new Map(this.imports);
+    imports.set(name, env);
+
+    return new TypeEnv(this.values, this.adts, imports);
   }
 
   findConstructor(
@@ -251,6 +271,7 @@ export class TypeEnv {
     return new TypeEnv(
       Maps.map(this.values, (scheme) => scheme.apply(s)),
       this.adts,
+      this.imports,
     );
   }
 
@@ -266,12 +287,20 @@ export class TypeEnv {
     return this.adts.find((a) => a.name === name);
   }
 
+  datas(): Array<DataDefinition> {
+    return this.adts;
+  }
+
+  import(name: string): TypeEnv | undefined {
+    return this.imports.get(name);
+  }
+
   generalise(t: Type): Scheme {
     return new Scheme(Sets.difference(t.ftv(), this.ftv()), t);
   }
 }
 
-export const emptyTypeEnv = new TypeEnv(new Map(), []);
+export const emptyTypeEnv = new TypeEnv(new Map(), [], new Map());
 
 export type Pump = { next: () => TVar; nextN: (n: number) => Array<TVar> };
 

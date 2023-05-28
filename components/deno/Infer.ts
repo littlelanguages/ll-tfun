@@ -207,9 +207,18 @@ export const inferExpression = (
       return [tv, env];
     }
     if (expr.type === "Var") {
-      const scheme = env.scheme(expr.name);
+      let varEnv: TypeEnv | undefined = env;
+      if (expr.qualifier !== undefined) {
+        varEnv = env.import(expr.qualifier);
+        if (varEnv === undefined) {
+          throw `Unknown qualifier: ${expr.qualifier}`;
+        }
+      }
+      const scheme = varEnv.scheme(expr.name);
 
-      if (scheme === undefined) throw `Unknown name: ${expr.name}`;
+      if (scheme === undefined) {
+        throw `Unknown name: ${expr.name}`;
+      }
 
       return [scheme.instantiate(pump), env];
     }

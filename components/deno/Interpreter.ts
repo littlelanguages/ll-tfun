@@ -207,7 +207,13 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
       return binaryOps.get(expr.op)!(left, right);
     }
     case "Var":
-      return runtimeEnv.get(expr.name);
+      if (expr.qualifier === undefined) {
+        return runtimeEnv.get(expr.name);
+      } else {
+        return runtimeEnv.get(expr.qualifier).find((v: RuntimeValue) =>
+          v[0] === expr.name
+        )![1];
+      }
     default:
       return null;
   }
@@ -451,9 +457,23 @@ const executeElement = (
           type = type.extend(n, new Scheme(t.ftv(), t));
         });
 
-        imports.types.adts.forEach((adt) => {
+        imports.types.datas().forEach((adt) => {
           type = type.addData(adt);
         });
+
+        return [null, undefined, { ...env, runtime, type }];
+      } else {
+        if (env.runtime.has(e.items.as)) {
+          throw {
+            type: "ImportNameAlreadyDeclared",
+            name: e.items.as,
+          };
+        }
+        const runtime = env.runtime.clone();
+        let type = env.type;
+
+        runtime.bind(e.items.as, imports.values);
+        type = type.addImport(e.items.as, imports.types);
 
         return [null, undefined, { ...env, runtime, type }];
       }
@@ -464,7 +484,7 @@ const executeElement = (
 
       e.items.items.forEach(({ name, as }) => {
         if (startsWithUppercase(name[0])) {
-          const adt = imports.types.adts.find((a) => a.name === name);
+          const adt = imports.types.data(name);
           if (adt === undefined) {
             throw {
               type: "UnknownImportName",
@@ -585,18 +605,28 @@ export const executeImport = (
 
         e.declarations.forEach((d, i2) => {
           if (d.visibility === Visibility.Public) {
-            importValues.push([d.name, value[i2], tt.types[i2]]);
+            const v = value[i2];
+            const vType = tt.types[i2];
+
+            importValues.push([d.name, v, vType]);
+            env = env.extend(d.name, new Scheme(vType.ftv(), vType));
           }
         });
       } else if (e.type === "DataDeclaration") {
         e.declarations.forEach((d) => {
           if (d.visibility === Visibility.Public) {
             d.constructors.forEach((c) => {
+              const constructorScheme = resultEnv.type.scheme(c.name)!;
+              const constructorType = constructorScheme.instantiate(
+                createFresh(),
+              );
+
               importValues.push([
                 c.name,
                 resultEnv.runtime.get(c.name),
-                resultEnv.type.scheme(c.name)!.instantiate(createFresh()), // new TCon(d.name, d.parameters.map((p) => new TVar(p))),
+                constructorType,
               ]);
+              env = env.extend(c.name, constructorScheme);
             });
             env = env.addData(resultEnv.type.data(d.name)!);
           } else if (d.visibility === Visibility.Opaque) {
@@ -616,7 +646,7 @@ export const executeImport = (
           e.items.items.forEach(({ name, as, visibility }) => {
             if (visibility === Visibility.Public) {
               if (startsWithUppercase(name[0])) {
-                const adt = imports.types.adts.find((a) => a.name === name);
+                const adt = imports.types.data(name);
                 if (adt === undefined) {
                   throw {
                     type: "UnknownImportName",
@@ -629,6 +659,7 @@ export const executeImport = (
                 adt.constructors.forEach((c) => {
                   const v = imports.values.find((v) => v[0] === c.name)!;
                   importValues.push([c.name, v[1], v[2]]);
+                  env = env.extend(c.name, new Scheme(v[2].ftv(), v[2]));
                 });
               } else {
                 const item = imports.values.find((v) => v[0] === name);

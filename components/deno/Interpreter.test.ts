@@ -212,7 +212,6 @@ Deno.test("Import - raw mechanism using adt.tfun", () => {
   const ip = executeImport("./tests/adt.tfun", home()).values;
 
   assertEquals(ip.length, 9);
-  // console.log(ip);
 });
 
 Deno.test("Import - simple values", () => {
@@ -257,6 +256,16 @@ Deno.test("Import - simple ADT", () => {
   ]);
 
   assertExecute(
+    'import * as T from "./tests/adt.tfun"; T.length ; T.sum ; T.map',
+    [
+      "import",
+      "function: List V1 -> Int",
+      "function: List Int -> Int",
+      "function: (V1 -> V2) -> List V1 -> List V2",
+    ],
+  );
+
+  assertExecute(
     'import * from "./tests/adt.tfun"; Nil ; Cons ; Cons 1 Nil',
     [
       "import",
@@ -267,7 +276,27 @@ Deno.test("Import - simple ADT", () => {
   );
 
   assertExecute(
-    'import * from "./tests/adt.tfun"; find (\\n -> n == 1) (Cons 1 Nil) ; let v = find (\\n -> n == 10) (Cons 1 Nil) ;  withDefault 0 v',
+    'import * as T from "./tests/adt.tfun" ; T.Nil ; T.Cons ; T.Cons 1 T.Nil',
+    [
+      "import",
+      "Nil: List V1",
+      "function: V1 -> List V1 -> List V1",
+      "Cons 1 Nil: List Int",
+    ],
+  );
+
+  assertExecute(
+    'import * from "./tests/adt.tfun"; find (\\n -> n == 1) (Cons 1 Nil) ; let v = find (\\n -> n == 10) (Cons 1 Nil) ; withDefault 0 v',
+    [
+      "import",
+      "Just 1: Maybe Int",
+      ["v = Nothing: Maybe Int"],
+      "0: Int",
+    ],
+  );
+
+  assertExecute(
+    'import * as T from "./tests/adt.tfun"; T.find (\\n -> n == 1) (T.Cons 1 T.Nil) ; let v = T.find (\\n -> n == 10) (T.Cons 1 T.Nil) ; T.withDefault 0 v',
     [
       "import",
       "Just 1: Maybe Int",
@@ -283,6 +312,14 @@ Deno.test("Import - simple ADT", () => {
       "1: Int",
     ],
   );
+
+  // assertExecute(
+  //   'import * as T from "./tests/adt.tfun"; match (T.Cons 1 T.Nil) with | T.Nil -> 0 | T.Cons v _ -> v',
+  //   [
+  //     "import",
+  //     "1: Int",
+  //   ],
+  // );
 
   assertError(
     'import * from "./tests/adt.tfun"; let v = find (\\n -> n == 10) (Cons 1 Nil); match v with | None -> 0 | Some v -> v',
@@ -309,6 +346,17 @@ Deno.test("Import - nested simple values", () => {
       "47: Int",
     ],
   );
+
+  // assertExecute(
+  //   'import * as T from "./tests/simple-nested.tfun" ; T.constant ; T.quad 10 ; T.id ; T.id 47',
+  //   [
+  //     "import",
+  //     "function: V1 -> V2 -> V1",
+  //     "10000: Int",
+  //     "function: V1 -> V1",
+  //     "47: Int",
+  //   ],
+  // );
 });
 
 Deno.test("Import - nested ADT", () => {
@@ -324,6 +372,19 @@ Deno.test("Import - nested ADT", () => {
       "45: Int",
     ],
   );
+
+  // assertExecute(
+  //   'import * as T from "./tests/maybe-nested.tfun" ; T.Nothing ; T.Just 10 ; T.isJust (T.Just 10) ; T.isJust T.Nothing ; T.range 3 ; T.sum (T.range 10)',
+  //   [
+  //     "import",
+  //     "Nothing: Maybe V1",
+  //     "Just 10: Maybe Int",
+  //     "true: Bool",
+  //     "false: Bool",
+  //     "Cons 0 (Cons 1 (Cons 2 Nil)): List Int",
+  //     "45: Int",
+  //   ],
+  // );
 
   assertError(
     'import * from "./tests/maybe-nested.tfun" ; Nothing ; Cons',
