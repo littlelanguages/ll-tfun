@@ -404,7 +404,7 @@ const visitor: Visitor<
 
   visitFactor9: (a1: Token, a2: [Token, string] | undefined): Expression => ({
     type: "Var",
-    qualifier: undefined,
+    qualifier: a2 === undefined ? undefined : a1[2],
     name: a2 === undefined ? a1[2] : a2[1],
   }),
 
