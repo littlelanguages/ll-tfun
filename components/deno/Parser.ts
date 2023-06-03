@@ -27,6 +27,7 @@ export type Expression =
   | MatchExpression
   | OpExpression
   | ProjectionExpression
+  | UpdateRecordExpression
   | VarExpression;
 
 export type AppExpression = {
@@ -113,6 +114,12 @@ export type ProjectionExpression = {
   type: "Projection";
   expr: Expression;
   field: string;
+};
+
+export type UpdateRecordExpression = {
+  type: "UpdateRecord";
+  name: string;
+  fields: Array<[string, Expression]>;
 };
 
 export enum Op {
@@ -279,6 +286,8 @@ const visitor: Visitor<
   string,
   Expression,
   Expression,
+  Expression,
+  (a: Token) => Expression,
   string,
   Declaration,
   MatchCase,
@@ -452,22 +461,44 @@ const visitor: Visitor<
 
   visitFactor12: (
     _a1: Token,
-    a2:
-      | [Token, Token, Expression, Array<[Token, Token, Token, Expression]>]
-      | undefined,
-    _a3: Token,
-  ): Expression => {
-    const firstFields: Array<[string, Expression]> = a2 === undefined
-      ? []
-      : [[a2[0][2], a2[2]]];
-    const remainingFields: Array<[string, Expression]> = a2 === undefined
-      ? []
-      : a2[3].map(([_1, n, _3, e]) => [n[2], e]);
+    a2: Expression,
+  ): Expression => a2,
+
+  visitRecordTail1: (_a: Token): Expression => ({
+    type: "LRecord",
+    fields: [],
+  }),
+  visitRecordTail2: (a1: Token, a2: (a: Token) => Expression): Expression =>
+    a2(a1),
+
+  visitRecordTailRest1: (
+    _a1: Token,
+    a2: Expression,
+    a3: Array<[Token, Token, Token, Expression]>,
+    _a4: Token,
+  ): (a: Token) => Expression =>
+  (a5: Token): Expression => {
+    const firstFields: Array<[string, Expression]> = [[a5[2], a2]];
+    const remainingFields: Array<[string, Expression]> = a3.map((
+      [_1, n, _3, e],
+    ) => [n[2], e]);
 
     return {
       type: "LRecord",
       fields: firstFields.concat(remainingFields),
     };
+  },
+
+  visitRecordTailRest2: (
+    _a1: Token,
+    _a2: Token,
+    _a3: Token,
+    _a4: Expression,
+    _a5: Array<[Token, Token, Token, Expression]>,
+    _a6: Token,
+  ): (a: Token) => Expression =>
+  (_a7: Token): Expression => {
+    throw new Error("Not implemented");
   },
 
   visitIdentifier1: (a: Token): string => a[2],

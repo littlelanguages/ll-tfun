@@ -52,7 +52,17 @@ Factor
     | UpperIdentifier ["." Identifier]
     | LowerIdentifier
     | "match" Expression "with" ["|"] Case {"|" Case}
-    | "{" [LowerIdentifier ":" Expression {"," LowerIdentifier ":" Expression}] "}"
+    | "{" RecordTail
+    ;
+
+RecordTail
+    : "}"
+    | LowerIdentifier RecordTailRest
+    ;
+
+RecordTailRest
+    : ":" Expression {"," LowerIdentifier ":" Expression} "}"
+    | "|" LowerIdentifier ":" Expression {"," LowerIdentifier ":" Expression} "}"
     ;
 
 Identifier

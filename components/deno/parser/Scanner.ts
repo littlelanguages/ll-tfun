@@ -37,11 +37,11 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               this.markAndNextChar();
               state = 5;
               break;
-            } else if (this.nextCh === 125) {
+            } else if (this.nextCh === 58) {
               this.markAndNextChar();
               state = 6;
               break;
-            } else if (this.nextCh === 58) {
+            } else if (this.nextCh === 125) {
               this.markAndNextChar();
               state = 7;
               break;
@@ -1244,8 +1244,8 @@ export enum TToken {
   Import,
   Data,
   Equal,
-  RCurly,
   Colon,
+  RCurly,
   LCurly,
   Bar,
   With,
