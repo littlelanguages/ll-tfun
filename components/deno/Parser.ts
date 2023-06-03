@@ -491,14 +491,23 @@ const visitor: Visitor<
 
   visitRecordTailRest2: (
     _a1: Token,
-    _a2: Token,
+    a2: Token,
     _a3: Token,
-    _a4: Expression,
-    _a5: Array<[Token, Token, Token, Expression]>,
+    a4: Expression,
+    a5: Array<[Token, Token, Token, Expression]>,
     _a6: Token,
   ): (a: Token) => Expression =>
-  (_a7: Token): Expression => {
-    throw new Error("Not implemented");
+  (a7: Token): Expression => {
+    const firstFields: Array<[string, Expression]> = [[a2[2], a4]];
+    const remainingFields: Array<[string, Expression]> = a5.map((
+      [_1, n, _3, e],
+    ) => [n[2], e]);
+
+    return {
+      type: "UpdateRecord",
+      name: a7[2],
+      fields: firstFields.concat(remainingFields),
+    };
   },
 
   visitIdentifier1: (a: Token): string => a[2],
