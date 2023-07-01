@@ -128,18 +128,6 @@ Deno.test("infer LString", () => {
   assertTypeEquals(type, ["String"]);
 });
 
-Deno.test("infer LRecord", () => {
-  const [constraints, type] = inferProgram(
-    emptyTypeEnv,
-    parse('{ x: 1, y: "hello" }'),
-    new Constraints(),
-    createFresh(),
-  );
-
-  assertEquals(constraints.constraints.length, 0);
-  assertTypeEquals(type, ["{x: Int, y: String}"]);
-});
-
 Deno.test("infer LTuple", () => {
   const [constraints, type] = inferProgram(
     emptyTypeEnv,
@@ -180,7 +168,19 @@ Deno.test("infer Match", () => {
   assertTypeEquals(type, ["V1"]);
 });
 
-Deno.test("infer Projection", () => {
+Deno.test("infer RecordExtend", () => {
+  const [constraints, type] = inferProgram(
+    emptyTypeEnv,
+    parse('{ x: 1, y: "hello" }'),
+    new Constraints(),
+    createFresh(),
+  );
+
+  assertEquals(constraints.constraints.length, 0);
+  assertTypeEquals(type, ["{ x: Int, y: String }"]);
+});
+
+Deno.test("infer RecordSelect", () => {
   const [constraints, type] = inferProgram(
     emptyTypeEnv,
     parse("{ x: 1, y: 2 }.x"),
@@ -189,13 +189,13 @@ Deno.test("infer Projection", () => {
   );
 
   assertConstraintsEquals(constraints, [
-    "{x: Int, y: Int} ~ {x: V1, ...}",
+    "{ x: Int, y: Int } ~ { x: V1 | V2 }",
   ]);
 
   assertTypeEquals(type, ["V1"]);
 });
 
-Deno.test("infer Projection 2", () => {
+Deno.test("infer RecordSelect 2", () => {
   const [constraints, type] = inferProgram(
     emptyTypeEnv,
     parse("\\x -> x.y"),
@@ -204,7 +204,7 @@ Deno.test("infer Projection 2", () => {
   );
 
   assertConstraintsEquals(constraints, [
-    "V1 ~ {y: V2, ...}",
+    "V1 ~ { y: V2 | V3 }",
   ]);
 
   assertTypeEquals(type, ["V1 -> V2"]);

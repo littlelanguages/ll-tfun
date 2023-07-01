@@ -1,9 +1,11 @@
 import {
   nullSubs,
+  Pump,
   Subst,
   TArr,
   TCon,
-  TRecord,
+  TRowEmpty,
+  TRowExtend,
   TTuple,
   TVar,
   Type,
@@ -20,19 +22,66 @@ const bind = (
   type: Type,
 ): Unifier => [new Subst(new Map([[name, type]])), []];
 
-const unifies = (t1: Type, t2: Type): Unifier => {
+const unifies = (t1: Type, t2: Type, pump: Pump): Unifier => {
+  // console.log(`unify: ${JSON.stringify(t1, null, 2)} with ${JSON.stringify(t2, null, 2)}`);
+  // console.log(`unify: ${t1.toString()} with ${t2.toString()}`);
+
   if (t1 == t2) return emptyUnifier;
   if (t1 instanceof TVar) return bind(t1.name, t2);
   if (t2 instanceof TVar) return bind(t2.name, t1);
   if (t1 instanceof TArr && t2 instanceof TArr) {
-    return unifyMany([t1.domain, t1.range], [t2.domain, t2.range]);
+    return unifyMany([t1.domain, t1.range], [t2.domain, t2.range], pump);
   }
   if (t1 instanceof TTuple && t2 instanceof TTuple) {
-    return unifyMany(t1.types, t2.types);
+    return unifyMany(t1.types, t2.types, pump);
+  }
+  if (t1 instanceof TRowEmpty && t2 instanceof TRowEmpty) {
+    return emptyUnifier;
+  }
+  if (t1 instanceof TRowExtend) {
+    const rewriteRow = (row: Type): [Type, Type] | undefined => {
+      if (row instanceof TRowExtend) {
+        if (t1.name === row.name) {
+          return [row.type, row.row];
+        } else {
+          const rr = rewriteRow(row.row);
+          if (rr === undefined) {
+            return undefined;
+          }
+
+          const [t2, r2] = rr;
+          return [t2, new TRowExtend(row.name, row.type, r2)];
+        }
+      }
+
+      return undefined;
+    };
+
+    const replaceInnerType = (newInner: Type, row: Type): [Type, Type] => {
+      if (row instanceof TRowExtend) {
+        const [t2, r2] = replaceInnerType(newInner, row.row);
+        return [t2, new TRowExtend(row.name, row.type, r2)];
+      } else {
+        return [row, newInner];
+      }
+    };
+
+    const rr = rewriteRow(t2);
+    if (rr === undefined) {
+      const newInner = pump.next();
+
+      const [inner, r2] = replaceInnerType(newInner, t2);
+      return unifyMany([new TRowExtend(t1.name, t1.type, newInner), t1.row], [
+        inner,
+        r2,
+      ], pump);
+    } else {
+      return unifyMany([t1.type, t1.row], [rr[0], rr[1]], pump);
+    }
   }
   if (t1 instanceof TCon && t2 instanceof TCon && t1.adt.name === t2.adt.name) {
     if (t1.qualifiedName() === t2.qualifiedName()) {
-      return unifyMany(t1.args, t2.args);
+      return unifyMany(t1.args, t2.args, pump);
     } else {
       throw {
         type: "UnificationMismatch",
@@ -42,123 +91,43 @@ const unifies = (t1: Type, t2: Type): Unifier => {
       };
     }
   }
-  if (t1 instanceof TRecord && t2 instanceof TRecord) {
-    if (t1.open && t2.open) {
-      const t2Fields = new Map(t2.fields);
-      const t1Types: Array<Type> = [];
-      const t2Types: Array<Type> = [];
 
-      for (const [name, t1Type] of t1.fields) {
-        if (t2Fields.has(name)) {
-          t1Types.push(t1Type);
-          t2Types.push(t2Fields.get(name)!);
-        }
-      }
-      return unifyMany(t1Types, t2Types);
-    }
-    if (t1.open && !t2.open) {
-      const t2Fields = new Map(t2.fields);
-      const t1Types: Array<Type> = [];
-      const t2Types: Array<Type> = [];
-
-      for (const [name, t1Type] of t1.fields) {
-        if (t2Fields.has(name)) {
-          t1Types.push(t1Type);
-          t2Types.push(t2Fields.get(name)!);
-        } else {
-          throw {
-            type: "UnificationMismatch",
-            reason: "Record types have different fields",
-            t1,
-            t2,
-          };
-        }
-      }
-
-      return unifyMany(t1Types, t2Types);
-    }
-
-    if (!t1.open && t2.open) {
-      const t1Fields = new Map(t1.fields);
-      const t1Types: Array<Type> = [];
-      const t2Types: Array<Type> = [];
-
-      for (const [name, t2Type] of t2.fields) {
-        if (t1Fields.has(name)) {
-          t1Types.push(t1Fields.get(name)!);
-          t2Types.push(t2Type);
-        } else {
-          throw {
-            type: "UnificationMismatch",
-            reason: "Record types have different fields",
-            t1,
-            t2,
-          };
-        }
-      }
-
-      return unifyMany(t1Types, t2Types);
-    }
-    if (!t1.open && !t2.open) {
-      if (t1.fields.length !== t2.fields.length) {
-        throw {
-          type: "UnificationMismatch",
-          reason: "Record types have different fields",
-          t1,
-          t2,
-        };
-      }
-
-      const t2Fields = new Map(t2.fields);
-      const t1Types: Array<Type> = [];
-      const t2Types: Array<Type> = [];
-
-      for (const [name, t1Type] of t1.fields) {
-        if (t2Fields.has(name)) {
-          t1Types.push(t1Type);
-          t2Types.push(t2Fields.get(name)!);
-        } else {
-          throw {
-            type: "UnificationMismatch",
-            reason: "Record types have different fields",
-            t1,
-            t2,
-          };
-        }
-      }
-
-      return unifyMany(t1Types, t2Types);
-    }
-  }
-
-  throw `Unification Mismatch: ${JSON.stringify(t1)} ${JSON.stringify(t2)}`;
+  throw `Unification Mismatch: ${t1.toString()} -- ${t2.toString()}`;
+  // throw `Unification Mismatch: ${JSON.stringify(t1)} ${JSON.stringify(t2)}`;
 };
 
 const applyTypes = (s: Subst, ts: Array<Type>): Array<Type> =>
   ts.map((t) => t.apply(s));
 
-const unifyMany = (ta: Array<Type>, tb: Array<Type>): Unifier => {
+const unifyMany = (ta: Array<Type>, tb: Array<Type>, pump: Pump): Unifier => {
+  // console.log("unifyMany", ta.map((t) => t.toString()), tb.map((t) => t.toString()));
+
   if (ta.length === 0 && tb.length === 0) return emptyUnifier;
   if (ta.length === 0 || tb.length === 0) {
-    throw `Unification Mismatch: ${JSON.stringify(ta)} ${JSON.stringify(tb)}`;
+    throw `Unification Mismatch: ${ta.toString()} -- ${tb.toString()}`;
+    // throw `Unification Mismatch: ${JSON.stringify(ta)} ${JSON.stringify(tb)}`;
   }
 
   const [t1, ...ts1] = ta;
   const [t2, ...ts2] = tb;
 
-  const [su1, cs1] = unifies(t1, t2);
-  const [su2, cs2] = unifyMany(applyTypes(su1, ts1), applyTypes(su1, ts2));
+  const [su1, cs1] = unifies(t1, t2, pump);
+  const [su2, cs2] = unifyMany(
+    applyTypes(su1, ts1),
+    applyTypes(su1, ts2),
+    pump,
+  );
 
   return [su2.compose(su1), cs1.concat(cs2)];
 };
 
-const solver = (constraints: Array<Constraint>): Subst => {
+const solver = (constraints: Array<Constraint>, pump: Pump): Subst => {
   let su = nullSubs;
   let cs = [...constraints];
 
   while (cs.length > 0) {
     const [[t1, t2], ...cs0] = cs;
-    const [su1, cs1] = unifies(t1, t2);
+    const [su1, cs1] = unifies(t1, t2, pump);
     su = su1.compose(su);
     cs = cs1.concat(
       cs0.map(
@@ -184,8 +153,8 @@ export class Constraints {
     this.constraints.push([t1, t2]);
   }
 
-  solve(): Subst {
-    return solver(this.constraints);
+  solve(pump: Pump): Subst {
+    return solver(this.constraints, pump);
   }
 
   toString(): string {

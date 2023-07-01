@@ -192,6 +192,17 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
       const right = evaluate(expr.right, runtimeEnv);
       return binaryOps.get(expr.op)!(left, right);
     }
+    case "RecordEmpty":
+      return {};
+    case "RecordExtend": {
+      const e = evaluate(expr.expr, runtimeEnv);
+      const rest = evaluate(expr.rest, runtimeEnv);
+      return { ...rest, [expr.name]: e };
+    }
+    case "RecordSelect": {
+      const e = evaluate(expr.expr, runtimeEnv);
+      return e[expr.name];
+    }
     case "Var":
       return (expr.qualifier === undefined)
         ? runtimeEnv.get(expr.name)
@@ -535,7 +546,7 @@ const executeElement = (
       new Constraints(),
       pump,
     );
-    const subst = constraints.solve();
+    const subst = constraints.solve(pump);
     const newType = type.apply(subst);
 
     const [value, newRuntime] = executeExpression(e, env.runtime);

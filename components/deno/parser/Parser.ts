@@ -16,8 +16,6 @@ export interface Visitor<
   T_MultiplicativeOps,
   T_Projection,
   T_Factor,
-  T_RecordTail,
-  T_RecordTailRest,
   T_Identifier,
   T_ValueDeclaration,
   T_Case,
@@ -96,23 +94,17 @@ export interface Visitor<
     a5: T_Case,
     a6: Array<[Token, T_Case]>,
   ): T_Factor;
-  visitFactor12(a1: Token, a2: T_RecordTail): T_Factor;
-  visitRecordTail1(a: Token): T_RecordTail;
-  visitRecordTail2(a1: Token, a2: T_RecordTailRest): T_RecordTail;
-  visitRecordTailRest1(
+  visitFactor12(
     a1: Token,
-    a2: T_Expression,
-    a3: Array<[Token, Token, Token, T_Expression]>,
-    a4: Token,
-  ): T_RecordTailRest;
-  visitRecordTailRest2(
-    a1: Token,
-    a2: Token,
+    a2: [
+      Token,
+      Token,
+      T_Expression,
+      Array<[Token, Token, Token, T_Expression]>,
+      [Token, T_Expression] | undefined,
+    ] | undefined,
     a3: Token,
-    a4: T_Expression,
-    a5: Array<[Token, Token, Token, T_Expression]>,
-    a6: Token,
-  ): T_RecordTailRest;
+  ): T_Factor;
   visitIdentifier1(a: Token): T_Identifier;
   visitIdentifier2(a: Token): T_Identifier;
   visitValueDeclaration(
@@ -198,8 +190,6 @@ export const parseProgram = <
   T_MultiplicativeOps,
   T_Projection,
   T_Factor,
-  T_RecordTail,
-  T_RecordTailRest,
   T_Identifier,
   T_ValueDeclaration,
   T_Case,
@@ -226,8 +216,6 @@ export const parseProgram = <
     T_MultiplicativeOps,
     T_Projection,
     T_Factor,
-    T_RecordTail,
-    T_RecordTailRest,
     T_Identifier,
     T_ValueDeclaration,
     T_Case,
@@ -261,8 +249,6 @@ export const mkParser = <
   T_MultiplicativeOps,
   T_Projection,
   T_Factor,
-  T_RecordTail,
-  T_RecordTailRest,
   T_Identifier,
   T_ValueDeclaration,
   T_Case,
@@ -289,8 +275,6 @@ export const mkParser = <
     T_MultiplicativeOps,
     T_Projection,
     T_Factor,
-    T_RecordTail,
-    T_RecordTailRest,
     T_Identifier,
     T_ValueDeclaration,
     T_Case,
@@ -617,8 +601,52 @@ export const mkParser = <
         return visitor.visitFactor11(a1, a2, a3, a4, a5, a6);
       } else if (isToken(TToken.LCurly)) {
         const a1: Token = matchToken(TToken.LCurly);
-        const a2: T_RecordTail = this.recordTail();
-        return visitor.visitFactor12(a1, a2);
+        let a2: [
+          Token,
+          Token,
+          T_Expression,
+          Array<[Token, Token, Token, T_Expression]>,
+          [Token, T_Expression] | undefined,
+        ] | undefined = undefined;
+
+        if (isToken(TToken.LowerIdentifier)) {
+          const a2t1: Token = matchToken(TToken.LowerIdentifier);
+          const a2t2: Token = matchToken(TToken.Colon);
+          const a2t3: T_Expression = this.expression();
+          const a2t4: Array<[Token, Token, Token, T_Expression]> = [];
+
+          while (isToken(TToken.Comma)) {
+            const a2t4t1: Token = matchToken(TToken.Comma);
+            const a2t4t2: Token = matchToken(TToken.LowerIdentifier);
+            const a2t4t3: Token = matchToken(TToken.Colon);
+            const a2t4t4: T_Expression = this.expression();
+            const a2t4t: [Token, Token, Token, T_Expression] = [
+              a2t4t1,
+              a2t4t2,
+              a2t4t3,
+              a2t4t4,
+            ];
+            a2t4.push(a2t4t);
+          }
+          let a2t5: [Token, T_Expression] | undefined = undefined;
+
+          if (isToken(TToken.Bar)) {
+            const a2t5t1: Token = matchToken(TToken.Bar);
+            const a2t5t2: T_Expression = this.expression();
+            const a2t5t: [Token, T_Expression] = [a2t5t1, a2t5t2];
+            a2t5 = a2t5t;
+          }
+          const a2t: [
+            Token,
+            Token,
+            T_Expression,
+            Array<[Token, Token, Token, T_Expression]>,
+            [Token, T_Expression] | undefined,
+          ] = [a2t1, a2t2, a2t3, a2t4, a2t5];
+          a2 = a2t;
+        }
+        const a3: Token = matchToken(TToken.RCurly);
+        return visitor.visitFactor12(a1, a2, a3);
       } else {
         throw {
           tag: "SyntaxError",
@@ -637,72 +665,6 @@ export const mkParser = <
             TToken.Match,
             TToken.LCurly,
           ],
-        };
-      }
-    },
-    recordTail: function (): T_RecordTail {
-      if (isToken(TToken.RCurly)) {
-        return visitor.visitRecordTail1(matchToken(TToken.RCurly));
-      } else if (isToken(TToken.LowerIdentifier)) {
-        const a1: Token = matchToken(TToken.LowerIdentifier);
-        const a2: T_RecordTailRest = this.recordTailRest();
-        return visitor.visitRecordTail2(a1, a2);
-      } else {
-        throw {
-          tag: "SyntaxError",
-          found: scanner.current(),
-          expected: [TToken.RCurly, TToken.LowerIdentifier],
-        };
-      }
-    },
-    recordTailRest: function (): T_RecordTailRest {
-      if (isToken(TToken.Colon)) {
-        const a1: Token = matchToken(TToken.Colon);
-        const a2: T_Expression = this.expression();
-        const a3: Array<[Token, Token, Token, T_Expression]> = [];
-
-        while (isToken(TToken.Comma)) {
-          const a3t1: Token = matchToken(TToken.Comma);
-          const a3t2: Token = matchToken(TToken.LowerIdentifier);
-          const a3t3: Token = matchToken(TToken.Colon);
-          const a3t4: T_Expression = this.expression();
-          const a3t: [Token, Token, Token, T_Expression] = [
-            a3t1,
-            a3t2,
-            a3t3,
-            a3t4,
-          ];
-          a3.push(a3t);
-        }
-        const a4: Token = matchToken(TToken.RCurly);
-        return visitor.visitRecordTailRest1(a1, a2, a3, a4);
-      } else if (isToken(TToken.Bar)) {
-        const a1: Token = matchToken(TToken.Bar);
-        const a2: Token = matchToken(TToken.LowerIdentifier);
-        const a3: Token = matchToken(TToken.Colon);
-        const a4: T_Expression = this.expression();
-        const a5: Array<[Token, Token, Token, T_Expression]> = [];
-
-        while (isToken(TToken.Comma)) {
-          const a5t1: Token = matchToken(TToken.Comma);
-          const a5t2: Token = matchToken(TToken.LowerIdentifier);
-          const a5t3: Token = matchToken(TToken.Colon);
-          const a5t4: T_Expression = this.expression();
-          const a5t: [Token, Token, Token, T_Expression] = [
-            a5t1,
-            a5t2,
-            a5t3,
-            a5t4,
-          ];
-          a5.push(a5t);
-        }
-        const a6: Token = matchToken(TToken.RCurly);
-        return visitor.visitRecordTailRest2(a1, a2, a3, a4, a5, a6);
-      } else {
-        throw {
-          tag: "SyntaxError",
-          found: scanner.current(),
-          expected: [TToken.Colon, TToken.Bar],
         };
       }
     },
@@ -844,12 +806,13 @@ export const mkParser = <
       let a2: (Token | Token) | undefined = undefined;
 
       if (isTokens([TToken.Star, TToken.Dash])) {
+        let a2t: Token | Token;
         if (isToken(TToken.Star)) {
-          const a2t: Token = matchToken(TToken.Star);
-          a2 = a2t;
+          const a2tt: Token = matchToken(TToken.Star);
+          a2t = a2tt;
         } else if (isToken(TToken.Dash)) {
-          const a2t: Token = matchToken(TToken.Dash);
-          a2 = a2t;
+          const a2tt: Token = matchToken(TToken.Dash);
+          a2t = a2tt;
         } else {
           throw {
             tag: "SyntaxError",
@@ -857,6 +820,7 @@ export const mkParser = <
             expected: [TToken.Star, TToken.Dash],
           };
         }
+        a2 = a2t;
       }
       const a3: Array<Token> = [];
 
@@ -1026,12 +990,13 @@ export const mkParser = <
         let a2: (Token | Token) | undefined = undefined;
 
         if (isTokens([TToken.Star, TToken.Dash])) {
+          let a2t: Token | Token;
           if (isToken(TToken.Star)) {
-            const a2t: Token = matchToken(TToken.Star);
-            a2 = a2t;
+            const a2tt: Token = matchToken(TToken.Star);
+            a2t = a2tt;
           } else if (isToken(TToken.Dash)) {
-            const a2t: Token = matchToken(TToken.Dash);
-            a2 = a2t;
+            const a2tt: Token = matchToken(TToken.Dash);
+            a2t = a2tt;
           } else {
             throw {
               tag: "SyntaxError",
@@ -1039,6 +1004,7 @@ export const mkParser = <
               expected: [TToken.Star, TToken.Dash],
             };
           }
+          a2 = a2t;
         }
         return visitor.visitImportItem1(a1, a2);
       } else if (isToken(TToken.LowerIdentifier)) {

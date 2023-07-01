@@ -7,7 +7,8 @@ import {
   Subst,
   TArr,
   TCon,
-  TRecord,
+  TRowEmpty,
+  TRowExtend,
   TTuple,
   Type,
   typeBool,
@@ -110,7 +111,7 @@ export const inferExpression = (
           pump,
         );
 
-        const subst = nc.solve();
+        const subst = nc.solve(pump);
 
         newEnv = newEnv.apply(subst);
         const type = tb.apply(subst);
@@ -148,7 +149,7 @@ export const inferExpression = (
       constraints.add(new TTuple(tvs), declarationType);
       const types: Array<Type> = [];
 
-      const subst = constraints.solve();
+      const subst = constraints.solve(pump);
       const solvedTypeEnv = env.apply(subst);
       const solvedEnv = expr.declarations.reduce(
         (acc, declaration, idx) => {
@@ -174,12 +175,6 @@ export const inferExpression = (
     }
     if (expr.type === "LInt") {
       return [typeInt, env];
-    }
-    if (expr.type === "LRecord") {
-      const namedTypes: Array<[string, Type]> = expr.fields.map((
-        v,
-      ) => [v[0], infer(v[1], env)[0]]);
-      return [new TRecord(namedTypes), env];
     }
     if (expr.type === "LString") {
       return [typeString, env];
@@ -213,14 +208,23 @@ export const inferExpression = (
       constraints.add(u1, u2);
       return [tv, env];
     }
-    if (expr.type === "Projection") {
+    if (expr.type === "RecordEmpty") {
+      return [new TRowEmpty(), env];
+    }
+    if (expr.type === "RecordExtend") {
       const [t1] = infer(expr.expr, env);
-      const tv = pump.next();
+      const [t2] = infer(expr.rest, env);
 
-      const constraint = new TRecord([[expr.field, tv]], true);
-      constraints.add(t1, constraint);
+      return [new TRowExtend(expr.name, t1, t2), env];
+    }
+    if (expr.type === "RecordSelect") {
+      const [t] = infer(expr.expr, env);
+      const t1 = pump.next();
+      const t2 = pump.next();
 
-      return [tv, env];
+      constraints.add(t, new TRowExtend(expr.name, t1, t2));
+
+      return [t1, env];
     }
     if (expr.type === "Var") {
       let varEnv: TypeEnv | undefined = env;

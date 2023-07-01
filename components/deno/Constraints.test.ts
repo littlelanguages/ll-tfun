@@ -5,14 +5,16 @@ import { parse } from "./Parser.ts";
 import { createFresh, emptyTypeEnv, Type } from "./Typing.ts";
 
 const solve = (expression: string): Array<Type> => {
+  const pump = createFresh();
+
   const [constraints, types] = inferProgram(
     emptyTypeEnv,
     parse(expression),
     new Constraints(),
-    createFresh(),
+    pump,
   );
 
-  const subst = constraints.solve();
+  const subst = constraints.solve(pump);
 
   return types.map((t) => t.apply(subst));
 };
@@ -180,11 +182,47 @@ Deno.test('solve let recs a = { x: 1, y: a } ; let y = recs "10" ; y ; y.x ; y.y
   assertType(
     'let recs a = { x: 1, y: a } ; let y = recs "10" ; y ; y.x ; y.y',
     [
-      "(V1 -> {x: Int, y: V1})",
-      "({x: Int, y: String})",
-      "{x: Int, y: String}",
+      "(V1 -> { x: Int, y: V1 })",
+      "({ x: Int, y: String })",
+      "{ x: Int, y: String }",
       "Int",
       "String",
     ],
   );
 });
+
+Deno.test("the-test", () => {
+  assertType(
+    'let recs a = { x: 1, y: a }; let y = recs "10"; y; y.x; y.y', //   ; y ; y.x ; y.y
+    [
+      "(V1 -> { x: Int, y: V1 })",
+      "({ x: Int, y: String })",
+      "{ x: Int, y: String }",
+      "Int",
+      "String",
+    ],
+  );
+
+  assertType(
+    'let y = { x: 1, y: "10" }; y.y',
+    [
+      "({ x: Int, y: String })",
+      "String",
+    ],
+  );
+});
+
+/*
+
+unify: { x: Int, y: String } with { y: V1 | V2 }
+unifyMany [ "{ x: Int | V3 }", "V2" ] [ "{ y: String }", "{ y: V1 | V3 }" ]
+
+unify: { x: Int | V3 } with { y: String }
+unifyMany [ "{ x: Int | V4 }", "{}" ] [ "V3", "{ y: String | V4 }" ]
+
+unify: { x: Int | V4 } with V3
+unifyMany [ "{}" ] [ "{ y: String | V4 }" ]
+
+unify: {} with { y: String | V4 }
+
+*/

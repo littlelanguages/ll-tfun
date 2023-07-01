@@ -126,6 +126,32 @@ Deno.test("Op", () => {
   assertExecute("9 / 2", ["4: Int"]);
 });
 
+Deno.test("Records", () => {
+  assertExecute("let x = {a: 10} ; x ; x.a", [
+    ["x = { a: 10 }: { a: Int }"],
+    "{ a: 10 }: { a: Int }",
+    "10: Int",
+  ]);
+  assertExecute('let x = {a: 10, b: "Hello"} ; x ; x.b', [
+    ['x = { a: 10, b: "Hello" }: { a: Int, b: String }'],
+    '{ a: 10, b: "Hello" }: { a: Int, b: String }',
+    '"Hello": String',
+  ]);
+
+  assertExecute("let rect a b = {a: a, b: b} ; rect 10 20", [
+    ["rect = function: V1 -> V2 -> { a: V1, b: V2 }"],
+    "{ a: 10, b: 20 }: { a: Int, b: Int }",
+  ]);
+
+  assertExecute(
+    "let add a = a.a + a.b + a.c ; add {a: 10, b: 20, c: 30, d: 40}",
+    [
+      ["add = function: { a: Int, b: Int, c: Int | V12 } -> Int"],
+      "60: Int",
+    ],
+  );
+});
+
 Deno.test("Var", () => {
   assertExecute("let x = 1 ; x", [["x = 1: Int"], "1: Int"]);
   assertExecute("let x = True ; x", [["x = true: Bool"], "true: Bool"]);

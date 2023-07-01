@@ -26,8 +26,9 @@ export type Expression =
   | LUnitExpression
   | MatchExpression
   | OpExpression
-  | ProjectionExpression
-  | UpdateRecordExpression
+  | RecordEmptyExpression
+  | RecordExtendExpression
+  | RecordSelectExpression
   | VarExpression;
 
 export type AppExpression = {
@@ -110,16 +111,21 @@ export type OpExpression = {
   right: Expression;
 };
 
-export type ProjectionExpression = {
-  type: "Projection";
-  expr: Expression;
-  field: string;
+export type RecordEmptyExpression = {
+  type: "RecordEmpty";
 };
 
-export type UpdateRecordExpression = {
-  type: "UpdateRecord";
+export type RecordExtendExpression = {
+  type: "RecordExtend";
   name: string;
-  fields: Array<[string, Expression]>;
+  expr: Expression;
+  rest: Expression;
+};
+
+export type RecordSelectExpression = {
+  type: "RecordSelect";
+  name: string;
+  expr: Expression;
 };
 
 export enum Op {
@@ -276,31 +282,29 @@ export const parse = (input: string): Program =>
   }, (r: Array<Element>): Program => r);
 
 const visitor: Visitor<
-  Array<Element>,
-  Element,
-  Expression,
-  Expression,
-  Expression,
-  string,
-  Expression,
-  string,
-  Expression,
-  Expression,
-  Expression,
-  (a: Token) => Expression,
-  string,
-  Declaration,
-  MatchCase,
-  Pattern,
-  DataDeclaration,
-  TypeDeclaration,
-  ConstructorDeclaration,
-  Type,
-  Type,
-  Type,
-  ImportStatement,
-  ImportAll | ImportNames,
-  ImportName
+  Array<Element>, // T_Program
+  Element, // T_Element
+  Expression, // T_Expression
+  Expression, // T_Relational
+  Expression, // T_Additive
+  string, // T_AdditiveOps
+  Expression, // T_Multiplicative
+  string, // T_MultiplicativeOps
+  Expression, // T_Projection
+  Expression, // T_Factor
+  string, // T_Identifier
+  Declaration, // T_ValueDeclaration
+  MatchCase, // T_Case
+  Pattern, // T_Pattern
+  DataDeclaration, // T_DataDeclaration
+  TypeDeclaration, // T_TypeDeclaration
+  ConstructorDeclaration, // T_ConstructorDeclaration
+  Type, // T_Type
+  Type, // T_ADTType
+  Type, // T_TermType
+  ImportStatement, // T_ImportStatement
+  ImportAll | ImportNames, // T_ImportItems
+  ImportName // T_ImportItem
 > = {
   visitProgram: (
     a1: Expression,
@@ -362,9 +366,9 @@ const visitor: Visitor<
 
   visitProjection: (a1: Expression, a2: Array<[Token, Token]>): Expression =>
     a2.length === 0 ? a1 : a2.reduce((acc, field) => ({
-      type: "Projection",
+      type: "RecordSelect",
       expr: acc,
-      field: field[1][2],
+      name: field[1][2],
     }), a1),
 
   visitFactor1: (
@@ -461,53 +465,35 @@ const visitor: Visitor<
 
   visitFactor12: (
     _a1: Token,
-    a2: Expression,
-  ): Expression => a2,
-
-  visitRecordTail1: (_a: Token): Expression => ({
-    type: "LRecord",
-    fields: [],
-  }),
-  visitRecordTail2: (a1: Token, a2: (a: Token) => Expression): Expression =>
-    a2(a1),
-
-  visitRecordTailRest1: (
-    _a1: Token,
-    a2: Expression,
-    a3: Array<[Token, Token, Token, Expression]>,
-    _a4: Token,
-  ): (a: Token) => Expression =>
-  (a5: Token): Expression => {
-    const firstFields: Array<[string, Expression]> = [[a5[2], a2]];
-    const remainingFields: Array<[string, Expression]> = a3.map((
-      [_1, n, _3, e],
-    ) => [n[2], e]);
-
-    return {
-      type: "LRecord",
-      fields: firstFields.concat(remainingFields),
-    };
-  },
-
-  visitRecordTailRest2: (
-    _a1: Token,
-    a2: Token,
+    a2: [
+      Token,
+      Token,
+      Expression,
+      Array<[Token, Token, Token, Expression]>,
+      [Token, Expression] | undefined,
+    ] | undefined,
     _a3: Token,
-    a4: Expression,
-    a5: Array<[Token, Token, Token, Expression]>,
-    _a6: Token,
-  ): (a: Token) => Expression =>
-  (a7: Token): Expression => {
-    const firstFields: Array<[string, Expression]> = [[a2[2], a4]];
-    const remainingFields: Array<[string, Expression]> = a5.map((
-      [_1, n, _3, e],
-    ) => [n[2], e]);
+  ): Expression => {
+    if (a2 === undefined) {
+      return { type: "RecordEmpty" };
+    }
 
-    return {
-      type: "UpdateRecord",
-      name: a7[2],
-      fields: firstFields.concat(remainingFields),
-    };
+    const field: [Token, Token, Token, Expression] = [
+      a2[0],
+      a2[0],
+      a2[1],
+      a2[2],
+    ];
+    const fields: Array<[Token, Token, Token, Expression]> = [field].concat(
+      a2[3],
+    );
+
+    return fields.reduceRight((acc, e) => ({
+      type: "RecordExtend",
+      name: e[1][2],
+      expr: e[3],
+      rest: acc,
+    }), a2[4] === undefined ? { type: "RecordEmpty" } : a2[4][1]);
   },
 
   visitIdentifier1: (a: Token): string => a[2],

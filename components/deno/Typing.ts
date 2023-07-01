@@ -13,24 +13,30 @@ export abstract class Type {
   }
 }
 
-export class TVar extends Type {
-  name: Var;
+export class TArr extends Type {
+  domain: Type;
+  range: Type;
 
-  constructor(name: Var) {
+  constructor(domain: Type, range: Type) {
     super();
-    this.name = name;
+    this.domain = domain;
+    this.range = range;
   }
 
   apply(s: Subst): Type {
-    return s.get(this.name) || this;
+    return new TArr(this.domain.apply(s), this.range.apply(s));
   }
 
   ftv(): Set<Var> {
-    return new Set([this.name]);
+    return new Set([...this.domain.ftv(), ...this.range.ftv()]);
   }
 
   toString(): string {
-    return this.name;
+    if (this.domain instanceof TArr) {
+      return `(${this.domain}) -> ${this.range}`;
+    } else {
+      return `${this.domain} -> ${this.range}`;
+    }
   }
 }
 
@@ -74,58 +80,66 @@ export class TCon extends Type {
   }
 }
 
-export class TArr extends Type {
-  domain: Type;
-  range: Type;
-
-  constructor(domain: Type, range: Type) {
-    super();
-    this.domain = domain;
-    this.range = range;
-  }
-
-  apply(s: Subst): Type {
-    return new TArr(this.domain.apply(s), this.range.apply(s));
+export class TRowEmpty extends Type {
+  apply(_s: Subst): Type {
+    return this;
   }
 
   ftv(): Set<Var> {
-    return new Set([...this.domain.ftv(), ...this.range.ftv()]);
+    return new Set();
   }
 
   toString(): string {
-    if (this.domain instanceof TArr) {
-      return `(${this.domain}) -> ${this.range}`;
-    } else {
-      return `${this.domain} -> ${this.range}`;
-    }
+    return "{}";
   }
 }
 
-export class TRecord extends Type {
-  readonly fields: Array<[string, Type]>;
-  readonly open: boolean;
+export class TRowExtend extends Type {
+  name: string;
+  type: Type;
+  row: Type;
 
-  constructor(fields: Array<[string, Type]>, open: boolean = false) {
+  constructor(name: string, type: Type, row: Type) {
     super();
-    this.fields = fields;
-    this.open = open;
+    this.name = name;
+    this.type = type;
+    this.row = row;
   }
 
   apply(s: Subst): Type {
-    return new TRecord(
-      this.fields.map(([name, type]) => [name, type.apply(s)]),
-      this.open,
-    );
+    return new TRowExtend(this.name, this.type.apply(s), this.row.apply(s));
   }
 
   ftv(): Set<Var> {
-    return new Set(this.fields.flatMap(([, t]) => [...t.ftv()]));
+    return new Set([...this.type.ftv(), ...this.row.ftv()]);
   }
 
   toString(): string {
-    return `{${
-      this.fields.map(([n, t]) => `${n}: ${t.toString()}`).join(", ")
-    }${this.open ? ", ..." : ""}}`;
+    const items = [];
+
+    items.push("{ ");
+
+    let isFirst = true;
+    // deno-lint-ignore no-this-alias
+    let item: Type = this;
+    while (item instanceof TRowExtend) {
+      if (isFirst) {
+        isFirst = false;
+      } else {
+        items.push(", ");
+      }
+
+      items.push(`${item.name}: ${item.type}`);
+      item = item.row;
+    }
+
+    if (!(item instanceof TRowEmpty)) {
+      items.push(" | ");
+      items.push(item.toString());
+    }
+    items.push(" }");
+
+    return items.join("");
   }
 }
 
@@ -147,6 +161,27 @@ export class TTuple extends Type {
 
   toString(): string {
     return `(${this.types.join(" * ")})`;
+  }
+}
+
+export class TVar extends Type {
+  name: Var;
+
+  constructor(name: Var) {
+    super();
+    this.name = name;
+  }
+
+  apply(s: Subst): Type {
+    return s.get(this.name) || this;
+  }
+
+  ftv(): Set<Var> {
+    return new Set([this.name]);
+  }
+
+  toString(): string {
+    return this.name;
   }
 }
 

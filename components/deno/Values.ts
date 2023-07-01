@@ -58,6 +58,29 @@ export const valueToString = (v: RuntimeValue): string => {
       }`;
     }
   }
+  if (typeof v === "object") {
+    const fields = Object.entries(v).sort();
+
+    if (fields.length === 0) {
+      return "{}";
+    }
+
+    const result: Array<string> = [];
+    let isFirst = true;
+    result.push("{ ");
+    for (const [k, v] of fields) {
+      if (isFirst) {
+        isFirst = false;
+      } else {
+        result.push(", ");
+      }
+
+      result.push(`${k}: ${valueToString(v)}`);
+    }
+    result.push(" }");
+
+    return result.join("");
+  }
 
   return `${v}`;
 };
