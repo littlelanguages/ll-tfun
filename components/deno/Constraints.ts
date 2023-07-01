@@ -40,6 +40,14 @@ const unifies = (t1: Type, t2: Type, pump: Pump): Unifier => {
   }
   if (t1 instanceof TRowExtend) {
     const rewriteRow = (row: Type): [Type, Type] | undefined => {
+      if (row instanceof TRowEmpty) {
+        throw {
+          type: "RowDoesNotContainLabel",
+          label: t1.name,
+          t1,
+          t2,
+        };
+      }
       if (row instanceof TRowExtend) {
         if (t1.name === row.name) {
           return [row.type, row.row];
