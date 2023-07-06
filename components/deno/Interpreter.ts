@@ -21,6 +21,8 @@ import {
   Scheme,
   TArr,
   TCon,
+  TRowEmpty,
+  TRowExtend,
   TTuple,
   TVar,
   Type,
@@ -243,6 +245,20 @@ const matchPattern = (
       }
       return newRuntimeEnv;
     }
+    case "PRecord": {
+      let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
+      for (const [name, p] of pattern.fields) {
+        newRuntimeEnv = matchPattern(
+          p,
+          value[name],
+          newRuntimeEnv,
+        );
+        if (newRuntimeEnv === null) {
+          return null;
+        }
+      }
+      return newRuntimeEnv;
+    }
     case "PTuple": {
       let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
       for (let i = 0; i < pattern.values.length; i++) {
@@ -361,14 +377,23 @@ const executeDataDeclaration = (
 
         return new TCon(tc, t.arguments.map(translate));
       }
-      case "TypeVariable":
-        return new TVar(t.name);
       case "TypeFunction":
         return new TArr(translate(t.left), translate(t.right));
+      case "TypeRecord": {
+        const f = (acc: Type, field: [string, TypeItem]) =>
+          new TRowExtend(field[0], translate(field[1]), acc);
+        const initial: Type = t.extension === undefined
+          ? new TRowEmpty()
+          : translate(t.extension);
+
+        return t.fields.reduceRight(f, initial);
+      }
       case "TypeTuple":
         return new TTuple(t.values.map(translate));
       case "TypeUnit":
         return typeUnit;
+      case "TypeVariable":
+        return new TVar(t.name);
       default:
         throw { type: "UnknownTypeItemError", item: t };
     }

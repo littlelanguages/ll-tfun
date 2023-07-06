@@ -154,6 +154,7 @@ export type Pattern =
   | LStringPattern
   | LTuplePattern
   | LUnitPattern
+  | RecordPattern
   | VarPattern
   | WildCardPattern;
 
@@ -188,6 +189,12 @@ export type LUnitPattern = {
   type: "PUnit";
 };
 
+export type RecordPattern = {
+  type: "PRecord";
+  fields: Array<[string, Pattern]>;
+  extension: Pattern | undefined;
+};
+
 export type VarPattern = {
   type: "PVar";
   name: string;
@@ -217,11 +224,12 @@ export type ConstructorDeclaration = {
 };
 
 export type Type =
-  | TypeVariable
   | TypeConstructor
-  | TypeTuple
   | TypeFunction
-  | TypeUnit;
+  | TypeRecord
+  | TypeTuple
+  | TypeUnit
+  | TypeVariable;
 
 export type TypeVariable = {
   type: "TypeVariable";
@@ -244,6 +252,12 @@ export type TypeFunction = {
   type: "TypeFunction";
   left: Type;
   right: Type;
+};
+
+export type TypeRecord = {
+  type: "TypeRecord";
+  fields: Array<[string, Type]>;
+  extension: Type | undefined;
 };
 
 export type TypeUnit = {
@@ -564,6 +578,41 @@ const visitor: Visitor<
     name: a2 === undefined ? a1[2] : a2[1][2],
     args: a3,
   }),
+  visitPattern8: (
+    _a1: Token,
+    a2: [
+      Token,
+      [Token, Pattern] | undefined,
+      Array<[Token, Token, [Token, Pattern] | undefined]>,
+      [Token, Pattern] | undefined,
+    ] | undefined,
+    _a3: Token,
+  ): Pattern => {
+    if (a2 === undefined) {
+      return {
+        type: "PRecord",
+        fields: [],
+        extension: undefined,
+      };
+    }
+
+    const field: [string, Pattern] = [
+      a2[0][2],
+      a2[1] === undefined ? { type: "PVar", name: a2[0][2] } : a2[1][1],
+    ];
+    const fields = [field].concat(
+      a2[2].map((
+        [, a, b],
+      ) => [a[2], b === undefined ? { type: "PVar", name: a[2] } : b[1]]),
+    );
+    const extension = a2[3] === undefined ? undefined : a2[3][1];
+
+    return {
+      type: "PRecord",
+      fields,
+      extension,
+    };
+  },
 
   visitDataDeclaration: (
     _a1: Token,
@@ -630,6 +679,35 @@ const visitor: Visitor<
       type: "TypeTuple",
       values: [a2[0]].concat(a2[1].map(([, e]) => e)),
     },
+  visitTermType3: (
+    _a1: Token,
+    a2: [
+      Token,
+      Token,
+      Type,
+      Array<[Token, Token, Token, Type]>,
+      [Token, Type] | undefined,
+    ] | undefined,
+    _a3: Token,
+  ): Type => {
+    if (a2 === undefined) {
+      return {
+        type: "TypeRecord",
+        fields: [],
+        extension: undefined,
+      };
+    }
+
+    const field: [string, Type] = [a2[0][2], a2[2]];
+    const fields = [field].concat(a2[3].map(([, a, , b]) => [a[2], b]));
+    const extension = a2[4] === undefined ? undefined : a2[4][1];
+
+    return {
+      type: "TypeRecord",
+      fields,
+      extension,
+    };
+  },
 
   visitImportStatement: (
     _a1: Token,

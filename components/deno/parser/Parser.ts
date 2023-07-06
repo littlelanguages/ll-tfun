@@ -130,6 +130,16 @@ export interface Visitor<
     a2: [Token, Token] | undefined,
     a3: Array<T_Pattern>,
   ): T_Pattern;
+  visitPattern8(
+    a1: Token,
+    a2: [
+      Token,
+      [Token, T_Pattern] | undefined,
+      Array<[Token, Token, [Token, T_Pattern] | undefined]>,
+      [Token, T_Pattern] | undefined,
+    ] | undefined,
+    a3: Token,
+  ): T_Pattern;
   visitDataDeclaration(
     a1: Token,
     a2: T_TypeDeclaration,
@@ -158,6 +168,17 @@ export interface Visitor<
   visitTermType2(
     a1: Token,
     a2: [T_Type, Array<[Token, T_Type]>] | undefined,
+    a3: Token,
+  ): T_TermType;
+  visitTermType3(
+    a1: Token,
+    a2: [
+      Token,
+      Token,
+      T_Type,
+      Array<[Token, Token, Token, T_Type]>,
+      [Token, T_Type] | undefined,
+    ] | undefined,
     a3: Token,
   ): T_TermType;
   visitImportStatement(
@@ -719,6 +740,7 @@ export const mkParser = <
             TToken.False,
             TToken.LowerIdentifier,
             TToken.UpperIdentifier,
+            TToken.LCurly,
           ])
         ) {
           const a2t1: T_Pattern = this.pattern();
@@ -766,12 +788,71 @@ export const mkParser = <
             TToken.False,
             TToken.LowerIdentifier,
             TToken.UpperIdentifier,
+            TToken.LCurly,
           ])
         ) {
           const a3t: T_Pattern = this.pattern();
           a3.push(a3t);
         }
         return visitor.visitPattern7(a1, a2, a3);
+      } else if (isToken(TToken.LCurly)) {
+        const a1: Token = matchToken(TToken.LCurly);
+        let a2: [
+          Token,
+          [Token, T_Pattern] | undefined,
+          Array<[Token, Token, [Token, T_Pattern] | undefined]>,
+          [Token, T_Pattern] | undefined,
+        ] | undefined = undefined;
+
+        if (isToken(TToken.LowerIdentifier)) {
+          const a2t1: Token = matchToken(TToken.LowerIdentifier);
+          let a2t2: [Token, T_Pattern] | undefined = undefined;
+
+          if (isToken(TToken.Colon)) {
+            const a2t2t1: Token = matchToken(TToken.Colon);
+            const a2t2t2: T_Pattern = this.pattern();
+            const a2t2t: [Token, T_Pattern] = [a2t2t1, a2t2t2];
+            a2t2 = a2t2t;
+          }
+          const a2t3: Array<[Token, Token, [Token, T_Pattern] | undefined]> =
+            [];
+
+          while (isToken(TToken.Comma)) {
+            const a2t3t1: Token = matchToken(TToken.Comma);
+            const a2t3t2: Token = matchToken(TToken.LowerIdentifier);
+            let a2t3t3: [Token, T_Pattern] | undefined = undefined;
+
+            if (isToken(TToken.Colon)) {
+              const a2t3t3t1: Token = matchToken(TToken.Colon);
+              const a2t3t3t2: T_Pattern = this.pattern();
+              const a2t3t3t: [Token, T_Pattern] = [a2t3t3t1, a2t3t3t2];
+              a2t3t3 = a2t3t3t;
+            }
+            const a2t3t: [Token, Token, [Token, T_Pattern] | undefined] = [
+              a2t3t1,
+              a2t3t2,
+              a2t3t3,
+            ];
+            a2t3.push(a2t3t);
+          }
+          let a2t4: [Token, T_Pattern] | undefined = undefined;
+
+          if (isToken(TToken.Bar)) {
+            const a2t4t1: Token = matchToken(TToken.Bar);
+            const a2t4t2: T_Pattern = this.pattern();
+            const a2t4t: [Token, T_Pattern] = [a2t4t1, a2t4t2];
+            a2t4 = a2t4t;
+          }
+          const a2t: [
+            Token,
+            [Token, T_Pattern] | undefined,
+            Array<[Token, Token, [Token, T_Pattern] | undefined]>,
+            [Token, T_Pattern] | undefined,
+          ] = [a2t1, a2t2, a2t3, a2t4];
+          a2 = a2t;
+        }
+        const a3: Token = matchToken(TToken.RCurly);
+        return visitor.visitPattern8(a1, a2, a3);
       } else {
         throw {
           tag: "SyntaxError",
@@ -784,6 +865,7 @@ export const mkParser = <
             TToken.False,
             TToken.LowerIdentifier,
             TToken.UpperIdentifier,
+            TToken.LCurly,
           ],
         };
       }
@@ -849,6 +931,7 @@ export const mkParser = <
           TToken.UpperIdentifier,
           TToken.LowerIdentifier,
           TToken.LParen,
+          TToken.LCurly,
         ])
       ) {
         const a2t: T_Type = this.type();
@@ -886,13 +969,16 @@ export const mkParser = <
             TToken.UpperIdentifier,
             TToken.LowerIdentifier,
             TToken.LParen,
+            TToken.LCurly,
           ])
         ) {
           const a3t: T_Type = this.type();
           a3.push(a3t);
         }
         return visitor.visitADTType1(a1, a2, a3);
-      } else if (isTokens([TToken.LowerIdentifier, TToken.LParen])) {
+      } else if (
+        isTokens([TToken.LowerIdentifier, TToken.LParen, TToken.LCurly])
+      ) {
         return visitor.visitADTType2(this.termType());
       } else {
         throw {
@@ -902,6 +988,7 @@ export const mkParser = <
             TToken.UpperIdentifier,
             TToken.LowerIdentifier,
             TToken.LParen,
+            TToken.LCurly,
           ],
         };
       }
@@ -918,6 +1005,7 @@ export const mkParser = <
             TToken.UpperIdentifier,
             TToken.LowerIdentifier,
             TToken.LParen,
+            TToken.LCurly,
           ])
         ) {
           const a2t1: T_Type = this.type();
@@ -934,11 +1022,59 @@ export const mkParser = <
         }
         const a3: Token = matchToken(TToken.RParen);
         return visitor.visitTermType2(a1, a2, a3);
+      } else if (isToken(TToken.LCurly)) {
+        const a1: Token = matchToken(TToken.LCurly);
+        let a2: [
+          Token,
+          Token,
+          T_Type,
+          Array<[Token, Token, Token, T_Type]>,
+          [Token, T_Type] | undefined,
+        ] | undefined = undefined;
+
+        if (isToken(TToken.LowerIdentifier)) {
+          const a2t1: Token = matchToken(TToken.LowerIdentifier);
+          const a2t2: Token = matchToken(TToken.Colon);
+          const a2t3: T_Type = this.type();
+          const a2t4: Array<[Token, Token, Token, T_Type]> = [];
+
+          while (isToken(TToken.Comma)) {
+            const a2t4t1: Token = matchToken(TToken.Comma);
+            const a2t4t2: Token = matchToken(TToken.LowerIdentifier);
+            const a2t4t3: Token = matchToken(TToken.Colon);
+            const a2t4t4: T_Type = this.type();
+            const a2t4t: [Token, Token, Token, T_Type] = [
+              a2t4t1,
+              a2t4t2,
+              a2t4t3,
+              a2t4t4,
+            ];
+            a2t4.push(a2t4t);
+          }
+          let a2t5: [Token, T_Type] | undefined = undefined;
+
+          if (isToken(TToken.Bar)) {
+            const a2t5t1: Token = matchToken(TToken.Bar);
+            const a2t5t2: T_Type = this.type();
+            const a2t5t: [Token, T_Type] = [a2t5t1, a2t5t2];
+            a2t5 = a2t5t;
+          }
+          const a2t: [
+            Token,
+            Token,
+            T_Type,
+            Array<[Token, Token, Token, T_Type]>,
+            [Token, T_Type] | undefined,
+          ] = [a2t1, a2t2, a2t3, a2t4, a2t5];
+          a2 = a2t;
+        }
+        const a3: Token = matchToken(TToken.RCurly);
+        return visitor.visitTermType3(a1, a2, a3);
       } else {
         throw {
           tag: "SyntaxError",
           found: scanner.current(),
-          expected: [TToken.LowerIdentifier, TToken.LParen],
+          expected: [TToken.LowerIdentifier, TToken.LParen, TToken.LCurly],
         };
       }
     },

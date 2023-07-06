@@ -114,6 +114,31 @@ Deno.test("Match", () => {
     "match (1, (True, 99)) with (_, (False, x)) -> x | (x, (True, _)) -> x",
     ["1: Int"],
   );
+
+  assertExecute(
+    "match {a: 10, b: 20} with {a: x, b: y} -> x + y",
+    ["30: Int"],
+  );
+  assertExecute(
+    "match {a: 10, b: 20} with {a, b} -> a + b",
+    ["30: Int"],
+  );
+  assertExecute(
+    "match {a: 10, b: 20} with {a | _} -> a + a",
+    ["20: Int"],
+  );
+  assertExecute(
+    "match {a: 10, b: 20} with {a: 10 | _} -> 0 | {a: 20 | _ } -> 1 | _ -> 2",
+    ["0: Int"],
+  );
+  assertExecute(
+    "match {a: 20, b: 20} with {a: 10 | _} -> 0 | {a: 20 | _ } -> 1 | _ -> 2",
+    ["1: Int"],
+  );
+  assertExecute(
+    "match {a: 30, b: 20} with {a: 10 | _} -> 0 | {a: 20 | _ } -> 1 | _ -> 2",
+    ["2: Int"],
+  );
 });
 
 Deno.test("Op", () => {
@@ -176,6 +201,9 @@ Deno.test("Data Declaration - declaration", () => {
   assertExecute("data Funny = A Int | B String | C Bool", [
     "Funny = A Int | B String | C Bool",
   ]);
+  assertExecute("data Funny = Funny {a: Int, b: Int}", [
+    "Funny = Funny { a: Int, b: Int }",
+  ]);
 });
 
 Deno.test("Data Declaration - execute", () => {
@@ -183,6 +211,15 @@ Deno.test("Data Declaration - execute", () => {
     "Boolean = BTrue | BFalse",
     "BTrue: Boolean",
   ]);
+
+  assertExecute(
+    "data Funny = Funny {a: Int, b: Int} ; Funny ; Funny {a: 10, b: 10}",
+    [
+      "Funny = Funny { a: Int, b: Int }",
+      "function: { a: Int, b: Int } -> Funny",
+      "Funny { a: 10, b: 10 }: Funny",
+    ],
+  );
 
   assertExecute(
     "data List a = Cons a (List a) | Nil; Nil; Cons; Cons 10; Cons 10 (Cons 20 (Cons 30 Nil))",

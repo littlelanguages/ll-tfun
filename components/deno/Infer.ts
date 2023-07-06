@@ -277,6 +277,19 @@ export const inferPattern = (
   if (pattern.type === "PUnit") {
     return [typeUnit, env];
   }
+  if (pattern.type === "PRecord") {
+    const result: [Type, TypeEnv] = pattern.extension === undefined
+      ? [new TRowEmpty(), env]
+      : inferPattern(pattern.extension, env, constraints, pump);
+
+    for (const [name, p] of pattern.fields) {
+      const [t, e] = inferPattern(p, result[1], constraints, pump);
+      result[0] = new TRowExtend(name, t, result[0]);
+      result[1] = e;
+    }
+
+    return result;
+  }
   if (pattern.type === "PVar") {
     const tv = pump.next();
     return [tv, env.extend(pattern.name, new Scheme(new Set(), tv))];

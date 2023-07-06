@@ -76,6 +76,7 @@ Pattern
     | "False"
     | LowerIdentifier
     | UpperIdentifier ["." UpperIdentifier] {Pattern}
+    | "{" [LowerIdentifier [":" Pattern] {"," LowerIdentifier [":" Pattern]} ["|" Pattern ]] "}"
     ;
 
 DataDeclaration
@@ -102,6 +103,7 @@ ADTType
 TermType
     : LowerIdentifier
     | "(" [Type {"*" Type}] ")"
+    | "{" [LowerIdentifier ":" Type {"," LowerIdentifier ":" Type} ["|" Type]] "}"
     ;
 
 ImportStatement
