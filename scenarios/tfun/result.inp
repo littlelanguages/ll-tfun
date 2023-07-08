@@ -8,4 +8,4 @@ let rec find p lst =
   | Nil -> Error "Not found"
   | Cons x xs -> if (p x) Okay x else find p xs ;
 
-find (\x -> x == 2) (Cons 1 (Cons 2 (Cons 3 Nil)))
+find (\x = x == 2) (Cons 1 (Cons 2 (Cons 3 Nil)))

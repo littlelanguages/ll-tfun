@@ -16,10 +16,10 @@ let rec foldRight f lst z =
   | Cons x xs -> f x (foldRight f xs z) ;
 
 let length lst =
-  foldLeft (\a b -> a + 1) 0 lst ;
+  foldLeft (\a b = a + 1) 0 lst ;
 
 let sum lst = 
-  foldRight (\a b -> a + b) lst 0 ;
+  foldRight (\a b = a + b) lst 0 ;
 
 let rec map f lst =
   match lst with
