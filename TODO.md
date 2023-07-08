@@ -28,3 +28,12 @@ The tasks are built out according to the packages listed in [README](README.md)
 - [x] Incorporate into deno REPL implementation
 - [x] Add record pattern matching into grammar
 - [x] Incorporate into deno REPL implementation
+
+# Type Expression
+
+- [ ] Add typing of declarations into grammar
+- [ ] Incorporate into deno REPL implementation
+- [ ] Add typing of expressions into grammar
+- [ ] Incorporate into deno REPL implementation
+- [ ] Add type alias into grammar
+- [ ] Incorporate into deno REPL implementation

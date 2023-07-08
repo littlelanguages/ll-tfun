@@ -95,7 +95,7 @@ export const inferExpression = (
       const tv = pump.next();
       const [t] = infer(
         expr.expr,
-        env.extend(expr.name, new Scheme(new Set(), tv)),
+        env.extend(expr.name[0], new Scheme(new Set(), tv)),
       );
       return [new TArr(tv, t), env];
     }
@@ -138,11 +138,12 @@ export const inferExpression = (
         newEnv,
         {
           type: "Lam",
-          name: "_bob",
+          name: ["_bob", undefined],
           expr: {
             type: "LTuple",
             values: expr.declarations.map((d) => d.expr),
           },
+          returnType: undefined,
         },
         constraints,
       );

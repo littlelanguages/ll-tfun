@@ -46,7 +46,7 @@ Factor
     | LiteralString
     | "True"
     | "False"
-    | "\" LowerIdentifier {LowerIdentifier} "->" Expression
+    | "\" Parameter {Parameter} "->" Expression
     | "let" ["rec"] ValueDeclaration {"and" ValueDeclaration} ["in" Expression]
     | "if" "(" Expression ")" Expression "else" Expression
     | UpperIdentifier ["." Identifier]
@@ -61,7 +61,12 @@ Identifier
     ;
 
 ValueDeclaration
-    : LowerIdentifier["*"] {LowerIdentifier} "=" Expression
+    : LowerIdentifier["*"] {Parameter} [":" Type] "=" Expression
+    ;
+
+Parameter
+    : LowerIdentifier
+    | "(" LowerIdentifier ":" Type ")"
     ;
 
 Case

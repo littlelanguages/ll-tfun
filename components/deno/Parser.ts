@@ -61,12 +61,14 @@ export type Declaration = {
   name: string;
   visibility: Visibility;
   expr: Expression;
+  returnType: Type | undefined;
 };
 
 export type LamExpression = {
   type: "Lam";
-  name: string;
+  name: Parameter;
   expr: Expression;
+  returnType: Type | undefined;
 };
 
 export type LBoolExpression = {
@@ -146,6 +148,8 @@ export type MatchCase = {
   pattern: Pattern;
   expr: Expression;
 };
+
+export type Parameter = [string, Type | undefined];
 
 export type Pattern =
   | ConsPattern
@@ -308,6 +312,7 @@ const visitor: Visitor<
   Expression, // T_Factor
   string, // T_Identifier
   Declaration, // T_ValueDeclaration
+  Parameter, // T_Parameter
   MatchCase, // T_Case
   Pattern, // T_Pattern
   DataDeclaration, // T_DataDeclaration
@@ -418,12 +423,13 @@ const visitor: Visitor<
 
   visitFactor6: (
     _a1: Token,
-    a2: Token,
-    a3: Array<Token>,
+    a2: Parameter,
+    a3: Array<Parameter>,
     _a4: Token,
     a5: Expression,
   ): Expression =>
-    composeLambda([a2].concat(a3).map((n: Token): string => n[2]), a5),
+    // composeLambda([a2].concat(a3).map((n: Token): string => n[2]), a5),
+    composeLambda([a2].concat(a3), a5),
 
   visitFactor7: (
     _a1: Token,
@@ -516,15 +522,26 @@ const visitor: Visitor<
   visitValueDeclaration: (
     a1: Token,
     a2: Token | undefined,
-    a3: Array<Token>,
-    _a4: Token,
-    a5: Expression,
+    a3: Array<Parameter>,
+    a4: [Token, Type] | undefined,
+    _a5: Token,
+    a6: Expression,
   ): Declaration => ({
     type: "Declaration",
     name: a1[2],
     visibility: a2 === undefined ? Visibility.None : Visibility.Public,
-    expr: composeLambda(a3.map((n) => n[2]), a5),
+    expr: composeLambda(a3, a6),
+    returnType: a4 === undefined ? undefined : a4[1],
   }),
+
+  visitParameter1: (a: Token): Parameter => [a[2], undefined],
+  visitParameter2: (
+    a1: Token,
+    _a2: Token,
+    _a3: Token,
+    a4: Type,
+    _a5: Token,
+  ): Parameter => [a1[2], a4],
 
   visitCase: (a1: Pattern, _a2: Token, a3: Expression): MatchCase => ({
     pattern: a1,
@@ -759,11 +776,12 @@ const visitor: Visitor<
   }),
 };
 
-const composeLambda = (names: Array<string>, expr: Expression): Expression =>
+const composeLambda = (names: Array<Parameter>, expr: Expression): Expression =>
   names.reduceRight((acc, name) => ({
     type: "Lam",
     name,
     expr: acc,
+    returnType: undefined,
   }), expr);
 
 const composeFunctionType = (types: Array<Type>): Type =>

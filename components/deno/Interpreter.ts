@@ -164,7 +164,7 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
     case "Lam":
       return (x: RuntimeValue): RuntimeValue => {
         const newRuntimeEnv = runtimeEnv.clone();
-        newRuntimeEnv.bind(expr.name, x);
+        newRuntimeEnv.bind(expr.name[0], x);
         return evaluate(expr.expr, newRuntimeEnv);
       };
     case "Let":
