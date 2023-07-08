@@ -256,25 +256,21 @@ Deno.test("Error - add visibility ot non-toplevel declaration", () => {
 Deno.test("Import - raw mechanism using simple.tfun", () => {
   const ip = executeImport("./tests/simple.tfun", home).values;
 
-  assertEquals(ip.length, 4);
+  assertEquals(ip.size, 4);
 
-  assertEquals(ip[0][0], "x");
-  assertEquals(ip[0][1], 10);
+  assertEquals(ip.get("x")![0], 10);
 
-  assertEquals(ip[1][0], "y");
-  assertEquals(ip[1][1], 20);
+  assertEquals(ip.get("y")![0], 20);
 
-  assertEquals(ip[2][0], "double");
-  assertEquals(ip[2][1](5), 10);
+  assertEquals(ip.get("double")![0](5), 10);
 
-  assertEquals(ip[3][0], "square");
-  assertEquals(ip[3][1](5), 25);
+  assertEquals(ip.get("square")![0](5), 25);
 });
 
 Deno.test("Import - raw mechanism using adt.tfun", () => {
   const ip = executeImport("./tests/adt.tfun", home).values;
 
-  assertEquals(ip.length, 9);
+  assertEquals(ip.size, 9);
 });
 
 Deno.test("Import - simple values", () => {

@@ -74,11 +74,13 @@ class RuntimeEnv {
   }
 }
 
-type ImportValues = Array<[string, RuntimeValue, Type]>;
+type ImportValues = Map<string, [RuntimeValue, Type]>;
 type ImportPackage = {
   values: ImportValues;
   types: TypeEnv;
 };
+
+const importValueNames = (values: ImportValues): Array<string> => [...values.keys()];
 
 type ImportEnv = { [key: string]: ImportPackage };
 
@@ -208,9 +210,7 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
     case "Var":
       return (expr.qualifier === undefined)
         ? runtimeEnv.get(expr.name)
-        : runtimeEnv.get(expr.qualifier).find((v: RuntimeValue) =>
-          v[0] === expr.name
-        )![1];
+        : runtimeEnv.get(expr.qualifier).get(expr.name)![0];
     default:
       return null;
   }
@@ -337,16 +337,16 @@ const mkConstructorFunction = (name: string, arity: number): RuntimeValue => {
   }
   if (arity === 4) {
     return (x1: RuntimeValue) =>
-    (x2: RuntimeValue) =>
-    (x3: RuntimeValue) =>
-    (x4: RuntimeValue) => [name, x1, x2, x3, x4];
+      (x2: RuntimeValue) =>
+        (x3: RuntimeValue) =>
+          (x4: RuntimeValue) => [name, x1, x2, x3, x4];
   }
   if (arity === 5) {
     return (x1: RuntimeValue) =>
-    (x2: RuntimeValue) =>
-    (x3: RuntimeValue) =>
-    (x4: RuntimeValue) =>
-    (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
+      (x2: RuntimeValue) =>
+        (x3: RuntimeValue) =>
+          (x4: RuntimeValue) =>
+            (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
   }
 
   throw { type: "TooManyConstructorArgumentsErrors", name, arity };
@@ -466,7 +466,7 @@ const executeElement = (
         const runtime = env.runtime.clone();
         let type = env.type;
 
-        imports.values.forEach(([n, v, t]) => {
+        imports.values.forEach(([v, t], n) => {
           if (runtime.has(n)) {
             throw {
               type: "ImportNameAlreadyDeclared",
@@ -510,7 +510,7 @@ const executeElement = (
             throw {
               type: "UnknownImportName",
               name,
-              names: imports.values.map((v) => v[0]),
+              names: importValueNames(imports.values),
             };
           }
           if (type.data(adt.name) !== undefined) {
@@ -528,24 +528,24 @@ const executeElement = (
                 name: adt.name,
               };
             }
-            const v = imports.values.find((v) => v[0] === c.name)!;
+            const v = imports.values.get(c.name)!;
             runtime.bind(
               c.name,
-              v[1],
+              v[0],
             );
-            type = type.extend(c.name, v[2].toScheme());
+            type = type.extend(c.name, v[1].toScheme());
           });
         } else {
-          const item = imports.values.find((v) => v[0] === name);
+          const item = imports.values.get(name);
 
           if (item === undefined) {
             throw {
               type: "UnknownImportName",
               name,
-              names: imports.values.map((v) => v[0]),
+              names: importValueNames(imports.values),
             };
           }
-          const n = as === undefined ? item[0] : as;
+          const n = as ?? name;
 
           if (runtime.has(n)) {
             throw {
@@ -554,8 +554,8 @@ const executeElement = (
             };
           }
 
-          runtime.bind(n, item[1]);
-          type = type.extend(n, item[2].toScheme());
+          runtime.bind(n, item[0]);
+          type = type.extend(n, item[1].toScheme());
         }
       });
 
@@ -612,7 +612,7 @@ export const executeImport = (
 
   const env = importEnv[urn];
   if (env === undefined) {
-    const importValues: ImportValues = [];
+    const importValues: ImportValues = new Map();
     let env = emptyTypeEnv;
 
     const ast = parse(Deno.readTextFileSync(urn));
@@ -629,7 +629,7 @@ export const executeImport = (
             const v = value[i2];
             const vType = tt.types[i2];
 
-            importValues.push([d.name, v, vType]);
+            importValues.set(d.name, [v, vType]);
             env = env.extend(d.name, vType.toScheme());
           }
         });
@@ -642,11 +642,7 @@ export const executeImport = (
                 createFresh(),
               );
 
-              importValues.push([
-                c.name,
-                resultEnv.runtime.get(c.name),
-                constructorType,
-              ]);
+              importValues.set(c.name, [resultEnv.runtime.get(c.name), constructorType,]);
               env = env.extend(c.name, constructorScheme);
             });
             env = env.addData(resultEnv.type.data(d.name)!);
@@ -673,31 +669,31 @@ export const executeImport = (
                   throw {
                     type: "UnknownImportName",
                     name,
-                    names: imports.values.map((v) => v[0]),
+                    names: importValueNames(imports.values),
                   };
                 }
                 env = env.addData(adt);
 
                 adt.constructors.forEach((c) => {
-                  const v = imports.values.find((v) => v[0] === c.name)!;
-                  importValues.push([c.name, v[1], v[2]]);
-                  env = env.extend(c.name, v[2].toScheme());
+                  const v = imports.values.get(c.name)!;
+                  importValues.set(c.name, [v[0], v[1]]);
+                  env = env.extend(c.name, v[1].toScheme());
                 });
               } else {
-                const item = imports.values.find((v) => v[0] === name);
+                const item = imports.values.get(name);
 
                 if (item === undefined) {
                   throw {
                     type: "UnknownImportName",
                     name,
-                    names: imports.values.map((v) => v[0]),
+                    names: importValueNames(imports.values),
                   };
                 }
 
-                const n = as === undefined ? item[0] : as;
+                const n = as ?? name;
 
-                importValues.push([n, item[1], item[2]]);
-                env = env.extend(n, item[2].toScheme());
+                importValues.set(n, [item[0], item[1]]);
+                env = env.extend(n, item[1].toScheme());
               }
             }
           });
