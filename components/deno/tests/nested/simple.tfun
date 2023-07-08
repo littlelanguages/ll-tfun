@@ -2,4 +2,4 @@ let compose* f g n = f (g n);
 
 let identity* n = n;
 
-let constant* n = \_ -> n
+let constant* n = \_ = n

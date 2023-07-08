@@ -66,8 +66,9 @@ export interface Visitor<
     a1: Token,
     a2: T_Parameter,
     a3: Array<T_Parameter>,
-    a4: Token,
-    a5: T_Expression,
+    a4: [Token, T_Type] | undefined,
+    a5: Token,
+    a6: T_Expression,
   ): T_Factor;
   visitFactor7(
     a1: Token,
@@ -563,9 +564,17 @@ export const mkParser = <
           const a3t: T_Parameter = this.parameter();
           a3.push(a3t);
         }
-        const a4: Token = matchToken(TToken.DashGreaterThan);
-        const a5: T_Expression = this.expression();
-        return visitor.visitFactor6(a1, a2, a3, a4, a5);
+        let a4: [Token, T_Type] | undefined = undefined;
+
+        if (isToken(TToken.Colon)) {
+          const a4t1: Token = matchToken(TToken.Colon);
+          const a4t2: T_Type = this.type();
+          const a4t: [Token, T_Type] = [a4t1, a4t2];
+          a4 = a4t;
+        }
+        const a5: Token = matchToken(TToken.Equal);
+        const a6: T_Expression = this.expression();
+        return visitor.visitFactor6(a1, a2, a3, a4, a5, a6);
       } else if (isToken(TToken.Let)) {
         const a1: Token = matchToken(TToken.Let);
         let a2: Token | undefined = undefined;

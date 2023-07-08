@@ -46,7 +46,7 @@ Factor
     | LiteralString
     | "True"
     | "False"
-    | "\" Parameter {Parameter} "->" Expression
+    | "\" Parameter {Parameter} [":" Type] "=" Expression
     | "let" ["rec"] ValueDeclaration {"and" ValueDeclaration} ["in" Expression]
     | "if" "(" Expression ")" Expression "else" Expression
     | UpperIdentifier ["." Identifier]

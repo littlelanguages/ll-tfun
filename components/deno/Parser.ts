@@ -61,7 +61,6 @@ export type Declaration = {
   name: string;
   visibility: Visibility;
   expr: Expression;
-  returnType: Type | undefined;
 };
 
 export type LamExpression = {
@@ -425,11 +424,11 @@ const visitor: Visitor<
     _a1: Token,
     a2: Parameter,
     a3: Array<Parameter>,
-    _a4: Token,
-    a5: Expression,
+    a4: [Token, Type] | undefined,
+    _a5: Token,
+    a6: Expression,
   ): Expression =>
-    // composeLambda([a2].concat(a3).map((n: Token): string => n[2]), a5),
-    composeLambda([a2].concat(a3), a5),
+    composeLambda([a2].concat(a3), a6, a4 === undefined ? undefined : a4[1]),
 
   visitFactor7: (
     _a1: Token,
@@ -530,18 +529,17 @@ const visitor: Visitor<
     type: "Declaration",
     name: a1[2],
     visibility: a2 === undefined ? Visibility.None : Visibility.Public,
-    expr: composeLambda(a3, a6),
-    returnType: a4 === undefined ? undefined : a4[1],
+    expr: composeLambda(a3, a6, a4 === undefined ? undefined : a4[1]),
   }),
 
   visitParameter1: (a: Token): Parameter => [a[2], undefined],
   visitParameter2: (
-    a1: Token,
-    _a2: Token,
+    _a1: Token,
+    a2: Token,
     _a3: Token,
     a4: Type,
     _a5: Token,
-  ): Parameter => [a1[2], a4],
+  ): Parameter => [a2[2], a4],
 
   visitCase: (a1: Pattern, _a2: Token, a3: Expression): MatchCase => ({
     pattern: a1,
@@ -776,13 +774,24 @@ const visitor: Visitor<
   }),
 };
 
-const composeLambda = (names: Array<Parameter>, expr: Expression): Expression =>
-  names.reduceRight((acc, name) => ({
+const composeLambda = (
+  names: Array<Parameter>,
+  expr: Expression,
+  returnType: Type | undefined,
+): Expression => {
+  const result: Expression = names.reduceRight((acc, name) => ({
     type: "Lam",
     name,
     expr: acc,
     returnType: undefined,
   }), expr);
+
+  if (result.type === "Lam") {
+    result.returnType = returnType;
+  }
+
+  return result;
+};
 
 const composeFunctionType = (types: Array<Type>): Type =>
   types.slice(1).reduceRight((acc, type) => ({
@@ -793,3 +802,4 @@ const composeFunctionType = (types: Array<Type>): Type =>
 
 // console.log(JSON.stringify(parse("data List n = Nil | Cons n (List n) ; let compose f g x = f(g x) ; compose"), null, 2));
 // console.log(JSON.stringify(parse("let recs a = { x: 1, y: a } ; let y = recs 10 ; y ; y.x.z"), null, 2));
+// console.log(JSON.stringify(parse("\\(v: Int) . v"), null, 2));

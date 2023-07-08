@@ -26,16 +26,16 @@ const assertType = (expression: string, expected: Array<string>) => {
   );
 };
 
-Deno.test("solve \\x -> \\y -> \\z -> x + y + z", () => {
+Deno.test("solve \\x = \\y = \\z = x + y + z", () => {
   assertType(
-    "\\x -> \\y -> \\z -> x + y + z",
+    "\\x = \\y = \\z = x + y + z",
     ["Int -> Int -> Int -> Int"],
   );
 });
 
-Deno.test("solve \\f -> \\g -> \\x -> f (g x)", () => {
+Deno.test("solve \\f = \\g = \\x = f (g x)", () => {
   assertType(
-    "\\f -> \\g -> \\x -> f (g x)",
+    "\\f = \\g = \\x = f (g x)",
     ["(V4 -> V5) -> (V3 -> V4) -> V3 -> V5"],
   );
 });
@@ -52,9 +52,9 @@ Deno.test("solve match (1, 2) with (x, y) -> x + y", () => {
   );
 });
 
-Deno.test("solve let rec? compose = \\f -> \\g -> \\x -> f (g x) ; compose", () => {
+Deno.test("solve let rec? compose = \\f = \\g = \\x = f (g x) ; compose", () => {
   assertType(
-    "let compose = \\f -> \\g -> \\x -> f (g x) ; compose",
+    "let compose = \\f = \\g = \\x = f (g x) ; compose",
     [
       "((V4 -> V5) -> (V3 -> V4) -> V3 -> V5)",
       "(V6 -> V7) -> (V8 -> V6) -> V8 -> V7",
@@ -62,7 +62,7 @@ Deno.test("solve let rec? compose = \\f -> \\g -> \\x -> f (g x) ; compose", () 
   );
 
   assertType(
-    "let rec compose = \\f -> \\g -> \\x -> f (g x) ; compose",
+    "let rec compose = \\f = \\g = \\x = f (g x) ; compose",
     [
       "((V6 -> V7) -> (V5 -> V6) -> V5 -> V7)",
       "(V9 -> V10) -> (V11 -> V9) -> V11 -> V10",
@@ -70,36 +70,36 @@ Deno.test("solve let rec? compose = \\f -> \\g -> \\x -> f (g x) ; compose", () 
   );
 });
 
-Deno.test("solve let rec? f = (\\x -> x) ; let rec? g = (f True) ; f 3", () => {
+Deno.test("solve let rec? f = (\\x = x) ; let rec? g = (f True) ; f 3", () => {
   assertType(
-    "let f = (\\x -> x) ; let g = (f True) ; f 3",
+    "let f = (\\x = x) ; let g = (f True) ; f 3",
     ["(V1 -> V1)", "(Bool)", "Int"],
   );
 
   assertType(
-    "let f = (\\x -> x) ; let rec g = (f True) ; f 3",
+    "let f = (\\x = x) ; let rec g = (f True) ; f 3",
     ["(V1 -> V1)", "(Bool)", "Int"],
   );
 
   assertType(
-    "let rec f = (\\x -> x) ; let g = (f True) ; f 3",
+    "let rec f = (\\x = x) ; let g = (f True) ; f 3",
     ["(V3 -> V3)", "(Bool)", "Int"],
   );
 
   assertType(
-    "let rec f = (\\x -> x) ; let rec g = (f True) ; f 3",
+    "let rec f = (\\x = x) ; let rec g = (f True) ; f 3",
     ["(V3 -> V3)", "(Bool)", "Int"],
   );
 });
 
-Deno.test("solve let rec? identity = \\n -> n ; identity", () => {
+Deno.test("solve let rec? identity = \\n = n ; identity", () => {
   assertType(
-    "let identity = \\n -> n ; identity",
+    "let identity = \\n = n ; identity",
     ["(V1 -> V1)", "V2 -> V2"],
   );
 
   assertType(
-    "let rec identity = \\n -> n ; identity",
+    "let rec identity = \\n = n ; identity",
     ["(V3 -> V3)", "V5 -> V5"],
   );
 });

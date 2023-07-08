@@ -9,11 +9,11 @@ import { expressionToNestedString, NestedString } from "./Values.ts";
 import { home } from "./Src.ts";
 
 Deno.test("App 1", () => {
-  assertExecute("(\\n -> n + 1) 1", ["2: Int"]);
+  assertExecute("(\\n = n + 1) 1", ["2: Int"]);
 });
 
 Deno.test("App", () => {
-  assertExecute("(\\a -> \\b -> a + b) 10 20", ["30: Int"]);
+  assertExecute("(\\a = \\b = a + b) 10 20", ["30: Int"]);
 });
 
 Deno.test("If", () => {
@@ -22,7 +22,7 @@ Deno.test("If", () => {
 });
 
 Deno.test("Lam", () => {
-  assertExecute("\\a -> \\b -> a + b", ["function: Int -> Int -> Int"]);
+  assertExecute("\\a = \\b = a + b", ["function: Int -> Int -> Int"]);
 });
 
 Deno.test("Let", () => {
@@ -180,14 +180,14 @@ Deno.test("Records", () => {
 Deno.test("Var", () => {
   assertExecute("let x = 1 ; x", [["x = 1: Int"], "1: Int"]);
   assertExecute("let x = True ; x", [["x = true: Bool"], "true: Bool"]);
-  assertExecute("let x = \\a -> a ; x", [
+  assertExecute("let x = \\a = a ; x", [
     ["x = function: V1 -> V1"],
     "function: V1 -> V1",
   ]);
 
   assertExecute("let x = 1 in x", ["1: Int"]);
   assertExecute("let x = True in x", ["true: Bool"]);
-  assertExecute("let x = \\a -> a in x", ["function: V2 -> V2"]);
+  assertExecute("let x = \\a = a in x", ["function: V2 -> V2"]);
 });
 
 Deno.test("Data Declaration - declaration", () => {
@@ -349,7 +349,7 @@ Deno.test("Import - simple types", () => {
   );
 
   assertExecute(
-    'import * from "./tests/adt.tfun"; find (\\n -> n == 1) (Cons 1 Nil) ; let v = find (\\n -> n == 10) (Cons 1 Nil) ; withDefault 0 v',
+    'import * from "./tests/adt.tfun"; find (\\n = n == 1) (Cons 1 Nil) ; let v = find (\\n = n == 10) (Cons 1 Nil) ; withDefault 0 v',
     [
       "import",
       "Just 1: Maybe Int",
@@ -359,7 +359,7 @@ Deno.test("Import - simple types", () => {
   );
 
   assertExecute(
-    'import * as T from "./tests/adt.tfun"; T.find (\\n -> n == 1) (T.Cons 1 T.Nil) ; let v = T.find (\\n -> n == 10) (T.Cons 1 T.Nil) ; T.withDefault 0 v',
+    'import * as T from "./tests/adt.tfun"; T.find (\\n = n == 1) (T.Cons 1 T.Nil) ; let v = T.find (\\n = n == 10) (T.Cons 1 T.Nil) ; T.withDefault 0 v',
     [
       "import",
       "Just 1: Maybe Int",
@@ -377,7 +377,7 @@ Deno.test("Import - simple types", () => {
   );
 
   assertError(
-    'import * from "./tests/adt.tfun"; let v = find (\\n -> n == 10) (Cons 1 Nil); match v with | None -> 0 | Some v -> v',
+    'import * from "./tests/adt.tfun"; let v = find (\\n = n == 10) (Cons 1 Nil); match v with | None -> 0 | Some v -> v',
     { type: "UnknownConstructorError", name: "None" },
   );
 

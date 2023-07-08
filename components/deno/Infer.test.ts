@@ -67,7 +67,7 @@ Deno.test("infer If", () => {
 Deno.test("infer Lam", () => {
   const [constraints, type] = inferProgram(
     emptyTypeEnv,
-    parse("\\x -> x 10"),
+    parse("\\x = x 10"),
     new Constraints(),
     createFresh(),
   );
@@ -198,7 +198,7 @@ Deno.test("infer RecordSelect", () => {
 Deno.test("infer RecordSelect 2", () => {
   const [constraints, type] = inferProgram(
     emptyTypeEnv,
-    parse("\\x -> x.y"),
+    parse("\\x = x.y"),
     new Constraints(),
     createFresh(),
   );

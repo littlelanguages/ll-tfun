@@ -33,7 +33,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               this.markAndNextChar();
               state = 4;
               break;
-            } else if (this.nextCh === 61) {
+            } else if (this.nextCh === 45) {
               this.markAndNextChar();
               state = 5;
               break;
@@ -41,39 +41,39 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               this.markAndNextChar();
               state = 6;
               break;
-            } else if (this.nextCh === 58) {
+            } else if (this.nextCh === 123) {
               this.markAndNextChar();
               state = 7;
               break;
-            } else if (this.nextCh === 123) {
+            } else if (this.nextCh === 124) {
               this.markAndNextChar();
               state = 8;
               break;
-            } else if (this.nextCh === 124) {
+            } else if (this.nextCh === 119) {
               this.markAndNextChar();
               state = 9;
               break;
-            } else if (this.nextCh === 119) {
+            } else if (this.nextCh === 109) {
               this.markAndNextChar();
               state = 10;
               break;
-            } else if (this.nextCh === 109) {
+            } else if (this.nextCh === 101) {
               this.markAndNextChar();
               state = 11;
               break;
-            } else if (this.nextCh === 101) {
+            } else if (this.nextCh === 114) {
               this.markAndNextChar();
               state = 12;
               break;
-            } else if (this.nextCh === 114) {
+            } else if (this.nextCh === 108) {
               this.markAndNextChar();
               state = 13;
               break;
-            } else if (this.nextCh === 108) {
+            } else if (this.nextCh === 61) {
               this.markAndNextChar();
               state = 14;
               break;
-            } else if (this.nextCh === 45) {
+            } else if (this.nextCh === 58) {
               this.markAndNextChar();
               state = 15;
               break;
@@ -248,12 +248,20 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
             }
           }
           case 5: {
-            if (this.nextCh === 61) {
+            if (this.nextCh === 62) {
               this.nextChar();
               state = 39;
               break;
+            } else if (48 <= this.nextCh && this.nextCh <= 57) {
+              this.nextChar();
+              state = 31;
+              break;
+            } else if (this.nextCh === 45) {
+              this.nextChar();
+              state = 40;
+              break;
             } else {
-              this.setToken(4);
+              this.setToken(27);
               return;
             }
           }
@@ -270,13 +278,9 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
             return;
           }
           case 9: {
-            this.setToken(8);
-            return;
-          }
-          case 10: {
             if (this.nextCh === 105) {
               this.nextChar();
-              state = 40;
+              state = 41;
               break;
             } else if (
               48 <= this.nextCh && this.nextCh <= 57 ||
@@ -292,10 +296,10 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               return;
             }
           }
-          case 11: {
+          case 10: {
             if (this.nextCh === 97) {
               this.nextChar();
-              state = 41;
+              state = 42;
               break;
             } else if (
               48 <= this.nextCh && this.nextCh <= 57 ||
@@ -310,10 +314,10 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               return;
             }
           }
-          case 12: {
+          case 11: {
             if (this.nextCh === 108) {
               this.nextChar();
-              state = 42;
+              state = 43;
               break;
             } else if (
               48 <= this.nextCh && this.nextCh <= 57 ||
@@ -329,26 +333,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               return;
             }
           }
-          case 13: {
-            if (this.nextCh === 101) {
-              this.nextChar();
-              state = 43;
-              break;
-            } else if (
-              48 <= this.nextCh && this.nextCh <= 57 ||
-              65 <= this.nextCh && this.nextCh <= 90 || this.nextCh === 95 ||
-              97 <= this.nextCh && this.nextCh <= 100 ||
-              102 <= this.nextCh && this.nextCh <= 122
-            ) {
-              this.nextChar();
-              state = 28;
-              break;
-            } else {
-              this.setToken(32);
-              return;
-            }
-          }
-          case 14: {
+          case 12: {
             if (this.nextCh === 101) {
               this.nextChar();
               state = 44;
@@ -367,23 +352,38 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               return;
             }
           }
-          case 15: {
-            if (this.nextCh === 62) {
+          case 13: {
+            if (this.nextCh === 101) {
               this.nextChar();
               state = 45;
               break;
-            } else if (48 <= this.nextCh && this.nextCh <= 57) {
+            } else if (
+              48 <= this.nextCh && this.nextCh <= 57 ||
+              65 <= this.nextCh && this.nextCh <= 90 || this.nextCh === 95 ||
+              97 <= this.nextCh && this.nextCh <= 100 ||
+              102 <= this.nextCh && this.nextCh <= 122
+            ) {
               this.nextChar();
-              state = 31;
+              state = 28;
               break;
-            } else if (this.nextCh === 45) {
+            } else {
+              this.setToken(32);
+              return;
+            }
+          }
+          case 14: {
+            if (this.nextCh === 61) {
               this.nextChar();
               state = 46;
               break;
             } else {
-              this.setToken(27);
+              this.setToken(16);
               return;
             }
+          }
+          case 15: {
+            this.setToken(17);
+            return;
           }
           case 16: {
             this.setToken(18);
@@ -604,7 +604,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               state = 28;
               break;
             } else {
-              this.setToken(12);
+              this.setToken(11);
               return;
             }
           }
@@ -618,7 +618,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               state = 28;
               break;
             } else {
-              this.setToken(13);
+              this.setToken(12);
               return;
             }
           }
@@ -642,10 +642,23 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
             }
           }
           case 39: {
-            this.setToken(29);
+            this.setToken(4);
             return;
           }
           case 40: {
+            if (
+              0 <= this.nextCh && this.nextCh <= 9 ||
+              11 <= this.nextCh && this.nextCh <= 255
+            ) {
+              this.nextChar();
+              state = 40;
+              break;
+            } else {
+              this.next();
+              return;
+            }
+          }
+          case 41: {
             if (this.nextCh === 116) {
               this.nextChar();
               state = 55;
@@ -664,7 +677,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               return;
             }
           }
-          case 41: {
+          case 42: {
             if (this.nextCh === 116) {
               this.nextChar();
               state = 56;
@@ -683,7 +696,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               return;
             }
           }
-          case 42: {
+          case 43: {
             if (this.nextCh === 115) {
               this.nextChar();
               state = 57;
@@ -702,7 +715,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               return;
             }
           }
-          case 43: {
+          case 44: {
             if (this.nextCh === 99) {
               this.nextChar();
               state = 58;
@@ -721,7 +734,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               return;
             }
           }
-          case 44: {
+          case 45: {
             if (this.nextCh === 116) {
               this.nextChar();
               state = 59;
@@ -740,22 +753,9 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               return;
             }
           }
-          case 45: {
-            this.setToken(17);
-            return;
-          }
           case 46: {
-            if (
-              0 <= this.nextCh && this.nextCh <= 9 ||
-              11 <= this.nextCh && this.nextCh <= 255
-            ) {
-              this.nextChar();
-              state = 46;
-              break;
-            } else {
-              this.next();
-              return;
-            }
+            this.setToken(29);
+            return;
           }
           case 47: {
             if (this.nextCh === 108) {
@@ -832,7 +832,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               state = 28;
               break;
             } else {
-              this.setToken(14);
+              this.setToken(13);
               return;
             }
           }
@@ -959,7 +959,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               state = 28;
               break;
             } else {
-              this.setToken(15);
+              this.setToken(14);
               return;
             }
           }
@@ -973,7 +973,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               state = 28;
               break;
             } else {
-              this.setToken(16);
+              this.setToken(15);
               return;
             }
           }
@@ -1097,7 +1097,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               state = 28;
               break;
             } else {
-              this.setToken(9);
+              this.setToken(8);
               return;
             }
           }
@@ -1130,7 +1130,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               state = 28;
               break;
             } else {
-              this.setToken(11);
+              this.setToken(10);
               return;
             }
           }
@@ -1196,7 +1196,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
               state = 28;
               break;
             } else {
-              this.setToken(10);
+              this.setToken(9);
               return;
             }
           }
@@ -1243,9 +1243,8 @@ export enum TToken {
   From,
   Import,
   Data,
-  Equal,
+  DashGreaterThan,
   RCurly,
-  Colon,
   LCurly,
   Bar,
   With,
@@ -1256,7 +1255,8 @@ export enum TToken {
   And,
   Rec,
   Let,
-  DashGreaterThan,
+  Equal,
+  Colon,
   Backslash,
   False,
   True,
