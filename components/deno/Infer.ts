@@ -1,4 +1,4 @@
-import { Expression, Op, Pattern, Program } from "./Parser.ts";
+import * as AST from "./Parser.ts";
 import { Constraints } from "./Constraints.ts";
 import {
   applyArray,
@@ -20,16 +20,16 @@ import {
 } from "./Typing.ts";
 
 const ops = new Map([
-  [Op.Equals, new TArr(typeInt, new TArr(typeInt, typeBool))],
-  [Op.Plus, new TArr(typeInt, new TArr(typeInt, typeInt))],
-  [Op.Minus, new TArr(typeInt, new TArr(typeInt, typeInt))],
-  [Op.Times, new TArr(typeInt, new TArr(typeInt, typeInt))],
-  [Op.Divide, new TArr(typeInt, new TArr(typeInt, typeInt))],
+  [AST.Op.Equals, new TArr(typeInt, new TArr(typeInt, typeBool))],
+  [AST.Op.Plus, new TArr(typeInt, new TArr(typeInt, typeInt))],
+  [AST.Op.Minus, new TArr(typeInt, new TArr(typeInt, typeInt))],
+  [AST.Op.Times, new TArr(typeInt, new TArr(typeInt, typeInt))],
+  [AST.Op.Divide, new TArr(typeInt, new TArr(typeInt, typeInt))],
 ]);
 
 export const inferProgram = (
   env: TypeEnv,
-  program: Program,
+  program: AST.Program,
   constraints: Constraints,
   pump: Pump,
 ): [Constraints, Array<Type>, TypeEnv] => {
@@ -53,14 +53,14 @@ export const inferProgram = (
 };
 
 export const inferExpression = (
-  expression: Expression,
+  expression: AST.Expression,
   env: TypeEnv,
   constraints: Constraints,
   pump: Pump,
 ): [Constraints, Type, TypeEnv] => {
   const fix = (
     env: TypeEnv,
-    expr: Expression,
+    expr: AST.Expression,
     constraints: Constraints,
   ): Type => {
     const [_, t1] = inferExpression(expr, env, constraints, pump);
@@ -71,7 +71,7 @@ export const inferExpression = (
     return tv;
   };
 
-  const infer = (expr: Expression, env: TypeEnv): [Type, TypeEnv] => {
+  const infer = (expr: AST.Expression, env: TypeEnv): [Type, TypeEnv] => {
     if (expr.type === "App") {
       const [t1] = infer(expr.e1, env);
       const [t2] = infer(expr.e2, env);
@@ -251,7 +251,7 @@ export const inferExpression = (
 };
 
 export const inferPattern = (
-  pattern: Pattern,
+  pattern: AST.Pattern,
   env: TypeEnv,
   constraints: Constraints,
   pump: Pump,
