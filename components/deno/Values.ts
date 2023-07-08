@@ -1,8 +1,16 @@
 import { Expression } from "./Parser.ts";
-import { TTuple, Type } from "./Typing.ts";
+import { TTuple, Type, TypeEnv } from "./Typing.ts";
 
 // deno-lint-ignore no-explicit-any
 export type RuntimeValue = any;
+
+export type ImportValues = Map<string, [RuntimeValue, Type]>;
+export type ImportPackage = {
+  values: ImportValues;
+  types: TypeEnv;
+};
+
+export type ImportEnv = { [key: string]: ImportPackage };
 
 class VTuple {
   values: Array<RuntimeValue>;

@@ -32,7 +32,14 @@ import {
   typeString,
   typeUnit,
 } from "./Typing.ts";
-import { mkTuple, RuntimeValue, tupleComponent } from "./Values.ts";
+import {
+  ImportEnv,
+  ImportPackage,
+  ImportValues,
+  mkTuple,
+  RuntimeValue,
+  tupleComponent,
+} from "./Values.ts";
 
 type RuntimeEnvBindings = { [key: string]: RuntimeValue };
 
@@ -74,17 +81,9 @@ class RuntimeEnv {
   }
 }
 
-type ImportValues = Map<string, [RuntimeValue, Type]>;
-type ImportPackage = {
-  values: ImportValues;
-  types: TypeEnv;
-};
-
 const importValueNames = (
   values: ImportValues,
 ): Array<string> => [...values.keys()];
-
-type ImportEnv = { [key: string]: ImportPackage };
 
 export type Env = {
   runtime: RuntimeEnv;
@@ -417,7 +416,7 @@ const executeDataDeclaration = (
     const adt = env.type.data(d.name)!;
 
     d.constructors.forEach((c) => {
-      adt.addConstructor(c.name, c.parameters.map(translate));
+      adt.addConstructor(c.name, c.parameters.map(translateType));
     });
 
     adts.push(adt);
