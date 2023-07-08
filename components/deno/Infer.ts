@@ -10,6 +10,7 @@ import {
   TRowEmpty,
   TRowExtend,
   TTuple,
+  TVar,
   Type,
   typeBool,
   TypeEnv,
@@ -18,6 +19,12 @@ import {
   typeString,
   typeUnit,
 } from "./Typing.ts";
+import { ImportEnv } from "./Values.ts";
+
+export type Env = {
+  type: TypeEnv;
+  imports: ImportEnv;
+};
 
 const ops = new Map([
   [AST.Op.Equals, new TArr(typeInt, new TArr(typeInt, typeBool))],
@@ -331,6 +338,53 @@ export const inferPattern = (
   }
 
   return [typeError, env];
+};
+
+export const translateType = (t: AST.Type, env: Env): Type => {
+  const translate = (t: AST.Type): Type => {
+    switch (t.type) {
+      case "TypeConstructor": {
+        const qualifiedEnv = t.qualifier === undefined
+          ? env.type
+          : env.type.import(t.qualifier);
+        const tc = qualifiedEnv?.data(t.name);
+        if (tc === undefined) {
+          throw { type: "UnknownDataError", name: t.name };
+        }
+        if (t.arguments.length !== tc.parameters.length) {
+          throw {
+            type: "IncorrectTypeArguments",
+            name: t.name,
+            expected: tc.parameters.length,
+            actual: t.arguments.length,
+          };
+        }
+
+        return new TCon(tc, t.arguments.map(translate));
+      }
+      case "TypeFunction":
+        return new TArr(translate(t.left), translate(t.right));
+      case "TypeRecord": {
+        const f = (acc: Type, field: [string, AST.Type]) =>
+          new TRowExtend(field[0], translate(field[1]), acc);
+        const initial: Type = t.extension === undefined
+          ? new TRowEmpty()
+          : translate(t.extension);
+
+        return t.fields.reduceRight(f, initial);
+      }
+      case "TypeTuple":
+        return new TTuple(t.values.map(translate));
+      case "TypeUnit":
+        return typeUnit;
+      case "TypeVariable":
+        return new TVar(t.name);
+      default:
+        throw { type: "UnknownTypeItemError", item: t };
+    }
+  };
+
+  return translate(t);
 };
 
 const zip = <A, B>(a: Array<A>, b: Array<B>): Array<[A, B]> =>

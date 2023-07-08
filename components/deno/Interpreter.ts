@@ -1,5 +1,5 @@
 import { Constraints } from "./Constraints.ts";
-import { inferExpression } from "./Infer.ts";
+import { inferExpression, translateType } from "./Infer.ts";
 import {
   DataDeclaration,
   Element,
@@ -10,7 +10,6 @@ import {
   parse,
   Pattern,
   Program,
-  Type as TypeItem,
   Visibility,
 } from "./Parser.ts";
 import { Src } from "./Src.ts";
@@ -21,8 +20,6 @@ import {
   Scheme,
   TArr,
   TCon,
-  TRowEmpty,
-  TRowExtend,
   TTuple,
   TVar,
   Type,
@@ -30,7 +27,6 @@ import {
   TypeEnv,
   typeInt,
   typeString,
-  typeUnit,
 } from "./Typing.ts";
 import {
   ImportEnv,
@@ -357,49 +353,6 @@ const executeDataDeclaration = (
   dd: DataDeclaration,
   env: Env,
 ): [Array<DataDefinition>, Env] => {
-  const translateType = (t: TypeItem): Type => {
-    switch (t.type) {
-      case "TypeConstructor": {
-        const qualifiedEnv = t.qualifier === undefined
-          ? env.type
-          : env.type.import(t.qualifier);
-        const tc = qualifiedEnv?.data(t.name);
-        if (tc === undefined) {
-          throw { type: "UnknownDataError", name: t.name };
-        }
-        if (t.arguments.length !== tc.parameters.length) {
-          throw {
-            type: "IncorrectTypeArguments",
-            name: t.name,
-            expected: tc.parameters.length,
-            actual: t.arguments.length,
-          };
-        }
-
-        return new TCon(tc, t.arguments.map(translateType));
-      }
-      case "TypeFunction":
-        return new TArr(translateType(t.left), translateType(t.right));
-      case "TypeRecord": {
-        const f = (acc: Type, field: [string, TypeItem]) =>
-          new TRowExtend(field[0], translateType(field[1]), acc);
-        const initial: Type = t.extension === undefined
-          ? new TRowEmpty()
-          : translateType(t.extension);
-
-        return t.fields.reduceRight(f, initial);
-      }
-      case "TypeTuple":
-        return new TTuple(t.values.map(translateType));
-      case "TypeUnit":
-        return typeUnit;
-      case "TypeVariable":
-        return new TVar(t.name);
-      default:
-        throw { type: "UnknownTypeItemError", item: t };
-    }
-  };
-
   const adts: Array<DataDefinition> = [];
 
   dd.declarations.forEach((d) => {
@@ -416,7 +369,10 @@ const executeDataDeclaration = (
     const adt = env.type.data(d.name)!;
 
     d.constructors.forEach((c) => {
-      adt.addConstructor(c.name, c.parameters.map(translateType));
+      adt.addConstructor(
+        c.name,
+        c.parameters.map((t) => translateType(t, env)),
+      );
     });
 
     adts.push(adt);
