@@ -80,7 +80,9 @@ type ImportPackage = {
   types: TypeEnv;
 };
 
-const importValueNames = (values: ImportValues): Array<string> => [...values.keys()];
+const importValueNames = (
+  values: ImportValues,
+): Array<string> => [...values.keys()];
 
 type ImportEnv = { [key: string]: ImportPackage };
 
@@ -337,16 +339,16 @@ const mkConstructorFunction = (name: string, arity: number): RuntimeValue => {
   }
   if (arity === 4) {
     return (x1: RuntimeValue) =>
-      (x2: RuntimeValue) =>
-        (x3: RuntimeValue) =>
-          (x4: RuntimeValue) => [name, x1, x2, x3, x4];
+    (x2: RuntimeValue) =>
+    (x3: RuntimeValue) =>
+    (x4: RuntimeValue) => [name, x1, x2, x3, x4];
   }
   if (arity === 5) {
     return (x1: RuntimeValue) =>
-      (x2: RuntimeValue) =>
-        (x3: RuntimeValue) =>
-          (x4: RuntimeValue) =>
-            (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
+    (x2: RuntimeValue) =>
+    (x3: RuntimeValue) =>
+    (x4: RuntimeValue) =>
+    (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
   }
 
   throw { type: "TooManyConstructorArgumentsErrors", name, arity };
@@ -642,7 +644,10 @@ export const executeImport = (
                 createFresh(),
               );
 
-              importValues.set(c.name, [resultEnv.runtime.get(c.name), constructorType,]);
+              importValues.set(c.name, [
+                resultEnv.runtime.get(c.name),
+                constructorType,
+              ]);
               env = env.extend(c.name, constructorScheme);
             });
             env = env.addData(resultEnv.type.data(d.name)!);
