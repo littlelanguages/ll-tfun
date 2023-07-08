@@ -358,7 +358,7 @@ const executeDataDeclaration = (
   dd: DataDeclaration,
   env: Env,
 ): [Array<DataDefinition>, Env] => {
-  const translate = (t: TypeItem): Type => {
+  const translateType = (t: TypeItem): Type => {
     switch (t.type) {
       case "TypeConstructor": {
         const qualifiedEnv = t.qualifier === undefined
@@ -377,21 +377,21 @@ const executeDataDeclaration = (
           };
         }
 
-        return new TCon(tc, t.arguments.map(translate));
+        return new TCon(tc, t.arguments.map(translateType));
       }
       case "TypeFunction":
-        return new TArr(translate(t.left), translate(t.right));
+        return new TArr(translateType(t.left), translateType(t.right));
       case "TypeRecord": {
         const f = (acc: Type, field: [string, TypeItem]) =>
-          new TRowExtend(field[0], translate(field[1]), acc);
+          new TRowExtend(field[0], translateType(field[1]), acc);
         const initial: Type = t.extension === undefined
           ? new TRowEmpty()
-          : translate(t.extension);
+          : translateType(t.extension);
 
         return t.fields.reduceRight(f, initial);
       }
       case "TypeTuple":
-        return new TTuple(t.values.map(translate));
+        return new TTuple(t.values.map(translateType));
       case "TypeUnit":
         return typeUnit;
       case "TypeVariable":
