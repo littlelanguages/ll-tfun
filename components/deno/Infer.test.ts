@@ -321,7 +321,7 @@ const assertInferPatternWithEnv = (
 
   const [type, typeEnv] = Infer.inferPattern(
     input,
-    defaultEnv,
+    { type: defaultEnv, imports: emptyImportEnv() },
     constraints,
     createFresh(),
   );

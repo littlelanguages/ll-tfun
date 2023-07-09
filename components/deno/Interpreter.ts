@@ -524,7 +524,7 @@ const executeElement = (
     const pump = createFresh();
     const [constraints, type, newTypeEnv] = inferExpression(
       e,
-      env.type,
+      env,
       new Constraints(),
       pump,
     );

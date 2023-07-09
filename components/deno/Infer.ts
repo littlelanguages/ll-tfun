@@ -56,7 +56,7 @@ export const inferProgram = (
       throw new Error("TODO: inferProgram: Import statement not supported yet");
     }
 
-    const [, tp, newEnv] = inferExpression(e, env.type, constraints, pump);
+    const [, tp, newEnv] = inferExpression(e, env, constraints, pump);
 
     types.push(tp);
     env = { ...env, type: newEnv };
@@ -67,12 +67,12 @@ export const inferProgram = (
 
 export const inferExpression = (
   expression: AST.Expression,
-  env: TypeEnv,
+  env: Env,
   constraints: Constraints,
   pump: Pump,
 ): [Constraints, Type, TypeEnv] => {
   const fix = (
-    env: TypeEnv,
+    env: Env,
     expr: AST.Expression,
     constraints: Constraints,
   ): Type => {
@@ -84,7 +84,7 @@ export const inferExpression = (
     return tv;
   };
 
-  const infer = (expr: AST.Expression, env: TypeEnv): [Type, TypeEnv] => {
+  const infer = (expr: AST.Expression, env: Env): [Type, TypeEnv] => {
     if (expr.type === "App") {
       const [t1] = infer(expr.e1, env);
       const [t2] = infer(expr.e2, env);
@@ -92,7 +92,7 @@ export const inferExpression = (
 
       constraints.add(t1, new TArr(t2, tv));
 
-      return [tv, env];
+      return [tv, env.type];
     }
     if (expr.type === "If") {
       const [tg] = infer(expr.guard, env);
@@ -102,15 +102,18 @@ export const inferExpression = (
       constraints.add(tg, typeBool);
       constraints.add(tt, et);
 
-      return [tt, env];
+      return [tt, env.type];
     }
     if (expr.type === "Lam") {
       const tv = pump.next();
       const [t] = infer(
         expr.expr,
-        env.extend(expr.name[0], new Scheme(new Set(), tv)),
+        {
+          ...env,
+          type: env.type.extend(expr.name[0], new Scheme(new Set(), tv)),
+        },
       );
-      return [new TArr(tv, t), env];
+      return [new TArr(tv, t), env.type];
     }
     if (expr.type === "Let") {
       let newEnv = env;
@@ -126,24 +129,29 @@ export const inferExpression = (
 
         const subst = nc.solve(pump);
 
-        newEnv = newEnv.apply(subst);
+        newEnv = { ...newEnv, type: newEnv.type.apply(subst) };
         const type = tb.apply(subst);
         types.push(type);
-        const sc = newEnv.generalise(type);
-        newEnv = newEnv.extend(declaration.name, sc);
+        const sc = newEnv.type.generalise(type);
+        newEnv = { ...newEnv, type: newEnv.type.extend(declaration.name, sc) };
       }
 
       if (expr.expr === undefined) {
-        return [new TTuple(types), newEnv];
+        return [new TTuple(types), newEnv.type];
       } else {
-        return [infer(expr.expr, newEnv)[0], env];
+        return [infer(expr.expr, newEnv)[0], env.type];
       }
     }
     if (expr.type === "LetRec") {
       const tvs = pump.nextN(expr.declarations.length);
       const newEnv = expr.declarations.reduce(
-        (acc, declaration, idx) =>
-          acc.extend(declaration.name, new Scheme(new Set(), tvs[idx])),
+        (acc, declaration, idx) => ({
+          ...acc,
+          type: acc.type.extend(
+            declaration.name,
+            new Scheme(new Set(), tvs[idx]),
+          ),
+        }),
         env,
       );
 
@@ -164,7 +172,7 @@ export const inferExpression = (
       const types: Array<Type> = [];
 
       const subst = constraints.solve(pump);
-      const solvedTypeEnv = env.apply(subst);
+      const solvedTypeEnv = env.type.apply(subst);
       const solvedEnv = expr.declarations.reduce(
         (acc, declaration, idx) => {
           const type: Type = tvs[idx].apply(subst);
@@ -181,23 +189,23 @@ export const inferExpression = (
       if (expr.expr === undefined) {
         return [new TTuple(types), solvedEnv];
       } else {
-        return [infer(expr.expr, solvedEnv)[0], env];
+        return [infer(expr.expr, { ...env, type: solvedEnv })[0], env.type];
       }
     }
     if (expr.type === "LBool") {
-      return [typeBool, env];
+      return [typeBool, env.type];
     }
     if (expr.type === "LInt") {
-      return [typeInt, env];
+      return [typeInt, env.type];
     }
     if (expr.type === "LString") {
-      return [typeString, env];
+      return [typeString, env.type];
     }
     if (expr.type === "LTuple") {
-      return [new TTuple(expr.values.map((v) => infer(v, env)[0])), env];
+      return [new TTuple(expr.values.map((v) => infer(v, env)[0])), env.type];
     }
     if (expr.type === "LUnit") {
-      return [typeUnit, env];
+      return [typeUnit, env.type];
     }
     if (expr.type === "Match") {
       const [t] = infer(expr.expr, env);
@@ -205,12 +213,12 @@ export const inferExpression = (
 
       for (const { pattern, expr: pexpr } of expr.cases) {
         const [tp, newEnv] = inferPattern(pattern, env, constraints, pump);
-        const [te] = infer(pexpr, newEnv);
+        const [te] = infer(pexpr, { ...env, type: newEnv });
         constraints.add(tp, t);
         constraints.add(te, tv);
       }
 
-      return [tv, env];
+      return [tv, env.type];
     }
     if (expr.type === "Op") {
       const [tl] = infer(expr.left, env);
@@ -220,16 +228,16 @@ export const inferExpression = (
       const u1 = new TArr(tl, new TArr(tr, tv));
       const u2 = ops.get(expr.op)!;
       constraints.add(u1, u2);
-      return [tv, env];
+      return [tv, env.type];
     }
     if (expr.type === "RecordEmpty") {
-      return [new TRowEmpty(), env];
+      return [new TRowEmpty(), env.type];
     }
     if (expr.type === "RecordExtend") {
       const [t1] = infer(expr.expr, env);
       const [t2] = infer(expr.rest, env);
 
-      return [new TRowExtend(expr.name, t1, t2), env];
+      return [new TRowExtend(expr.name, t1, t2), env.type];
     }
     if (expr.type === "RecordSelect") {
       const [t] = infer(expr.expr, env);
@@ -238,12 +246,12 @@ export const inferExpression = (
 
       constraints.add(t, new TRowExtend(expr.name, t1, t2));
 
-      return [t1, env];
+      return [t1, env.type];
     }
     if (expr.type === "Var") {
-      let varEnv: TypeEnv | undefined = env;
+      let varEnv: TypeEnv | undefined = env.type;
       if (expr.qualifier !== undefined) {
-        varEnv = env.import(expr.qualifier);
+        varEnv = env.type.import(expr.qualifier);
         if (varEnv === undefined) {
           throw `Unknown qualifier: ${expr.qualifier}`;
         }
@@ -254,10 +262,10 @@ export const inferExpression = (
         throw `Unknown name: ${expr.name}`;
       }
 
-      return [scheme.instantiate(pump), env];
+      return [scheme.instantiate(pump), env.type];
     }
 
-    return [typeError, env];
+    return [typeError, env.type];
   };
 
   return [constraints, ...infer(expression, env)];
@@ -265,18 +273,18 @@ export const inferExpression = (
 
 export const inferPattern = (
   pattern: AST.Pattern,
-  env: TypeEnv,
+  env: Env,
   constraints: Constraints,
   pump: Pump,
 ): [Type, TypeEnv] => {
   if (pattern.type === "PBool") {
-    return [typeBool, env];
+    return [typeBool, env.type];
   }
   if (pattern.type === "PInt") {
-    return [typeInt, env];
+    return [typeInt, env.type];
   }
   if (pattern.type === "PString") {
-    return [typeString, env];
+    return [typeString, env.type];
   }
   if (pattern.type === "PTuple") {
     const values: Array<Type> = [];
@@ -284,20 +292,25 @@ export const inferPattern = (
     for (const p of pattern.values) {
       const [t, e] = inferPattern(p, newEnv, constraints, pump);
       values.push(t);
-      newEnv = e;
+      newEnv = { ...newEnv, type: e };
     }
-    return [new TTuple(values), newEnv];
+    return [new TTuple(values), newEnv.type];
   }
   if (pattern.type === "PUnit") {
-    return [typeUnit, env];
+    return [typeUnit, env.type];
   }
   if (pattern.type === "PRecord") {
     const result: [Type, TypeEnv] = pattern.extension === undefined
-      ? [new TRowEmpty(), env]
+      ? [new TRowEmpty(), env.type]
       : inferPattern(pattern.extension, env, constraints, pump);
 
     for (const [name, p] of pattern.fields) {
-      const [t, e] = inferPattern(p, result[1], constraints, pump);
+      const [t, e] = inferPattern(
+        p,
+        { ...env, type: result[1] },
+        constraints,
+        pump,
+      );
       result[0] = new TRowExtend(name, t, result[0]);
       result[1] = e;
     }
@@ -306,15 +319,15 @@ export const inferPattern = (
   }
   if (pattern.type === "PVar") {
     const tv = pump.next();
-    return [tv, env.extend(pattern.name, new Scheme(new Set(), tv))];
+    return [tv, env.type.extend(pattern.name, new Scheme(new Set(), tv))];
   }
   if (pattern.type === "PWildcard") {
-    return [pump.next(), env];
+    return [pump.next(), env.type];
   }
   if (pattern.type === "PCons") {
     const c = pattern.qualifier === undefined
-      ? env.findConstructor(pattern.name)
-      : env.import(pattern.qualifier)?.findConstructor(pattern.name);
+      ? env.type.findConstructor(pattern.name)
+      : env.type.import(pattern.qualifier)?.findConstructor(pattern.name);
 
     if (c === undefined) {
       throw { type: "UnknownConstructorError", name: pattern.name };
@@ -337,13 +350,13 @@ export const inferPattern = (
     pattern.args.forEach((p, i) => {
       const [t, e] = inferPattern(p, newEnv, constraints, pump);
       constraints.add(t, constructorArgTypes[i]);
-      newEnv = e;
+      newEnv = { ...newEnv, type: e };
     });
 
-    return [new TCon(adt, parameters), newEnv];
+    return [new TCon(adt, parameters), newEnv.type];
   }
 
-  return [typeError, env];
+  return [typeError, env.type];
 };
 
 export const translateType = (t: AST.Type, env: Env): Type => {
