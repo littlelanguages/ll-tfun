@@ -1,11 +1,18 @@
-let id = \v -> v ;;
-// id = function: a -> a
+\v = v ;;
+// function: a -> a
 
-let id1 = \(v: Int) -> v ;;
-// id1 = function: Int -> Int
+\(v: Int) = v ;;
+// function: Int -> Int
 
-let id2 = \v: Int -> v ;;
-// id2 = function: Int -> Int
+\v: Int = v ;;
+// function: Int -> Int
 
-let id3 = \(v: Int): Int -> v ;;
-// id3 = function: Int -> Int
+\(v: Int): Int = v ;;
+// function: Int -> Int
+
+data List n = Nil | Cons n (List n) ;;
+// List n = Nil | Cons n (List n)
+
+let rec length xs = match xs with Nil -> 0 | Cons _ xsp -> 1 + (length xsp) ;;
+// length = function: List a -> Int
+

@@ -473,6 +473,26 @@ Deno.test("Import - nested types", () => {
   );
 });
 
+Deno.test("Type declaration of values", () => {
+  assertExecute("\\n = n", ["function: V1 -> V1"]);
+  assertExecute("\\n:Int = n", ["function: Int -> Int"]);
+  assertExecute("\\(n:Int) = n", ["function: Int -> Int"]);
+  assertExecute("\\(n:Int): Int = n", ["function: Int -> Int"]);
+
+  assertExecute(
+    "data List n = Nil | Cons n (List n) ; let rec length xs = match xs with Nil -> 0 | Cons _ xsp -> 1 + (length xsp)",
+    [
+      "List n = Nil | Cons n (List n)",
+      ["length = function: List V5 -> Int"],
+    ],
+  );
+
+  assertExecute("let f1 (a: b) (b: b) = (a, b) and f2 b = (f1 b, b)", [[
+    "f1 = function: b -> b -> (b * b)",
+    "f2 = function: V1 -> (V1 -> (V1 * V1) * V1)",
+  ]]);
+});
+
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(expression);
   const [result, _] = executeProgram(ast, defaultEnv(home));

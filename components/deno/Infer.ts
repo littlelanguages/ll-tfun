@@ -105,11 +105,18 @@ export const inferExpression = (
       return [tt, env];
     }
     if (expr.type === "Lam") {
-      const tv = pump.next();
+      const tv = expr.name[1] === undefined
+        ? pump.next()
+        : translateType(expr.name[1], env);
       const [t] = infer(
         expr.expr,
         extend(env, expr.name[0], new Scheme(new Set(), tv)),
       );
+
+      if (expr.returnType !== undefined) {
+        constraints.add(t, translateType(expr.returnType, env));
+      }
+
       return [new TArr(tv, t), env];
     }
     if (expr.type === "Let") {
