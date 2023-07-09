@@ -213,7 +213,7 @@ export const inferExpression = (
 
       for (const { pattern, expr: pexpr } of expr.cases) {
         const [tp, newEnv] = inferPattern(pattern, env, constraints, pump);
-        const [te] = infer(pexpr, { ...env, type: newEnv });
+        const [te] = infer(pexpr, newEnv);
         constraints.add(tp, t);
         constraints.add(te, tv);
       }
@@ -276,15 +276,15 @@ export const inferPattern = (
   env: Env,
   constraints: Constraints,
   pump: Pump,
-): [Type, TypeEnv] => {
+): [Type, Env] => {
   if (pattern.type === "PBool") {
-    return [typeBool, env.type];
+    return [typeBool, env];
   }
   if (pattern.type === "PInt") {
-    return [typeInt, env.type];
+    return [typeInt, env];
   }
   if (pattern.type === "PString") {
-    return [typeString, env.type];
+    return [typeString, env];
   }
   if (pattern.type === "PTuple") {
     const values: Array<Type> = [];
@@ -292,22 +292,22 @@ export const inferPattern = (
     for (const p of pattern.values) {
       const [t, e] = inferPattern(p, newEnv, constraints, pump);
       values.push(t);
-      newEnv = { ...newEnv, type: e };
+      newEnv = e;
     }
-    return [new TTuple(values), newEnv.type];
+    return [new TTuple(values), newEnv];
   }
   if (pattern.type === "PUnit") {
-    return [typeUnit, env.type];
+    return [typeUnit, env];
   }
   if (pattern.type === "PRecord") {
-    const result: [Type, TypeEnv] = pattern.extension === undefined
-      ? [new TRowEmpty(), env.type]
+    const result: [Type, Env] = pattern.extension === undefined
+      ? [new TRowEmpty(), env]
       : inferPattern(pattern.extension, env, constraints, pump);
 
     for (const [name, p] of pattern.fields) {
       const [t, e] = inferPattern(
         p,
-        { ...env, type: result[1] },
+        result[1],
         constraints,
         pump,
       );
@@ -319,10 +319,10 @@ export const inferPattern = (
   }
   if (pattern.type === "PVar") {
     const tv = pump.next();
-    return [tv, env.type.extend(pattern.name, new Scheme(new Set(), tv))];
+    return [tv, extend(env, pattern.name, new Scheme(new Set(), tv))];
   }
   if (pattern.type === "PWildcard") {
-    return [pump.next(), env.type];
+    return [pump.next(), env];
   }
   if (pattern.type === "PCons") {
     const c = pattern.qualifier === undefined
@@ -350,13 +350,13 @@ export const inferPattern = (
     pattern.args.forEach((p, i) => {
       const [t, e] = inferPattern(p, newEnv, constraints, pump);
       constraints.add(t, constructorArgTypes[i]);
-      newEnv = { ...newEnv, type: e };
+      newEnv = e;
     });
 
-    return [new TCon(adt, parameters), newEnv.type];
+    return [new TCon(adt, parameters), newEnv];
   }
 
-  return [typeError, env.type];
+  return [typeError, env];
 };
 
 export const translateType = (t: AST.Type, env: Env): Type => {
@@ -405,6 +405,11 @@ export const translateType = (t: AST.Type, env: Env): Type => {
 
   return translate(t);
 };
+
+const extend = (env: Env, name: string, scheme: Scheme): Env => ({
+  ...env,
+  type: env.type.extend(name, scheme),
+});
 
 const zip = <A, B>(a: Array<A>, b: Array<B>): Array<[A, B]> =>
   a.map((k, i) => [k, b[i]]);
