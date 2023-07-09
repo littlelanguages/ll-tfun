@@ -45,7 +45,7 @@ export const inferProgram = (
   program: AST.Program,
   constraints: Constraints,
   pump: Pump,
-): [Constraints, Array<Type>, TypeEnv] => {
+): [Constraints, Array<Type>, Env] => {
   const types: Array<Type> = [];
   program.forEach((e) => {
     if (e.type === "DataDeclaration") {
@@ -62,7 +62,7 @@ export const inferProgram = (
     env = newEnv;
   });
 
-  return [constraints, types, env.type];
+  return [constraints, types, env];
 };
 
 export const inferExpression = (

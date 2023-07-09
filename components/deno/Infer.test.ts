@@ -301,7 +301,7 @@ Deno.test("infer Var", () => {
 const inferProgram = (
   defaultEnv: TypeEnv,
   input: string,
-): [Constraints, Array<Type>, TypeEnv] => {
+): [Constraints, Array<Type>, Infer.Env] => {
   return Infer.inferProgram(
     { type: defaultEnv, imports: emptyImportEnv() },
     parse(input),
