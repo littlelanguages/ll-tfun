@@ -533,7 +533,11 @@ const executeElement = (
 
     const [value, newRuntime] = executeExpression(e, env.runtime);
 
-    return [value, newType, { ...env, runtime: newRuntime, type: newTypeEnv }];
+    return [value, newType, {
+      ...env,
+      runtime: newRuntime,
+      type: newTypeEnv.type,
+    }];
   }
 };
 
