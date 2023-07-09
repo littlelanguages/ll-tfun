@@ -14,6 +14,7 @@ export type Element = Expression | DataDeclaration | ImportStatement;
 
 export type Expression =
   | AppExpression
+  | BuiltinExpression
   | IfExpression
   | LamExpression
   | LetExpression
@@ -35,6 +36,11 @@ export type AppExpression = {
   type: "App";
   e1: Expression;
   e2: Expression;
+};
+
+export type BuiltinExpression = {
+  type: "Builtin";
+  name: string;
 };
 
 export type IfExpression = {
@@ -514,6 +520,11 @@ const visitor: Visitor<
       rest: acc,
     }), a2[4] === undefined ? { type: "RecordEmpty" } : a2[4][1]);
   },
+
+  visitFactor13: (_a1: Token, a2: Token): Expression => ({
+    type: "Builtin",
+    name: transformLiteralString(a2[2]),
+  }),
 
   visitIdentifier1: (a: Token): string => a[2],
   visitIdentifier2: (a: Token): string => a[2],

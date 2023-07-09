@@ -37,3 +37,9 @@ The tasks are built out according to the packages listed in [README](README.md)
 - [ ] Incorporate into deno REPL implementation
 - [ ] Add type alias into grammar
 - [ ] Incorporate into deno REPL implementation
+
+# Builtins
+
+- [x] Add builtin into the grammar
+- [x] Incorporate into deno REPL implementation
+- [x] Add String.Length into deno REPL implementation

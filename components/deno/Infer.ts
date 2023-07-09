@@ -94,6 +94,9 @@ export const inferExpression = (
 
       return [tv, env];
     }
+    if (expr.type === "Builtin") {
+      return [pump.next(), env];
+    }
     if (expr.type === "If") {
       const [tg] = infer(expr.guard, env);
       const [tt] = infer(expr.then, env);

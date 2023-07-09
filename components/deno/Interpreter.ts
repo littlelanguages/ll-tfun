@@ -156,6 +156,13 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
       const operand = evaluate(expr.e2, runtimeEnv);
       return operator(operand);
     }
+    case "Builtin":
+      switch (expr.name) {
+        case "String.Length":
+          return (s: string) => s.length;
+        default:
+          throw new Error(`Unknown builtin ${expr.name}`);
+      }
     case "If":
       return evaluate(expr.guard, runtimeEnv)
         ? evaluate(expr.then, runtimeEnv)

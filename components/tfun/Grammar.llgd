@@ -53,6 +53,7 @@ Factor
     | LowerIdentifier
     | "match" Expression "with" ["|"] Case {"|" Case}
     | "{" [LowerIdentifier ":" Expression {"," LowerIdentifier ":" Expression} ["|" Expression ]] "}"
+    | "builtin" LiteralString
     ;
 
 Identifier

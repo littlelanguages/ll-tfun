@@ -107,6 +107,7 @@ export interface Visitor<
     ] | undefined,
     a3: Token,
   ): T_Factor;
+  visitFactor13(a1: Token, a2: Token): T_Factor;
   visitIdentifier1(a: Token): T_Identifier;
   visitIdentifier2(a: Token): T_Identifier;
   visitValueDeclaration(
@@ -379,6 +380,7 @@ export const mkParser = <
           TToken.LowerIdentifier,
           TToken.Match,
           TToken.LCurly,
+          TToken.Builtin,
         ])
       ) {
         return visitor.visitElement1(this.expression());
@@ -403,6 +405,7 @@ export const mkParser = <
             TToken.LowerIdentifier,
             TToken.Match,
             TToken.LCurly,
+            TToken.Builtin,
             TToken.Data,
             TToken.Import,
           ],
@@ -427,6 +430,7 @@ export const mkParser = <
           TToken.LowerIdentifier,
           TToken.Match,
           TToken.LCurly,
+          TToken.Builtin,
         ])
       ) {
         const a2t: T_Relational = this.relational();
@@ -528,6 +532,7 @@ export const mkParser = <
             TToken.LowerIdentifier,
             TToken.Match,
             TToken.LCurly,
+            TToken.Builtin,
           ])
         ) {
           const a2t1: T_Expression = this.expression();
@@ -691,6 +696,10 @@ export const mkParser = <
         }
         const a3: Token = matchToken(TToken.RCurly);
         return visitor.visitFactor12(a1, a2, a3);
+      } else if (isToken(TToken.Builtin)) {
+        const a1: Token = matchToken(TToken.Builtin);
+        const a2: Token = matchToken(TToken.LiteralString);
+        return visitor.visitFactor13(a1, a2);
       } else {
         throw {
           tag: "SyntaxError",
@@ -708,6 +717,7 @@ export const mkParser = <
             TToken.LowerIdentifier,
             TToken.Match,
             TToken.LCurly,
+            TToken.Builtin,
           ],
         };
       }
@@ -937,12 +947,13 @@ export const mkParser = <
       let a2: (Token | Token) | undefined = undefined;
 
       if (isTokens([TToken.Star, TToken.Dash])) {
+        let a2t: Token | Token;
         if (isToken(TToken.Star)) {
-          const a2t: Token = matchToken(TToken.Star);
-          a2 = a2t;
+          const a2tt: Token = matchToken(TToken.Star);
+          a2t = a2tt;
         } else if (isToken(TToken.Dash)) {
-          const a2t: Token = matchToken(TToken.Dash);
-          a2 = a2t;
+          const a2tt: Token = matchToken(TToken.Dash);
+          a2t = a2tt;
         } else {
           throw {
             tag: "SyntaxError",
@@ -950,6 +961,7 @@ export const mkParser = <
             expected: [TToken.Star, TToken.Dash],
           };
         }
+        a2 = a2t;
       }
       const a3: Array<Token> = [];
 
@@ -1173,12 +1185,13 @@ export const mkParser = <
         let a2: (Token | Token) | undefined = undefined;
 
         if (isTokens([TToken.Star, TToken.Dash])) {
+          let a2t: Token | Token;
           if (isToken(TToken.Star)) {
-            const a2t: Token = matchToken(TToken.Star);
-            a2 = a2t;
+            const a2tt: Token = matchToken(TToken.Star);
+            a2t = a2tt;
           } else if (isToken(TToken.Dash)) {
-            const a2t: Token = matchToken(TToken.Dash);
-            a2 = a2t;
+            const a2tt: Token = matchToken(TToken.Dash);
+            a2t = a2tt;
           } else {
             throw {
               tag: "SyntaxError",
@@ -1186,6 +1199,7 @@ export const mkParser = <
               expected: [TToken.Star, TToken.Dash],
             };
           }
+          a2 = a2t;
         }
         return visitor.visitImportItem1(a1, a2);
       } else if (isToken(TToken.LowerIdentifier)) {
