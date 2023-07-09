@@ -227,7 +227,7 @@ export class Scheme {
   }
 
   ftv(): Set<Var> {
-    return Sets.difference(this.type.ftv(), new Set(this.names));
+    return Sets.difference(this.type.ftv(), this.names);
   }
 
   instantiate(pump: Pump): Type {
