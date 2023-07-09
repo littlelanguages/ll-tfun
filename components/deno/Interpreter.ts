@@ -211,6 +211,8 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
       const e = evaluate(expr.expr, runtimeEnv);
       return e[expr.name];
     }
+    case "Typing":
+      return evaluate(expr.expr, runtimeEnv);
     case "Var":
       return (expr.qualifier === undefined)
         ? runtimeEnv.get(expr.name)

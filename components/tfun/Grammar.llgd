@@ -28,12 +28,16 @@ AdditiveOps
     ;
 
 Multiplicative
-    : Projection {MultiplicativeOps Projection}
+    : Typing {MultiplicativeOps Typing}
     ;
 
 MultiplicativeOps
     : "*"
     | "/"
+    ;
+
+Typing
+    : Projection [":" Type]
     ;
 
 Projection

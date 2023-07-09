@@ -30,6 +30,7 @@ export type Expression =
   | RecordEmptyExpression
   | RecordExtendExpression
   | RecordSelectExpression
+  | TypingExpression
   | VarExpression;
 
 export type AppExpression = {
@@ -142,6 +143,12 @@ export enum Op {
   Times,
   Divide,
 }
+
+export type TypingExpression = {
+  type: "Typing";
+  expr: Expression;
+  typ: Type;
+};
 
 export type VarExpression = {
   type: "Var";
@@ -313,6 +320,7 @@ const visitor: Visitor<
   string, // T_AdditiveOps
   Expression, // T_Multiplicative
   string, // T_MultiplicativeOps
+  Expression, // T_Typing
   Expression, // T_Projection
   Expression, // T_Factor
   string, // T_Identifier
@@ -387,6 +395,9 @@ const visitor: Visitor<
 
   visitAdditiveOps1: (a: Token): string => a[2],
   visitAdditiveOps2: (a: Token): string => a[2],
+
+  visitTyping: (a1: Expression, a2: [Token, Type] | undefined): Expression =>
+    a2 === undefined ? a1 : { type: "Typing", expr: a1, typ: a2[1] },
 
   visitProjection: (a1: Expression, a2: Array<[Token, Token]>): Expression =>
     a2.length === 0 ? a1 : a2.reduce((acc, field) => ({

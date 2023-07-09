@@ -14,6 +14,7 @@ export interface Visitor<
   T_AdditiveOps,
   T_Multiplicative,
   T_MultiplicativeOps,
+  T_Typing,
   T_Projection,
   T_Factor,
   T_Identifier,
@@ -47,11 +48,12 @@ export interface Visitor<
   visitAdditiveOps1(a: Token): T_AdditiveOps;
   visitAdditiveOps2(a: Token): T_AdditiveOps;
   visitMultiplicative(
-    a1: T_Projection,
-    a2: Array<[T_MultiplicativeOps, T_Projection]>,
+    a1: T_Typing,
+    a2: Array<[T_MultiplicativeOps, T_Typing]>,
   ): T_Multiplicative;
   visitMultiplicativeOps1(a: Token): T_MultiplicativeOps;
   visitMultiplicativeOps2(a: Token): T_MultiplicativeOps;
+  visitTyping(a1: T_Projection, a2: [Token, T_Type] | undefined): T_Typing;
   visitProjection(a1: T_Factor, a2: Array<[Token, Token]>): T_Projection;
   visitFactor1(
     a1: Token,
@@ -221,6 +223,7 @@ export const parseProgram = <
   T_AdditiveOps,
   T_Multiplicative,
   T_MultiplicativeOps,
+  T_Typing,
   T_Projection,
   T_Factor,
   T_Identifier,
@@ -248,6 +251,7 @@ export const parseProgram = <
     T_AdditiveOps,
     T_Multiplicative,
     T_MultiplicativeOps,
+    T_Typing,
     T_Projection,
     T_Factor,
     T_Identifier,
@@ -282,6 +286,7 @@ export const mkParser = <
   T_AdditiveOps,
   T_Multiplicative,
   T_MultiplicativeOps,
+  T_Typing,
   T_Projection,
   T_Factor,
   T_Identifier,
@@ -309,6 +314,7 @@ export const mkParser = <
     T_AdditiveOps,
     T_Multiplicative,
     T_MultiplicativeOps,
+    T_Typing,
     T_Projection,
     T_Factor,
     T_Identifier,
@@ -476,13 +482,13 @@ export const mkParser = <
       }
     },
     multiplicative: function (): T_Multiplicative {
-      const a1: T_Projection = this.projection();
-      const a2: Array<[T_MultiplicativeOps, T_Projection]> = [];
+      const a1: T_Typing = this.typing();
+      const a2: Array<[T_MultiplicativeOps, T_Typing]> = [];
 
       while (isTokens([TToken.Star, TToken.Slash])) {
         const a2t1: T_MultiplicativeOps = this.multiplicativeOps();
-        const a2t2: T_Projection = this.projection();
-        const a2t: [T_MultiplicativeOps, T_Projection] = [a2t1, a2t2];
+        const a2t2: T_Typing = this.typing();
+        const a2t: [T_MultiplicativeOps, T_Typing] = [a2t1, a2t2];
         a2.push(a2t);
       }
       return visitor.visitMultiplicative(a1, a2);
@@ -499,6 +505,18 @@ export const mkParser = <
           expected: [TToken.Star, TToken.Slash],
         };
       }
+    },
+    typing: function (): T_Typing {
+      const a1: T_Projection = this.projection();
+      let a2: [Token, T_Type] | undefined = undefined;
+
+      if (isToken(TToken.Colon)) {
+        const a2t1: Token = matchToken(TToken.Colon);
+        const a2t2: T_Type = this.type();
+        const a2t: [Token, T_Type] = [a2t1, a2t2];
+        a2 = a2t;
+      }
+      return visitor.visitTyping(a1, a2);
     },
     projection: function (): T_Projection {
       const a1: T_Factor = this.factor();

@@ -256,6 +256,12 @@ export const inferExpression = (
 
       return [t1, env];
     }
+    if (expr.type === "Typing") {
+      const [t] = infer(expr.expr, env);
+      const t1 = translateType(expr.typ, env);
+      constraints.add(t, t1);
+      return [t, env];
+    }
     if (expr.type === "Var") {
       let varEnv: TypeEnv | undefined = env.type;
       if (expr.qualifier !== undefined) {

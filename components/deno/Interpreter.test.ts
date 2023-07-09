@@ -504,6 +504,23 @@ Deno.test("Type declaration of values", () => {
   );
 });
 
+Deno.test("Typing of expressions", () => {
+  assertExecute("1: Int", ["1: Int"]);
+  assertExecute("\\x = (x: Int)", ["function: Int -> Int"]);
+  assertExecute(
+    [
+      "let fun (a: x) (b: x) = (a, b)",
+      "\\x = \\y = fun x y",
+      "\\x = \\y = fun (x: Int) y",
+    ].join(" ; "),
+    [
+      ["fun = function: x -> x -> (x * x)"],
+      "function: V2 -> V2 -> (V2 * V2)",
+      "function: Int -> Int -> (Int * Int)",
+    ],
+  );
+});
+
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(expression);
   const [result, _] = executeProgram(ast, defaultEnv(home));
