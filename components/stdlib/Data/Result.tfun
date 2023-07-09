@@ -1,0 +1,8 @@
+data Result* err ok = Error err | Okay ok ;
+
+let map* (f: b -> c) (r: Result a b) : Result a c = 
+  match r with 
+  | Okay ok -> Okay (f ok)
+  | Error err -> Error err 
+
+-- import * as R from "../stdlib/Data/Result.tfun" ;;

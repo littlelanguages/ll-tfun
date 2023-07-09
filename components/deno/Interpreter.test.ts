@@ -491,6 +491,17 @@ Deno.test("Type declaration of values", () => {
     "f1 = function: b -> b -> (b * b)",
     "f2 = function: V1 -> (V1 -> (V1 * V1) * V1)",
   ]]);
+
+  assertExecute(
+    [
+      "data Result err ok = Error err | Okay ok",
+      "let map (f: b -> c) (r: Result a b) : Result a c = match r with | Error err -> Error err | Okay ok -> Okay (f ok)",
+    ].join(" ; "),
+    [
+      "Result err ok = Error err | Okay ok",
+      ["map = function: (V9 -> V6) -> Result a V9 -> Result a V6"],
+    ],
+  );
 });
 
 const assertExecute = (expression: string, expected: NestedString) => {

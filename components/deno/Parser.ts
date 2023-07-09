@@ -778,20 +778,13 @@ const composeLambda = (
   names: Array<Parameter>,
   expr: Expression,
   returnType: Type | undefined,
-): Expression => {
-  const result: Expression = names.reduceRight((acc, name) => ({
+): Expression =>
+  names.reduceRight((acc, name) => ({
     type: "Lam",
     name,
     expr: acc,
-    returnType: undefined,
+    returnType: expr === acc ? returnType : undefined,
   }), expr);
-
-  if (result.type === "Lam") {
-    result.returnType = returnType;
-  }
-
-  return result;
-};
 
 const composeFunctionType = (types: Array<Type>): Type =>
   types.slice(1).reduceRight((acc, type) => ({
