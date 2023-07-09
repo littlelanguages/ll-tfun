@@ -1,14 +1,14 @@
 import { assertEquals } from "https://deno.land/std@0.137.0/testing/asserts.ts";
 import { Constraints } from "./Constraints.ts";
-import { inferProgram } from "./Infer.ts";
+import { emptyEnv, inferProgram } from "./Infer.ts";
 import { parse } from "./Parser.ts";
-import { createFresh, emptyTypeEnv, Type } from "./Typing.ts";
+import { createFresh, Type } from "./Typing.ts";
 
 const solve = (expression: string): Array<Type> => {
   const pump = createFresh();
 
   const [constraints, types] = inferProgram(
-    emptyTypeEnv,
+    emptyEnv(),
     parse(expression),
     new Constraints(),
     pump,

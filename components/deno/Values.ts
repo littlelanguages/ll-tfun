@@ -12,6 +12,8 @@ export type ImportPackage = {
 
 export type ImportEnv = { [key: string]: ImportPackage };
 
+export const emptyImportEnv = (): ImportEnv => ({});
+
 class VTuple {
   values: Array<RuntimeValue>;
 

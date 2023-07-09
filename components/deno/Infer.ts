@@ -2,6 +2,7 @@ import * as AST from "./Parser.ts";
 import { Constraints } from "./Constraints.ts";
 import {
   applyArray,
+  emptyTypeEnv,
   Pump,
   Scheme,
   Subst,
@@ -19,12 +20,17 @@ import {
   typeString,
   typeUnit,
 } from "./Typing.ts";
-import { ImportEnv } from "./Values.ts";
+import { emptyImportEnv, ImportEnv } from "./Values.ts";
 
 export type Env = {
   type: TypeEnv;
   imports: ImportEnv;
 };
+
+export const emptyEnv = (): Env => ({
+  type: emptyTypeEnv,
+  imports: emptyImportEnv(),
+});
 
 const ops = new Map([
   [AST.Op.Equals, new TArr(typeInt, new TArr(typeInt, typeBool))],
@@ -35,7 +41,7 @@ const ops = new Map([
 ]);
 
 export const inferProgram = (
-  env: TypeEnv,
+  env: Env,
   program: AST.Program,
   constraints: Constraints,
   pump: Pump,
@@ -50,13 +56,13 @@ export const inferProgram = (
       throw new Error("TODO: inferProgram: Import statement not supported yet");
     }
 
-    const [, tp, newEnv] = inferExpression(e, env, constraints, pump);
+    const [, tp, newEnv] = inferExpression(e, env.type, constraints, pump);
 
     types.push(tp);
-    env = newEnv;
+    env = { ...env, type: newEnv };
   });
 
-  return [constraints, types, env];
+  return [constraints, types, env.type];
 };
 
 export const inferExpression = (
