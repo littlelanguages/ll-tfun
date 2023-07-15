@@ -528,7 +528,9 @@ const assertExecute = (expression: string, expected: NestedString) => {
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
       assertEquals(result[i][0].toString(), expected[i]);
-    } else if (e.type !== "ImportStatement") {
+    } else if (
+      e.type !== "ImportStatement" && e.type !== "TypeAliasDeclarations"
+    ) {
       const [value, type] = result[i];
 
       assertEquals(expressionToNestedString(value, type!, e), expected[i]);

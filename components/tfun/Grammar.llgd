@@ -7,6 +7,7 @@ Program
 Element
     : Expression
     | DataDeclaration
+    | TypeAliasDeclarations
     | ImportStatement
     ;
 
@@ -37,7 +38,7 @@ MultiplicativeOps
     ;
 
 Typing
-    : Projection [":" Type]
+    : Projection [":" TypeType]
     ;
 
 Projection
@@ -50,7 +51,7 @@ Factor
     | LiteralString
     | "True"
     | "False"
-    | "\" Parameter {Parameter} [":" Type] "=" Expression
+    | "\" Parameter {Parameter} [":" TypeType] "=" Expression
     | "let" ["rec"] ValueDeclaration {"and" ValueDeclaration} ["in" Expression]
     | "if" "(" Expression ")" Expression "else" Expression
     | UpperIdentifier ["." Identifier]
@@ -66,12 +67,12 @@ Identifier
     ;
 
 ValueDeclaration
-    : LowerIdentifier["*"] {Parameter} [":" Type] "=" Expression
+    : LowerIdentifier["*"] {Parameter} [":" TypeType] "=" Expression
     ;
 
 Parameter
     : LowerIdentifier
-    | "(" LowerIdentifier ":" Type ")"
+    | "(" LowerIdentifier ":" TypeType ")"
     ;
 
 Case
@@ -98,22 +99,30 @@ TypeDeclaration
     ;
 
 ConstructorDeclaration
-    : UpperIdentifier {Type}
+    : UpperIdentifier {TypeType}
     ;
 
-Type
+TypeType
     : ADTType {"->" ADTType}
     ;
 
 ADTType
-    : UpperIdentifier ["." UpperIdentifier] {Type}
+    : UpperIdentifier ["." UpperIdentifier] {TypeType}
     | TermType
     ;
 
 TermType
     : LowerIdentifier
-    | "(" [Type {"*" Type}] ")"
-    | "{" [LowerIdentifier ":" Type {"," LowerIdentifier ":" Type} ["|" Type]] "}"
+    | "(" [TypeType {"*" TypeType}] ")"
+    | "{" [LowerIdentifier ":" TypeType {"," LowerIdentifier ":" TypeType} ["|" TypeType]] "}"
+    ;
+
+TypeAliasDeclarations
+    : "type" TypeAliasDeclaration {"and" TypeAliasDeclaration}
+    ;
+
+TypeAliasDeclaration
+    : UpperIdentifier["*" | "-"] {LowerIdentifier} "=" TypeType
     ;
 
 ImportStatement

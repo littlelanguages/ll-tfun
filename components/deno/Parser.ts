@@ -10,7 +10,11 @@ export enum Visibility {
 
 export type Program = Array<Element>;
 
-export type Element = Expression | DataDeclaration | ImportStatement;
+export type Element =
+  | Expression
+  | DataDeclaration
+  | TypeAliasDeclarations
+  | ImportStatement;
 
 export type Expression =
   | AppExpression
@@ -280,6 +284,19 @@ export type TypeUnit = {
   type: "TypeUnit";
 };
 
+export type TypeAliasDeclarations = {
+  type: "TypeAliasDeclarations";
+  items: Array<TypeAliasDeclaration>;
+};
+
+export type TypeAliasDeclaration = {
+  type: "TypeAliasDeclaration";
+  name: string;
+  visibility: Visibility;
+  parameters: Array<string>;
+  typ: Type;
+};
+
 export type ImportStatement = {
   type: "ImportStatement";
   items: ImportAll | ImportNames;
@@ -334,6 +351,8 @@ const visitor: Visitor<
   Type, // T_Type
   Type, // T_ADTType
   Type, // T_TermType
+  TypeAliasDeclarations, // T_TypeAliasDeclarations
+  TypeAliasDeclaration, // T_TypeAliasDeclaration
   ImportStatement, // T_ImportStatement
   ImportAll | ImportNames, // T_ImportItems
   ImportName // T_ImportItem
@@ -345,7 +364,8 @@ const visitor: Visitor<
 
   visitElement1: (a1: Expression): Element => a1,
   visitElement2: (a1: DataDeclaration): Element => a1,
-  visitElement3: (a1: ImportStatement): Element => a1,
+  visitElement3: (a1: TypeAliasDeclarations): Element => a1,
+  visitElement4: (a1: ImportStatement): Element => a1,
 
   visitExpression: (a1: Expression, a2: Array<Expression>): Expression =>
     a2.reduce((acc: Expression, e: Expression): Expression => ({
@@ -688,7 +708,7 @@ const visitor: Visitor<
     parameters: a2,
   }),
 
-  visitType: (a1: Type, a2: Array<[Token, Type]>): Type =>
+  visitTypeType: (a1: Type, a2: Array<[Token, Type]>): Type =>
     composeFunctionType([a1].concat(a2.map((a) => a[1]))),
 
   visitADTType1: (
@@ -744,6 +764,24 @@ const visitor: Visitor<
       fields,
       extension,
     };
+  },
+
+  visitTypeAliasDeclarations: (
+    _a1: Token,
+    _a2: TypeAliasDeclaration,
+    _a3: Array<[Token, TypeAliasDeclaration]>,
+  ): TypeAliasDeclarations => {
+    throw new Error("Method not implemented.");
+  },
+
+  visitTypeAliasDeclaration: (
+    _a1: Token,
+    _a2: (Token | Token) | undefined,
+    _a3: Array<Token>,
+    _a4: Token,
+    _a5: Type,
+  ): TypeAliasDeclaration => {
+    throw new Error("Method not implemented.");
   },
 
   visitImportStatement: (

@@ -52,6 +52,12 @@ export const inferProgram = (
       throw new Error("inferProgram: Data declarations not supported yet");
     }
 
+    if (e.type === "TypeAliasDeclarations") {
+      throw new Error(
+        "inferProgram: Type alias declarations not supported yet",
+      );
+    }
+
     if (e.type === "ImportStatement") {
       throw new Error("TODO: inferProgram: Import statement not supported yet");
     }

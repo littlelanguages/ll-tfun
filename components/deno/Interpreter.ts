@@ -424,6 +424,10 @@ const executeElement = (
   if (e.type === "DataDeclaration") {
     const [adts, newEnv] = executeDataDeclaration(e, env);
     return [adts, undefined, newEnv];
+  } else if (e.type === "TypeAliasDeclarations") {
+    throw new Error(
+      "TODO: Interpreter: Type alias declarations not yet supported",
+    );
   } else if (e.type === "ImportStatement") {
     const imports = executeImport(e.from, env.src, env.imports);
 
