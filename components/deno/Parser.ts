@@ -768,21 +768,30 @@ const visitor: Visitor<
 
   visitTypeAliasDeclarations: (
     _a1: Token,
-    _a2: TypeAliasDeclaration,
-    _a3: Array<[Token, TypeAliasDeclaration]>,
-  ): TypeAliasDeclarations => {
-    throw new Error("Method not implemented.");
-  },
+    a2: TypeAliasDeclaration,
+    a3: Array<[Token, TypeAliasDeclaration]>,
+  ): TypeAliasDeclarations => ({
+    type: "TypeAliasDeclarations",
+    items: [a2].concat(a3.map((a) => a[1])),
+  }),
 
   visitTypeAliasDeclaration: (
-    _a1: Token,
-    _a2: (Token | Token) | undefined,
-    _a3: Array<Token>,
+    a1: Token,
+    a2: (Token | Token) | undefined,
+    a3: Array<Token>,
     _a4: Token,
-    _a5: Type,
-  ): TypeAliasDeclaration => {
-    throw new Error("Method not implemented.");
-  },
+    a5: Type,
+  ): TypeAliasDeclaration => ({
+    type: "TypeAliasDeclaration",
+    name: a1[2],
+    visibility: a2 === undefined
+      ? Visibility.Private
+      : a2[2] === "*"
+      ? Visibility.Public
+      : Visibility.Opaque,
+    parameters: a3.map((a) => a[2]),
+    typ: a5,
+  }),
 
   visitImportStatement: (
     _a1: Token,
