@@ -1,0 +1,14 @@
+data Ref* a = Ref a ;
+
+let ref* r =
+  match r with
+  | Ref v -> v ;
+
+let assign* (v: a) (r: Ref a) : a =
+  builtin "Data.Ref.Assign" v r ;
+
+let modify* (f: a -> a) (r: Ref a) : a =
+  let newValue = f (ref r)
+  in builtin "Data.Ref.Assign" newValue r
+
+-- import * as R from "../stdlib/Data/Ref.tfun" ;;

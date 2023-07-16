@@ -158,7 +158,13 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
     }
     case "Builtin":
       switch (expr.name) {
-        case "String.Length":
+        case "Data.Ref.Assign":
+          return (v: RuntimeValue) => (r: RuntimeValue) => {
+            const result = r[1];
+            r[1] = v;
+            return result;
+          };
+        case "Data.String.Length":
           return (s: string) => s.length;
         default:
           throw new Error(`Unknown builtin ${expr.name}`);
@@ -254,11 +260,7 @@ const matchPattern = (
     case "PRecord": {
       let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
       for (const [name, p] of pattern.fields) {
-        newRuntimeEnv = matchPattern(
-          p,
-          value[name],
-          newRuntimeEnv,
-        );
+        newRuntimeEnv = matchPattern(p, value[name], newRuntimeEnv);
         if (newRuntimeEnv === null) {
           return null;
         }
