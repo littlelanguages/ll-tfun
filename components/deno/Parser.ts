@@ -13,7 +13,7 @@ export type Program = Array<Element>;
 export type Element =
   | Expression
   | DataDeclaration
-  | TypeAliasDeclarations
+  | TypeAliasDeclaration
   | ImportStatement;
 
 export type Expression =
@@ -284,11 +284,6 @@ export type TypeUnit = {
   type: "TypeUnit";
 };
 
-export type TypeAliasDeclarations = {
-  type: "TypeAliasDeclarations";
-  items: Array<TypeAliasDeclaration>;
-};
-
 export type TypeAliasDeclaration = {
   type: "TypeAliasDeclaration";
   name: string;
@@ -351,7 +346,7 @@ const visitor: Visitor<
   Type, // T_Type
   Type, // T_ADTType
   Type, // T_TermType
-  TypeAliasDeclarations, // T_TypeAliasDeclarations
+  TypeAliasDeclaration, // T_TypeAliasDeclarations
   TypeAliasDeclaration, // T_TypeAliasDeclaration
   ImportStatement, // T_ImportStatement
   ImportAll | ImportNames, // T_ImportItems
@@ -364,7 +359,7 @@ const visitor: Visitor<
 
   visitElement1: (a1: Expression): Element => a1,
   visitElement2: (a1: DataDeclaration): Element => a1,
-  visitElement3: (a1: TypeAliasDeclarations): Element => a1,
+  visitElement3: (a1: TypeAliasDeclaration): Element => a1,
   visitElement4: (a1: ImportStatement): Element => a1,
 
   visitExpression: (a1: Expression, a2: Array<Expression>): Expression =>
@@ -714,13 +709,33 @@ const visitor: Visitor<
   visitADTType1: (
     a1: Token,
     a2: [Token, Token] | undefined,
-    a3: Array<Type>,
-  ): Type => ({
-    type: "TypeConstructor",
-    qualifier: a2 === undefined ? undefined : a1[2],
-    name: a2 === undefined ? a1[2] : a2[1][2],
-    arguments: a3,
-  }),
+    a3: Array<(Type | [Token, [Token, Token] | undefined])>,
+  ): Type => {
+    const mkTypeConstructor = (
+      qualifier: string | undefined,
+      name: string,
+      args: Array<Type>,
+    ): Type => ({
+      type: "TypeConstructor",
+      qualifier,
+      name,
+      arguments: args,
+    });
+
+    const args: Array<Type> = a3.map((a) =>
+      Array.isArray(a)
+        ? a[1] === undefined
+          ? mkTypeConstructor(undefined, a[0][2], [])
+          : mkTypeConstructor(a[0][2], a[1][0][2], [])
+        : a
+    );
+
+    return mkTypeConstructor(
+      a2 === undefined ? undefined : a1[2],
+      a2 === undefined ? a1[2] : a2[1][2],
+      args,
+    );
+  },
   visitADTType2: (a: Type): Type => a,
 
   visitTermType1: (a: Token): Type => ({
@@ -769,11 +784,7 @@ const visitor: Visitor<
   visitTypeAliasDeclarations: (
     _a1: Token,
     a2: TypeAliasDeclaration,
-    a3: Array<[Token, TypeAliasDeclaration]>,
-  ): TypeAliasDeclarations => ({
-    type: "TypeAliasDeclarations",
-    items: [a2].concat(a3.map((a) => a[1])),
-  }),
+  ): TypeAliasDeclaration => a2,
 
   visitTypeAliasDeclaration: (
     a1: Token,
@@ -847,13 +858,22 @@ const composeLambda = (
   names: Array<Parameter>,
   expr: Expression,
   returnType: Type | undefined,
-): Expression =>
-  names.reduceRight((acc, name) => ({
+): Expression => {
+  if (names.length === 0 && returnType !== undefined) {
+    return {
+      type: "Typing",
+      expr,
+      typ: returnType,
+    };
+  }
+
+  return names.reduceRight((acc, name) => ({
     type: "Lam",
     name,
     expr: acc,
     returnType: expr === acc ? returnType : undefined,
   }), expr);
+};
 
 const composeFunctionType = (types: Array<Type>): Type =>
   types.slice(1).reduceRight((acc, type) => ({

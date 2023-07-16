@@ -9,7 +9,50 @@ export abstract class Type {
   abstract ftv(): Set<Var>;
 
   toScheme(): Scheme {
-    return new Scheme(this.ftv(), this);
+    return new Scheme([...this.ftv()], this);
+  }
+}
+
+export class TAlias extends Type {
+  name: string;
+  args: Array<Type>;
+  scheme: Scheme;
+
+  constructor(name: string, args: Array<Type>, scheme: Scheme) {
+    super();
+    this.name = name;
+    this.args = args;
+    this.scheme = scheme;
+  }
+
+  apply(s: Subst): Type {
+    return new TAlias(
+      this.name,
+      applyArray(s, this.args),
+      this.scheme.apply(s),
+    );
+  }
+
+  ftv(): Set<Var> {
+    return Sets.flatUnion(this.args.map((t) => t.ftv()));
+  }
+
+  toString(): string {
+    return `${this.name}${this.args.length > 0 ? " " : ""}${
+      this.args.map((t) =>
+        (t instanceof TCon && t.args.length > 0 || t instanceof TArr)
+          ? `(${t.toString()})`
+          : t.toString()
+      ).join(" ")
+    }`;
+  }
+
+  resolve(): Type {
+    const bindings = new Map(
+      this.scheme.names.map((n, i) => [n, this.args[i]]),
+    );
+
+    return this.scheme.type.apply(new Subst(bindings));
   }
 }
 
@@ -214,20 +257,23 @@ export class Subst {
 export const nullSubs = new Subst(new Map());
 
 export class Scheme {
-  names: Set<Var>;
+  names: Array<Var>;
   type: Type;
 
-  constructor(names: Set<Var>, type: Type) {
+  constructor(names: Array<Var>, type: Type) {
     this.names = names;
     this.type = type;
   }
 
   apply(s: Subst): Scheme {
-    return new Scheme(this.names, this.type.apply(s.remove(this.names)));
+    return new Scheme(
+      this.names,
+      this.type.apply(s.remove(new Set(this.names))),
+    );
   }
 
   ftv(): Set<Var> {
-    return Sets.difference(this.type.ftv(), this.names);
+    return Sets.difference(this.type.ftv(), new Set(this.names));
   }
 
   instantiate(pump: Pump): Type {
@@ -240,7 +286,7 @@ export class Scheme {
 
   toString(): string {
     return `${
-      this.names.size == 0 ? "" : `∀ ${[...this.names].join(", ")}. `
+      this.names.length == 0 ? "" : `∀ ${this.names.join(", ")}. `
     }${this.type}`;
   }
 }
@@ -303,23 +349,31 @@ export class DataDefinition {
 export class TypeEnv {
   private values: Map<string, Scheme>;
   private adts: Array<DataDefinition>;
+  private aliases: Map<string, Scheme>;
   private imports: Map<string, TypeEnv>;
 
   constructor(
     values: Map<string, Scheme>,
     adts: Array<DataDefinition>,
+    aliases: Map<string, Scheme>,
     imports: Map<string, TypeEnv>,
   ) {
     this.values = values;
     this.adts = adts;
     this.imports = imports;
+    this.aliases = aliases;
   }
 
   combine(other: TypeEnv): TypeEnv {
-    return new TypeEnv(Maps.union(this.values, other.values), [
-      ...this.adts,
-      ...other.adts,
-    ], Maps.union(this.imports, other.imports));
+    return new TypeEnv(
+      Maps.union(this.values, other.values),
+      [
+        ...this.adts,
+        ...other.adts,
+      ],
+      Maps.union(this.aliases, other.aliases),
+      Maps.union(this.imports, other.imports),
+    );
   }
 
   extend(name: string, scheme: Scheme): TypeEnv {
@@ -327,20 +381,27 @@ export class TypeEnv {
 
     result.set(name, scheme);
 
-    return new TypeEnv(result, this.adts, this.imports);
+    return new TypeEnv(result, this.adts, this.aliases, this.imports);
   }
 
   addData(adt: DataDefinition): TypeEnv {
     const adts = [adt, ...this.adts.filter((a) => a.name !== adt.name)];
 
-    return new TypeEnv(this.values, adts, this.imports);
+    return new TypeEnv(this.values, adts, this.aliases, this.imports);
   }
 
   addImport(name: string, env: TypeEnv): TypeEnv {
     const imports = new Map(this.imports);
     imports.set(name, env);
 
-    return new TypeEnv(this.values, this.adts, imports);
+    return new TypeEnv(this.values, this.adts, this.aliases, imports);
+  }
+
+  addAlias(name: string, type: Scheme): TypeEnv {
+    const aliases = new Map(this.aliases);
+    aliases.set(name, type);
+
+    return new TypeEnv(this.values, this.adts, aliases, this.imports);
   }
 
   findConstructor(
@@ -357,10 +418,15 @@ export class TypeEnv {
     return undefined;
   }
 
+  findAlias(name: string): Scheme | undefined {
+    return this.aliases.get(name);
+  }
+
   apply(s: Subst): TypeEnv {
     return new TypeEnv(
       Maps.map(this.values, (scheme) => scheme.apply(s)),
       this.adts,
+      this.aliases,
       this.imports,
     );
   }
@@ -386,11 +452,11 @@ export class TypeEnv {
   }
 
   generalise(t: Type): Scheme {
-    return new Scheme(Sets.difference(t.ftv(), this.ftv()), t);
+    return new Scheme([...Sets.difference(t.ftv(), this.ftv())], t);
   }
 }
 
-export const emptyTypeEnv = new TypeEnv(new Map(), [], new Map())
+export const emptyTypeEnv = new TypeEnv(new Map(), [], new Map(), new Map())
   .addData(new DataDefinition(home, "Bool", [], []))
   .addData(new DataDefinition(home, "Error", [], []))
   .addData(new DataDefinition(home, "Int", [], []))

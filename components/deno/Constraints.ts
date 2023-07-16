@@ -2,6 +2,7 @@ import {
   nullSubs,
   Pump,
   Subst,
+  TAlias,
   TArr,
   TCon,
   TRowEmpty,
@@ -34,6 +35,12 @@ const unifies = (t1: Type, t2: Type, pump: Pump): Unifier => {
   }
   if (t1 instanceof TTuple && t2 instanceof TTuple) {
     return unifyMany(t1.types, t2.types, pump);
+  }
+  if (t1 instanceof TAlias) {
+    return unifies(t1.resolve(), t2, pump);
+  }
+  if (t2 instanceof TAlias) {
+    return unifies(t1, t2.resolve(), pump);
   }
   if (t1 instanceof TRowEmpty && t2 instanceof TRowEmpty) {
     return emptyUnifier;

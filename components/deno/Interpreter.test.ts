@@ -521,16 +521,88 @@ Deno.test("Typing of expressions", () => {
   );
 });
 
+Deno.test("Alias declaration", () => {
+  assertExecute(
+    "type Fred a = (a * Int)",
+    ["Fred = ∀ a. (a * Int)"],
+  );
+
+  assertError(
+    "type Fred a = (a * b)",
+    { type: "TypeAliasParameterNotDeclared", name: "b", parameters: ["a"] },
+  );
+
+  assertExecute(
+    [
+      "type Fred a = (a * Int)",
+      "let mkFred0 n : Fred Int = (10, n)",
+    ].join(" ; "),
+    [
+      "Fred = ∀ a. (a * Int)",
+      ["mkFred0 = function: Int -> Fred Int"],
+    ],
+  );
+
+  assertExecute(
+    "type Fred a = {x: a, y: Int}",
+    ["Fred = ∀ a. { x: a, y: Int }"],
+  );
+
+  assertExecute(
+    [
+      "type Fred a = {x: a, y: Int}",
+      "let mkFred0: Fred Int = {x: 10, y: 11}",
+    ].join(" ; "),
+    [
+      "Fred = ∀ a. { x: a, y: Int }",
+      ["mkFred0 = { x: 10, y: 11 }: Fred Int"],
+    ],
+  );
+
+  assertExecute(
+    [
+      "type Fred a = {x: a, y: Int}",
+      "let mkFred0 x y : Fred Int = {x: x, y: y}",
+      "let mkFred1 (x: a) y : Fred a = {x: x, y: y}",
+      "let mkFred2 x y : Fred a = {x: x, y: y}",
+    ].join(" ; "),
+    [
+      "Fred = ∀ a. { x: a, y: Int }",
+      ["mkFred0 = function: Int -> Int -> Fred Int"],
+      ["mkFred1 = function: a -> Int -> Fred a"],
+      ["mkFred2 = function: a -> Int -> Fred a"],
+    ],
+  );
+
+  assertExecute(
+    [
+      "type FredA a = (a * a)",
+      "type FredB a b = (b * FredA a)",
+      '("hello", (1, 2))',
+      '("hello", (1, 2)) : FredB Int String',
+    ].join(" ; "),
+    [
+      "FredA = ∀ a. (a * a)",
+      "FredB = ∀ a, b. (b * FredA a)",
+      '("hello", (1, 2)): (String * (Int * Int))',
+      '("hello", (1, 2)): FredB Int String',
+    ],
+  );
+});
+
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(expression);
-  const [result, _] = executeProgram(ast, defaultEnv(home));
+  const [result, newEnv] = executeProgram(ast, defaultEnv(home));
 
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
       assertEquals(result[i][0].toString(), expected[i]);
-    } else if (
-      e.type !== "ImportStatement" && e.type !== "TypeAliasDeclarations"
-    ) {
+    } else if (e.type === "TypeAliasDeclaration") {
+      assertEquals(
+        `${e.name} = ${newEnv.type.findAlias(e.name)?.toString()}`,
+        expected[i],
+      );
+    } else if (e.type !== "ImportStatement") {
       const [value, type] = result[i];
 
       assertEquals(expressionToNestedString(value, type!, e), expected[i]);

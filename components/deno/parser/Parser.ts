@@ -178,7 +178,7 @@ export interface Visitor<
   visitADTType1(
     a1: Token,
     a2: [Token, Token] | undefined,
-    a3: Array<T_TypeType>,
+    a3: Array<(T_TermType | [Token, [Token, Token] | undefined])>,
   ): T_ADTType;
   visitADTType2(a: T_TermType): T_ADTType;
   visitTermType1(a: Token): T_TermType;
@@ -201,7 +201,6 @@ export interface Visitor<
   visitTypeAliasDeclarations(
     a1: Token,
     a2: T_TypeAliasDeclaration,
-    a3: Array<[Token, T_TypeAliasDeclaration]>,
   ): T_TypeAliasDeclarations;
   visitTypeAliasDeclaration(
     a1: Token,
@@ -1063,18 +1062,46 @@ export const mkParser = <
           const a2t: [Token, Token] = [a2t1, a2t2];
           a2 = a2t;
         }
-        const a3: Array<T_TypeType> = [];
+        const a3: Array<(T_TermType | [Token, [Token, Token] | undefined])> =
+          [];
 
         while (
           isTokens([
-            TToken.UpperIdentifier,
             TToken.LowerIdentifier,
             TToken.LParen,
             TToken.LCurly,
+            TToken.UpperIdentifier,
           ])
         ) {
-          const a3t: T_TypeType = this.typeType();
-          a3.push(a3t);
+          if (
+            isTokens([TToken.LowerIdentifier, TToken.LParen, TToken.LCurly])
+          ) {
+            const a3t: T_TermType = this.termType();
+            a3.push(a3t);
+          } else if (isToken(TToken.UpperIdentifier)) {
+            const a3t1: Token = matchToken(TToken.UpperIdentifier);
+            let a3t2: [Token, Token] | undefined = undefined;
+
+            if (isToken(TToken.Period)) {
+              const a3t2t1: Token = matchToken(TToken.Period);
+              const a3t2t2: Token = matchToken(TToken.UpperIdentifier);
+              const a3t2t: [Token, Token] = [a3t2t1, a3t2t2];
+              a3t2 = a3t2t;
+            }
+            const a3t: [Token, [Token, Token] | undefined] = [a3t1, a3t2];
+            a3.push(a3t);
+          } else {
+            throw {
+              tag: "SyntaxError",
+              found: scanner.current(),
+              expected: [
+                TToken.LowerIdentifier,
+                TToken.LParen,
+                TToken.LCurly,
+                TToken.UpperIdentifier,
+              ],
+            };
+          }
         }
         return visitor.visitADTType1(a1, a2, a3);
       } else if (
@@ -1183,15 +1210,7 @@ export const mkParser = <
     typeAliasDeclarations: function (): T_TypeAliasDeclarations {
       const a1: Token = matchToken(TToken.Type);
       const a2: T_TypeAliasDeclaration = this.typeAliasDeclaration();
-      const a3: Array<[Token, T_TypeAliasDeclaration]> = [];
-
-      while (isToken(TToken.And)) {
-        const a3t1: Token = matchToken(TToken.And);
-        const a3t2: T_TypeAliasDeclaration = this.typeAliasDeclaration();
-        const a3t: [Token, T_TypeAliasDeclaration] = [a3t1, a3t2];
-        a3.push(a3t);
-      }
-      return visitor.visitTypeAliasDeclarations(a1, a2, a3);
+      return visitor.visitTypeAliasDeclarations(a1, a2);
     },
     typeAliasDeclaration: function (): T_TypeAliasDeclaration {
       const a1: Token = matchToken(TToken.UpperIdentifier);

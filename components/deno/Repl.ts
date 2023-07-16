@@ -51,6 +51,8 @@ const execute = (line: string, env: Env): Env => {
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
       console.log(result[i][0].toString());
+    } else if (e.type === "TypeAliasDeclaration") {
+      console.log(`${e.name} = ${newEnv.type.findAlias(e.name)?.toString()}`);
     } else if (e.type !== "ImportStatement") {
       const [value, type] = result[i];
 
@@ -102,7 +104,7 @@ if (Deno.args.length === 0) {
           }
         }
         console.log("Data Declarations");
-        console.log(env.type.adts.map((a) => `  ${a}`).join("\n"));
+        console.log(env.type.datas().map((a) => `  ${a}`).join("\n"));
         break;
       default:
         try {

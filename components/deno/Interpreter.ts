@@ -388,10 +388,10 @@ const executeDataDeclaration = (
     const runtimeEnv = env.runtime;
     let typeEnv = env.type.addData(adt);
 
-    const parameters = new Set(adt.parameters);
+    const parameters = adt.parameters;
     const constructorResultType = new TCon(
       adt,
-      adt.parameters.map((p) => new TVar(p)),
+      parameters.map((p) => new TVar(p)),
     );
     adt.constructors.forEach((c) => {
       typeEnv = typeEnv.extend(
@@ -424,10 +424,26 @@ const executeElement = (
   if (e.type === "DataDeclaration") {
     const [adts, newEnv] = executeDataDeclaration(e, env);
     return [adts, undefined, newEnv];
-  } else if (e.type === "TypeAliasDeclarations") {
-    throw new Error(
-      "TODO: Interpreter: Type alias declarations not yet supported",
-    );
+  } else if (e.type === "TypeAliasDeclaration") {
+    const typ = translateType(e.typ, env);
+
+    const parameters = new Set(e.parameters);
+
+    for (const p of typ.ftv()) {
+      if (!parameters.has(p)) {
+        throw {
+          type: "TypeAliasParameterNotDeclared",
+          name: p,
+          parameters: e.parameters,
+        };
+      }
+    }
+
+    env = {
+      ...env,
+      type: env.type.addAlias(e.name, new Scheme(e.parameters, typ)),
+    };
+    return [null, undefined, env];
   } else if (e.type === "ImportStatement") {
     const imports = executeImport(e.from, env.src, env.imports);
 

@@ -6,6 +6,7 @@ import {
   Pump,
   Scheme,
   Subst,
+  TAlias,
   TArr,
   TCon,
   TRowEmpty,
@@ -52,7 +53,7 @@ export const inferProgram = (
       throw new Error("inferProgram: Data declarations not supported yet");
     }
 
-    if (e.type === "TypeAliasDeclarations") {
+    if (e.type === "TypeAliasDeclaration") {
       throw new Error(
         "inferProgram: Type alias declarations not supported yet",
       );
@@ -119,14 +120,17 @@ export const inferExpression = (
         : translateType(expr.name[1], env);
       const [t] = infer(
         expr.expr,
-        extend(env, expr.name[0], new Scheme(new Set(), tv)),
+        extend(env, expr.name[0], new Scheme([], tv)),
       );
 
-      if (expr.returnType !== undefined) {
-        constraints.add(t, translateType(expr.returnType, env));
-      }
+      if (expr.returnType === undefined) {
+        return [new TArr(tv, t), env];
+      } else {
+        const returnType = translateType(expr.returnType, env);
 
-      return [new TArr(tv, t), env];
+        constraints.add(t, returnType);
+        return [new TArr(tv, returnType), env];
+      }
     }
     if (expr.type === "Let") {
       let newEnv = env;
@@ -162,7 +166,7 @@ export const inferExpression = (
           ...acc,
           type: acc.type.extend(
             declaration.name,
-            new Scheme(new Set(), tvs[idx]),
+            new Scheme([], tvs[idx]),
           ),
         }),
         env,
@@ -266,7 +270,7 @@ export const inferExpression = (
       const [t] = infer(expr.expr, env);
       const t1 = translateType(expr.typ, env);
       constraints.add(t, t1);
-      return [t, env];
+      return [t1, env];
     }
     if (expr.type === "Var") {
       let varEnv: TypeEnv | undefined = env.type;
@@ -339,7 +343,7 @@ export const inferPattern = (
   }
   if (pattern.type === "PVar") {
     const tv = pump.next();
-    return [tv, extend(env, pattern.name, new Scheme(new Set(), tv))];
+    return [tv, extend(env, pattern.name, new Scheme([], tv))];
   }
   if (pattern.type === "PWildcard") {
     return [pump.next(), env];
@@ -388,7 +392,25 @@ export const translateType = (t: AST.Type, env: Env): Type => {
           : env.type.import(t.qualifier);
         const tc = qualifiedEnv?.data(t.name);
         if (tc === undefined) {
-          throw { type: "UnknownDataError", name: t.name };
+          const aliasType = qualifiedEnv?.findAlias(t.name);
+          if (aliasType === undefined) {
+            throw { type: "UnknownDataError", name: t.name };
+          } else if (aliasType.names.length !== t.arguments.length) {
+            throw {
+              type: "IncorrectTypeArguments",
+              name: t.name,
+              expected: aliasType.names.length,
+              actual: t.arguments.length,
+              // aliasType,
+              // ast: t,
+            };
+          } else {
+            return new TAlias(
+              t.name,
+              t.arguments.map(translate),
+              aliasType,
+            );
+          }
         }
         if (t.arguments.length !== tc.parameters.length) {
           throw {

@@ -107,7 +107,7 @@ TypeType
     ;
 
 ADTType
-    : UpperIdentifier ["." UpperIdentifier] {TypeType}
+    : UpperIdentifier ["." UpperIdentifier] {TermType | UpperIdentifier ["." UpperIdentifier]}
     | TermType
     ;
 
@@ -118,7 +118,7 @@ TermType
     ;
 
 TypeAliasDeclarations
-    : "type" TypeAliasDeclaration {"and" TypeAliasDeclaration}
+    : "type" TypeAliasDeclaration
     ;
 
 TypeAliasDeclaration
