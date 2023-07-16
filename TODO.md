@@ -35,8 +35,8 @@ The tasks are built out according to the packages listed in [README](README.md)
 - [x] Incorporate into deno REPL implementation
 - [x] Add typing of expressions into grammar
 - [x] Incorporate into deno REPL implementation
-- [ ] Add type alias into grammar
-- [ ] Incorporate into deno REPL implementation
+- [x] Add type alias into grammar
+- [x] Incorporate into deno REPL implementation
 
 # Builtins
 
