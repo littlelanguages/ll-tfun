@@ -48,12 +48,7 @@ const unifies = (t1: Type, t2: Type, pump: Pump): Unifier => {
   if (t1 instanceof TRowExtend) {
     const rewriteRow = (row: Type): [Type, Type] | undefined => {
       if (row instanceof TRowEmpty) {
-        throw {
-          type: "RowDoesNotContainLabel",
-          label: t1.name,
-          t1,
-          t2,
-        };
+        throw { type: "RowDoesNotContainLabel", label: t1.name, t1, t2 };
       }
       if (row instanceof TRowExtend) {
         if (t1.name === row.name) {
@@ -145,12 +140,9 @@ const solver = (constraints: Array<Constraint>, pump: Pump): Subst => {
     const [su1, cs1] = unifies(t1, t2, pump);
     su = su1.compose(su);
     cs = cs1.concat(
-      cs0.map(
-        (constraint) => [
-          constraint[0].apply(su1),
-          constraint[1].apply(su1),
-        ],
-      ),
+      cs0.map((
+        constraint,
+      ) => [constraint[0].apply(su1), constraint[1].apply(su1)]),
     );
   }
 
