@@ -349,7 +349,7 @@ export class DataDefinition {
 export class TypeEnv {
   private values: Map<string, Scheme>;
   private adts: Array<DataDefinition>;
-  private aliases: Map<string, Scheme>;
+  private _aliases: Map<string, Scheme>;
   private imports: Map<string, TypeEnv>;
 
   constructor(
@@ -361,7 +361,7 @@ export class TypeEnv {
     this.values = values;
     this.adts = adts;
     this.imports = imports;
-    this.aliases = aliases;
+    this._aliases = aliases;
   }
 
   combine(other: TypeEnv): TypeEnv {
@@ -371,7 +371,7 @@ export class TypeEnv {
         ...this.adts,
         ...other.adts,
       ],
-      Maps.union(this.aliases, other.aliases),
+      Maps.union(this._aliases, other._aliases),
       Maps.union(this.imports, other.imports),
     );
   }
@@ -381,24 +381,24 @@ export class TypeEnv {
 
     result.set(name, scheme);
 
-    return new TypeEnv(result, this.adts, this.aliases, this.imports);
+    return new TypeEnv(result, this.adts, this._aliases, this.imports);
   }
 
   addData(adt: DataDefinition): TypeEnv {
     const adts = [adt, ...this.adts.filter((a) => a.name !== adt.name)];
 
-    return new TypeEnv(this.values, adts, this.aliases, this.imports);
+    return new TypeEnv(this.values, adts, this._aliases, this.imports);
   }
 
   addImport(name: string, env: TypeEnv): TypeEnv {
     const imports = new Map(this.imports);
     imports.set(name, env);
 
-    return new TypeEnv(this.values, this.adts, this.aliases, imports);
+    return new TypeEnv(this.values, this.adts, this._aliases, imports);
   }
 
   addAlias(name: string, type: Scheme): TypeEnv {
-    const aliases = new Map(this.aliases);
+    const aliases = new Map(this._aliases);
     aliases.set(name, type);
 
     return new TypeEnv(this.values, this.adts, aliases, this.imports);
@@ -419,14 +419,14 @@ export class TypeEnv {
   }
 
   findAlias(name: string): Scheme | undefined {
-    return this.aliases.get(name);
+    return this._aliases.get(name);
   }
 
   apply(s: Subst): TypeEnv {
     return new TypeEnv(
       Maps.map(this.values, (scheme) => scheme.apply(s)),
       this.adts,
-      this.aliases,
+      this._aliases,
       this.imports,
     );
   }
@@ -437,6 +437,10 @@ export class TypeEnv {
 
   scheme(name: string): Scheme | undefined {
     return this.values.get(name);
+  }
+
+  aliases(): Array<string> {
+    return [...this._aliases.keys()];
   }
 
   data(name: string): DataDefinition | undefined {

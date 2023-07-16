@@ -1,0 +1,3 @@
+import AliasB*, AliasC from "./nested/aliases.tfun" ;
+
+type AliasD* a = AliasC a

@@ -1,0 +1,5 @@
+type AliasA a = (a * a) ;
+
+type AliasB* b = (b * b) ;
+
+type AliasC* c = AliasA c

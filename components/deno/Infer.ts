@@ -401,8 +401,6 @@ export const translateType = (t: AST.Type, env: Env): Type => {
               name: t.name,
               expected: aliasType.names.length,
               actual: t.arguments.length,
-              // aliasType,
-              // ast: t,
             };
           } else {
             return new TAlias(

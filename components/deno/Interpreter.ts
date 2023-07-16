@@ -468,6 +468,10 @@ const executeElement = (
           type = type.addData(adt);
         });
 
+        imports.types.aliases().forEach((name) => {
+          type = type.addAlias(name, imports.types.findAlias(name)!);
+        });
+
         return [null, undefined, { ...env, runtime, type }];
       } else {
         if (env.runtime.has(e.items.as)) {
@@ -492,35 +496,41 @@ const executeElement = (
       e.items.items.forEach(({ name, as }) => {
         if (startsWithUppercase(name[0])) {
           const adt = imports.types.data(name);
-          if (adt === undefined) {
-            throw {
-              type: "UnknownImportName",
-              name,
-              names: importValueNames(imports.values),
-            };
-          }
-          if (type.data(adt.name) !== undefined) {
-            throw {
-              type: "ImportNameAlreadyDeclared",
-              name: adt.name,
-            };
-          }
-          type = type.addData(adt);
 
-          adt.constructors.forEach((c) => {
-            if (runtime.has(c.name)) {
+          if (adt === undefined) {
+            const alias = imports.types.findAlias(name);
+            if (alias === undefined) {
+              throw {
+                type: "UnknownImportName",
+                name,
+                names: importValueNames(imports.values),
+              };
+            }
+            type = type.addAlias(name, alias);
+          } else {
+            if (type.data(adt.name) !== undefined) {
               throw {
                 type: "ImportNameAlreadyDeclared",
                 name: adt.name,
               };
             }
-            const v = imports.values.get(c.name)!;
-            runtime.bind(
-              c.name,
-              v[0],
-            );
-            type = type.extend(c.name, v[1].toScheme());
-          });
+            type = type.addData(adt);
+
+            adt.constructors.forEach((c) => {
+              if (runtime.has(c.name)) {
+                throw {
+                  type: "ImportNameAlreadyDeclared",
+                  name: adt.name,
+                };
+              }
+              const v = imports.values.get(c.name)!;
+              runtime.bind(
+                c.name,
+                v[0],
+              );
+              type = type.extend(c.name, v[1].toScheme());
+            });
+          }
         } else {
           const item = imports.values.get(name);
 
@@ -659,19 +669,24 @@ export const executeImport = (
               if (startsWithUppercase(name[0])) {
                 const adt = imports.types.data(name);
                 if (adt === undefined) {
-                  throw {
-                    type: "UnknownImportName",
-                    name,
-                    names: importValueNames(imports.values),
-                  };
-                }
-                env = env.addData(adt);
+                  const alias = imports.types.findAlias(name);
+                  if (alias === undefined) {
+                    throw {
+                      type: "UnknownImportName",
+                      name,
+                      names: importValueNames(imports.values),
+                    };
+                  }
+                  env = env.addAlias(name, alias);
+                } else {
+                  env = env.addData(adt);
 
-                adt.constructors.forEach((c) => {
-                  const v = imports.values.get(c.name)!;
-                  importValues.set(c.name, [v[0], v[1]]);
-                  env = env.extend(c.name, v[1].toScheme());
-                });
+                  adt.constructors.forEach((c) => {
+                    const v = imports.values.get(c.name)!;
+                    importValues.set(c.name, [v[0], v[1]]);
+                    env = env.extend(c.name, v[1].toScheme());
+                  });
+                }
               } else {
                 const item = imports.values.get(name);
 
@@ -690,6 +705,10 @@ export const executeImport = (
               }
             }
           });
+        }
+      } else if (e.type === "TypeAliasDeclaration") {
+        if (e.visibility === Visibility.Public) {
+          env = env.addAlias(e.name, resultEnv.type.findAlias(e.name)!);
         }
       }
     });

@@ -590,6 +590,31 @@ Deno.test("Alias declaration", () => {
   );
 });
 
+Deno.test("Import - aliases", () => {
+  assertExecute(
+    ['import * from "./tests/nested/aliases.tfun"', "(10, 10) : AliasB Int"]
+      .join(" ; "),
+    [
+      "import",
+      "(10, 10): AliasB Int",
+    ],
+  );
+
+  assertExecute(
+    [
+      'import * from "./tests/aliases.tfun"',
+      "(10, 10) : AliasB Int",
+      "(10, 10) : AliasD Int",
+    ]
+      .join(" ; "),
+    [
+      "import",
+      "(10, 10): AliasB Int",
+      "(10, 10): AliasD Int",
+    ],
+  );
+});
+
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(expression);
   const [result, newEnv] = executeProgram(ast, defaultEnv(home));
