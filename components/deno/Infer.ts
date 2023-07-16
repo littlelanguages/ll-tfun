@@ -301,86 +301,74 @@ export const inferPattern = (
   constraints: Constraints,
   pump: Pump,
 ): [Type, Env] => {
-  if (pattern.type === "PBool") {
-    return [typeBool, env];
-  }
-  if (pattern.type === "PInt") {
-    return [typeInt, env];
-  }
-  if (pattern.type === "PString") {
-    return [typeString, env];
-  }
-  if (pattern.type === "PTuple") {
-    const values: Array<Type> = [];
-    let newEnv = env;
-    for (const p of pattern.values) {
-      const [t, e] = inferPattern(p, newEnv, constraints, pump);
-      values.push(t);
-      newEnv = e;
+  switch (pattern.type) {
+    case "PBool":
+      return [typeBool, env];
+    case "PCons": {
+      const c = pattern.qualifier === undefined
+        ? env.type.findConstructor(pattern.name)
+        : env.type.import(pattern.qualifier)?.findConstructor(pattern.name);
+
+      if (c === undefined) {
+        throw { type: "UnknownConstructorError", name: pattern.name };
+      }
+
+      const [constructor, adt] = c;
+      if (constructor.args.length !== pattern.args.length) {
+        throw { type: "ArityMismatchError", constructor: constructor, pattern };
+      }
+
+      const parameters = pump.nextN(adt.parameters.length);
+      const subst = new Subst(new Map(zip(adt.parameters, parameters)));
+      const constructorArgTypes = applyArray(subst, constructor.args);
+
+      let newEnv = env;
+      pattern.args.forEach((p, i) => {
+        const [t, e] = inferPattern(p, newEnv, constraints, pump);
+        constraints.add(t, constructorArgTypes[i]);
+        newEnv = e;
+      });
+
+      return [new TCon(adt, parameters), newEnv];
     }
-    return [new TTuple(values), newEnv];
-  }
-  if (pattern.type === "PUnit") {
-    return [typeUnit, env];
-  }
-  if (pattern.type === "PRecord") {
-    const result: [Type, Env] = pattern.extension === undefined
-      ? [new TRowEmpty(), env]
-      : inferPattern(pattern.extension, env, constraints, pump);
+    case "PInt":
+      return [typeInt, env];
+    case "PRecord": {
+      const result: [Type, Env] = pattern.extension === undefined
+        ? [new TRowEmpty(), env]
+        : inferPattern(pattern.extension, env, constraints, pump);
 
-    for (const [name, p] of pattern.fields) {
-      const [t, e] = inferPattern(
-        p,
-        result[1],
-        constraints,
-        pump,
-      );
-      result[0] = new TRowExtend(name, t, result[0]);
-      result[1] = e;
+      for (const [name, p] of pattern.fields) {
+        const [t, e] = inferPattern(p, result[1], constraints, pump);
+        result[0] = new TRowExtend(name, t, result[0]);
+        result[1] = e;
+      }
+
+      return result;
     }
-
-    return result;
-  }
-  if (pattern.type === "PVar") {
-    const tv = pump.next();
-    return [tv, extend(env, pattern.name, new Scheme([], tv))];
-  }
-  if (pattern.type === "PWildcard") {
-    return [pump.next(), env];
-  }
-  if (pattern.type === "PCons") {
-    const c = pattern.qualifier === undefined
-      ? env.type.findConstructor(pattern.name)
-      : env.type.import(pattern.qualifier)?.findConstructor(pattern.name);
-
-    if (c === undefined) {
-      throw { type: "UnknownConstructorError", name: pattern.name };
+    case "PString":
+      return [typeString, env];
+    case "PTuple": {
+      const values: Array<Type> = [];
+      let newEnv = env;
+      for (const p of pattern.values) {
+        const [t, e] = inferPattern(p, newEnv, constraints, pump);
+        values.push(t);
+        newEnv = e;
+      }
+      return [new TTuple(values), newEnv];
     }
-
-    const [constructor, adt] = c;
-    if (constructor.args.length !== pattern.args.length) {
-      throw {
-        type: "ArityMismatchError",
-        constructor: constructor,
-        pattern,
-      };
+    case "PUnit":
+      return [typeUnit, env];
+    case "PVar": {
+      const tv = pump.next();
+      return [tv, extend(env, pattern.name, new Scheme([], tv))];
     }
-
-    const parameters = pump.nextN(adt.parameters.length);
-    const subst = new Subst(new Map(zip(adt.parameters, parameters)));
-    const constructorArgTypes = applyArray(subst, constructor.args);
-
-    let newEnv = env;
-    pattern.args.forEach((p, i) => {
-      const [t, e] = inferPattern(p, newEnv, constraints, pump);
-      constraints.add(t, constructorArgTypes[i]);
-      newEnv = e;
-    });
-
-    return [new TCon(adt, parameters), newEnv];
+    case "PWildcard":
+      return [pump.next(), env];
+    default:
+      return [typeError, env];
   }
-
-  return [typeError, env];
 };
 
 export const translateType = (t: AST.Type, env: Env): Type => {
