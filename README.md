@@ -19,8 +19,7 @@ Each of the preceding features are to be introduced and built in sequence.
 The supported implementation for `tfun` are:
 
 - A deno REPL
-- A Kotlin REPL
-- A Kotlin compiler that produces `tfun` specific bytecode
+- A deno compiler that produces `tfun` specific bytecode
 - A deno bytecode interpreter
 - A Zig bytecode interpreter
 
@@ -69,7 +68,7 @@ import size as setSize* from "https://....../blah.tfun";
 Some commentary on the above:
 
 - The first imports an entire package under the qualifying name `List`. It is
-  not possible to add scope qualifyers when importing a package in this manner
+  not possible to add scope qualifiers when importing a package in this manner
   with the declaration limited to the current package.
 - The third line imports individual names, making `length` and `listMap` public
   while renaming `map` to `listMap`.
@@ -94,7 +93,7 @@ me.name
 Finally, on my birthday, my age can be ticked over.
 
 ```
-{ me | age: me.age + 1 }
+{ age: me.age + 1 | me }
 ```
 
 
