@@ -1,2 +1,0 @@
-import List* from "./Data/List.tfun" ;
-import Maybe* from "./Data/Maybe.tfun"

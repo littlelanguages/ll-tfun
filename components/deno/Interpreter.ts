@@ -149,6 +149,17 @@ const binaryOps = new Map<
   [Op.Divide, (a, b) => (a / b) | 0],
 ]);
 
+const arrayToList = (
+  arr: Array<RuntimeValue>,
+  runtimeEnv: RuntimeEnv,
+): RuntimeValue => {
+  let result: RuntimeValue = runtimeEnv.get("Nil");
+  for (let i = arr.length - 1; i >= 0; i--) {
+    result = runtimeEnv.get("Cons")(arr[i])(result);
+  }
+  return result;
+};
+
 const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
   switch (expr.type) {
     case "App": {
@@ -158,6 +169,13 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
     }
     case "Builtin":
       switch (expr.name) {
+        case "Data.Integer.parse":
+          return (s: string) => {
+            const n = parseInt(s, 10);
+            return isNaN(n)
+              ? runtimeEnv.get("Nothing")
+              : runtimeEnv.get("Just")(n);
+          };
         case "Data.Ref.Assign":
           return (v: RuntimeValue) => (r: RuntimeValue) => {
             const result = r[1];
@@ -166,6 +184,11 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
           };
         case "Data.String.Length":
           return (s: string) => s.length;
+        case "Text.Regex.parse":
+          return (s: string) => new RegExp(s);
+        case "Text.Regex.split":
+          return (r: RegExp) => (s: string) =>
+            arrayToList(s.split(r), runtimeEnv);
         default:
           throw new Error(`Unknown builtin ${expr.name}`);
       }

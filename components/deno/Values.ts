@@ -68,6 +68,9 @@ export const valueToString = (v: RuntimeValue): string => {
       }`;
     }
   }
+  if (v instanceof RegExp) {
+    return v.toString();
+  }
   if (typeof v === "object") {
     const fields = Object.entries(v).sort();
 

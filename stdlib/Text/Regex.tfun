@@ -1,0 +1,11 @@
+import List from "../Data/List.tfun" ;
+
+data Regex- = Regex ;
+
+let parse* (s: String) : Regex =
+  builtin "Text.Regex.parse" s ;
+
+let split* (re: Regex) (s: String) : List String =
+  builtin "Text.Regex.split" re s
+
+-- import * as RE from "../../stdlib/Text/Regex.tfun" ;;

@@ -13,13 +13,13 @@ let rec foldRight* f z lst =
   | Cons x xs -> f x (foldRight f z xs) ;
 
 let length* =
-  foldRight (\a b -> b + 1) 0 ;
+  foldRight (\a b = b + 1) 0 ;
 
 let sum* = 
-  foldRight (\a b -> a + b) 0 ;
+  foldRight (\a b = a + b) 0 ;
 
 let map* f =
-  foldRight (\a -> Cons (f a)) Nil ;
+  foldRight (\a = Cons (f a)) Nil ;
 
 let rec find* p lst =
   match lst with

@@ -5,4 +5,4 @@ let map* (f: b -> c) (r: Result a b) : Result a c =
   | Okay ok -> Okay (f ok)
   | Error err -> Error err 
 
--- import * as R from "../stdlib/Data/Result.tfun" ;;
+-- import * as R from "../../stdlib/Data/Result.tfun" ;;

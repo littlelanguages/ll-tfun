@@ -67,6 +67,9 @@ const execute = (line: string, env: Env): Env => {
   return newEnv;
 };
 
+const loadPrelude = (env: Env): Env =>
+  execute('import * from "../../stdlib/Prelude.tfun"', env);
+
 if (Deno.args.length === 0) {
   console.log(
     "Welcome to the REPL of the Lambda Calculus with ADTs Interpreter!",
@@ -74,7 +77,7 @@ if (Deno.args.length === 0) {
   console.log('Type ".quit" to exit.');
   console.log("Enter a multi-line expression with ;; as a terminator.");
 
-  let env = defaultEnv(home);
+  let env = loadPrelude(defaultEnv(home));
 
   while (true) {
     const line = readline();
