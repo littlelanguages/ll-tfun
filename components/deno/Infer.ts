@@ -444,8 +444,6 @@ export const translateType = (t: AST.Type, env: Env): Type => {
         return typeUnit;
       case "TypeVariable":
         return new TVar(t.name);
-      default:
-        throw { type: "UnknownTypeItemError", item: t };
     }
   };
 
