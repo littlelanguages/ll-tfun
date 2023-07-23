@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 LANGUAGE=tfun
 PROJECT_HOME=$(dirname "$0")/..
@@ -24,8 +24,9 @@ build_parser() {
 markdown_tests() {
     echo "---| markdown tests"
 
-    deno run --allow-read ../test-runner/TestRunner.ts ../../scenarios/**/*.md
+    deno run --allow-read ../test-runner/TestRunner.ts `find ../../scenarios -name "*.md"`
 }
+
 scenario_tests() {
     echo "---| scenario tests"
 

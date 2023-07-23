@@ -45,7 +45,7 @@ const renameTypeVariables = (type: Type): Type => {
 };
 
 const execute = (line: string, env: Env): Env => {
-  const ast = parse(line);
+  const ast = parse(env.src, line);
   const [result, newEnv] = executeProgram(ast, env);
 
   ast.forEach((e, i) => {
@@ -78,6 +78,7 @@ if (Deno.args.length === 0) {
   console.log("Enter a multi-line expression with ;; as a terminator.");
 
   let env = loadPrelude(defaultEnv(home));
+  env.src = home.newSrc("repl");
 
   while (true) {
     const line = readline();
@@ -113,7 +114,7 @@ if (Deno.args.length === 0) {
         try {
           env = execute(line, env);
         } catch (e) {
-          console.error(e);
+          console.error(e.toString());
         }
     }
   }
