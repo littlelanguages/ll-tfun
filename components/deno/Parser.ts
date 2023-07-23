@@ -142,6 +142,11 @@ export type RecordSelectExpression = {
 
 export enum Op {
   Equals,
+  NotEquals,
+  LessThan,
+  LessEquals,
+  GreaterThan,
+  GreaterEquals,
   Plus,
   Minus,
   Times,
@@ -315,6 +320,19 @@ export type ImportName = {
   visibility: Visibility;
 };
 
+const stringToOps = new Map<string, Op>([
+  ["==", Op.Equals],
+  ["/=", Op.NotEquals],
+  ["<", Op.LessThan],
+  ["<=", Op.LessEquals],
+  [">", Op.GreaterThan],
+  [">=", Op.GreaterEquals],
+  ["+", Op.Plus],
+  ["-", Op.Minus],
+  ["*", Op.Times],
+  ["/", Op.Divide],
+]);
+
 export const transformLiteralString = (s: string): string =>
   s.substring(1, s.length - 1).replaceAll('\\"', '"');
 
@@ -328,6 +346,7 @@ const visitor: Visitor<
   Element, // T_Element
   Expression, // T_Expression
   Expression, // T_Relational
+  string, // T_RelationalOps
   Expression, // T_Additive
   string, // T_AdditiveOps
   Expression, // T_Multiplicative
@@ -371,11 +390,18 @@ const visitor: Visitor<
 
   visitRelational: (
     a1: Expression,
-    a2: [Token, Expression] | undefined,
+    a2: [string, Expression] | undefined,
   ): Expression =>
     a2 === undefined
       ? a1
-      : { type: "Op", left: a1, op: Op.Equals, right: a2[1] },
+      : { type: "Op", left: a1, op: stringToOps.get(a2[0])!, right: a2[1] },
+
+  visitRelationalOps1: (a: Token): string => a[2],
+  visitRelationalOps2: (a: Token): string => a[2],
+  visitRelationalOps3: (a: Token): string => a[2],
+  visitRelationalOps4: (a: Token): string => a[2],
+  visitRelationalOps5: (a: Token): string => a[2],
+  visitRelationalOps6: (a: Token): string => a[2],
 
   visitMultiplicative: (
     a1: Expression,
@@ -386,7 +412,7 @@ const visitor: Visitor<
         type: "Op",
         left: acc,
         right: e[1],
-        op: e[0] === "*" ? Op.Times : Op.Divide,
+        op: stringToOps.get(e[0])!,
       }),
       a1,
     ),
@@ -403,7 +429,7 @@ const visitor: Visitor<
         type: "Op",
         left: acc,
         right: e[1],
-        op: e[0] === "+" ? Op.Plus : Op.Minus,
+        op: stringToOps.get(e[0])!,
       }),
       a1,
     ),

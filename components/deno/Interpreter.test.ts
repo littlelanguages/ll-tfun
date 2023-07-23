@@ -144,6 +144,24 @@ Deno.test("Match", () => {
 Deno.test("Op", () => {
   assertExecute("1 == 2", ["false: Bool"]);
   assertExecute("2 == 2", ["true: Bool"]);
+  assertExecute("1 /= 2", ["true: Bool"]);
+  assertExecute("2 /= 2", ["false: Bool"]);
+
+  assertExecute("1 < 2", ["true: Bool"]);
+  assertExecute("2 < 2", ["false: Bool"]);
+  assertExecute("3 < 2", ["false: Bool"]);
+
+  assertExecute("1 <= 2", ["true: Bool"]);
+  assertExecute("2 <= 2", ["true: Bool"]);
+  assertExecute("3 <= 2", ["false: Bool"]);
+
+  assertExecute("1 > 2", ["false: Bool"]);
+  assertExecute("2 > 2", ["false: Bool"]);
+  assertExecute("3 > 2", ["true: Bool"]);
+
+  assertExecute("1 >= 2", ["false: Bool"]);
+  assertExecute("2 >= 2", ["true: Bool"]);
+  assertExecute("3 >= 2", ["true: Bool"]);
 
   assertExecute("3 + 2", ["5: Int"]);
   assertExecute("3 - 2", ["1: Int"]);

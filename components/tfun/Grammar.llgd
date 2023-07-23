@@ -16,7 +16,16 @@ Expression
     ;
 
 Relational
-    : Additive ["==" Additive]
+    : Additive [RelationalOps Additive]
+    ;
+
+RelationalOps
+    : "=="
+    | "/="
+    | "<"
+    | "<="
+    | ">"
+    | ">="
     ;
 
 Additive

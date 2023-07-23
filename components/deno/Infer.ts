@@ -34,6 +34,10 @@ export const emptyEnv = (): Env => ({
 });
 
 const ops = new Map([
+  [AST.Op.LessThan, new TArr(typeInt, new TArr(typeInt, typeBool))],
+  [AST.Op.LessEquals, new TArr(typeInt, new TArr(typeInt, typeBool))],
+  [AST.Op.GreaterThan, new TArr(typeInt, new TArr(typeInt, typeBool))],
+  [AST.Op.GreaterEquals, new TArr(typeInt, new TArr(typeInt, typeBool))],
   [AST.Op.Plus, new TArr(typeInt, new TArr(typeInt, typeInt))],
   [AST.Op.Minus, new TArr(typeInt, new TArr(typeInt, typeInt))],
   [AST.Op.Times, new TArr(typeInt, new TArr(typeInt, typeInt))],
@@ -241,7 +245,7 @@ export const inferExpression = (
         const tv = pump.next();
 
         const u1 = new TArr(tl, new TArr(tr, tv));
-        if (expr.op === AST.Op.Equals) {
+        if (expr.op === AST.Op.Equals || expr.op === AST.Op.NotEquals) {
           constraints.add(tl, tr);
           constraints.add(tv, typeBool);
         } else {

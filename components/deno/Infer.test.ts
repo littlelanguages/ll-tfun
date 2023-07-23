@@ -280,6 +280,7 @@ Deno.test("infer Op '=='", () => {
   };
 
   scenario("a == b", typeBool);
+  scenario("a /= b", typeBool);
 });
 
 Deno.test("infer Op excluding '=='", () => {
@@ -297,6 +298,10 @@ Deno.test("infer Op excluding '=='", () => {
     assertTypeEquals(type, ["V3"]);
   };
 
+  scenario("a < b", typeBool);
+  scenario("a <= b", typeBool);
+  scenario("a > b", typeBool);
+  scenario("a >= b", typeBool);
   scenario("a + b", typeInt);
   scenario("a - b", typeInt);
   scenario("a * b", typeInt);

@@ -10,6 +10,7 @@ export interface Visitor<
   T_Element,
   T_Expression,
   T_Relational,
+  T_RelationalOps,
   T_Additive,
   T_AdditiveOps,
   T_Multiplicative,
@@ -42,8 +43,14 @@ export interface Visitor<
   visitExpression(a1: T_Relational, a2: Array<T_Relational>): T_Expression;
   visitRelational(
     a1: T_Additive,
-    a2: [Token, T_Additive] | undefined,
+    a2: [T_RelationalOps, T_Additive] | undefined,
   ): T_Relational;
+  visitRelationalOps1(a: Token): T_RelationalOps;
+  visitRelationalOps2(a: Token): T_RelationalOps;
+  visitRelationalOps3(a: Token): T_RelationalOps;
+  visitRelationalOps4(a: Token): T_RelationalOps;
+  visitRelationalOps5(a: Token): T_RelationalOps;
+  visitRelationalOps6(a: Token): T_RelationalOps;
   visitAdditive(
     a1: T_Multiplicative,
     a2: Array<[T_AdditiveOps, T_Multiplicative]>,
@@ -233,6 +240,7 @@ export const parseProgram = <
   T_Element,
   T_Expression,
   T_Relational,
+  T_RelationalOps,
   T_Additive,
   T_AdditiveOps,
   T_Multiplicative,
@@ -263,6 +271,7 @@ export const parseProgram = <
     T_Element,
     T_Expression,
     T_Relational,
+    T_RelationalOps,
     T_Additive,
     T_AdditiveOps,
     T_Multiplicative,
@@ -300,6 +309,7 @@ export const mkParser = <
   T_Element,
   T_Expression,
   T_Relational,
+  T_RelationalOps,
   T_Additive,
   T_AdditiveOps,
   T_Multiplicative,
@@ -330,6 +340,7 @@ export const mkParser = <
     T_Element,
     T_Expression,
     T_Relational,
+    T_RelationalOps,
     T_Additive,
     T_AdditiveOps,
     T_Multiplicative,
@@ -471,15 +482,52 @@ export const mkParser = <
     },
     relational: function (): T_Relational {
       const a1: T_Additive = this.additive();
-      let a2: [Token, T_Additive] | undefined = undefined;
+      let a2: [T_RelationalOps, T_Additive] | undefined = undefined;
 
-      if (isToken(TToken.EqualEqual)) {
-        const a2t1: Token = matchToken(TToken.EqualEqual);
+      if (
+        isTokens([
+          TToken.EqualEqual,
+          TToken.SlashEqual,
+          TToken.LessThan,
+          TToken.LessThanEqual,
+          TToken.GreaterThan,
+          TToken.GreaterThanEqual,
+        ])
+      ) {
+        const a2t1: T_RelationalOps = this.relationalOps();
         const a2t2: T_Additive = this.additive();
-        const a2t: [Token, T_Additive] = [a2t1, a2t2];
+        const a2t: [T_RelationalOps, T_Additive] = [a2t1, a2t2];
         a2 = a2t;
       }
       return visitor.visitRelational(a1, a2);
+    },
+    relationalOps: function (): T_RelationalOps {
+      if (isToken(TToken.EqualEqual)) {
+        return visitor.visitRelationalOps1(matchToken(TToken.EqualEqual));
+      } else if (isToken(TToken.SlashEqual)) {
+        return visitor.visitRelationalOps2(matchToken(TToken.SlashEqual));
+      } else if (isToken(TToken.LessThan)) {
+        return visitor.visitRelationalOps3(matchToken(TToken.LessThan));
+      } else if (isToken(TToken.LessThanEqual)) {
+        return visitor.visitRelationalOps4(matchToken(TToken.LessThanEqual));
+      } else if (isToken(TToken.GreaterThan)) {
+        return visitor.visitRelationalOps5(matchToken(TToken.GreaterThan));
+      } else if (isToken(TToken.GreaterThanEqual)) {
+        return visitor.visitRelationalOps6(matchToken(TToken.GreaterThanEqual));
+      } else {
+        throw {
+          tag: "SyntaxError",
+          found: scanner.current(),
+          expected: [
+            TToken.EqualEqual,
+            TToken.SlashEqual,
+            TToken.LessThan,
+            TToken.LessThanEqual,
+            TToken.GreaterThan,
+            TToken.GreaterThanEqual,
+          ],
+        };
+      }
     },
     additive: function (): T_Additive {
       const a1: T_Multiplicative = this.multiplicative();

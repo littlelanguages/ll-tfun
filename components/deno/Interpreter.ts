@@ -144,6 +144,11 @@ const binaryOps = new Map<
   (v1: RuntimeValue, v2: RuntimeValue) => RuntimeValue
 >([
   [Op.Equals, (a, b) => equals(a, b)],
+  [Op.NotEquals, (a, b) => !equals(a, b)],
+  [Op.LessThan, (a, b) => a < b],
+  [Op.LessEquals, (a, b) => a <= b],
+  [Op.GreaterThan, (a, b) => a > b],
+  [Op.GreaterEquals, (a, b) => a >= b],
   [Op.Plus, (a, b) => (a + b) | 0],
   [Op.Minus, (a, b) => (a - b) | 0],
   [Op.Times, (a, b) => (a * b) | 0],
