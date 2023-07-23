@@ -269,7 +269,9 @@ export type TypeVariable = {
 export type TypeConstructor = {
   type: "TypeConstructor";
   qualifier: string | undefined;
+  qualifierLocation: Location | undefined;
   name: string;
+  nameLocation: Location;
   arguments: Array<Type>;
 };
 
@@ -460,8 +462,8 @@ const visitor: Visitor<
     a2 === undefined
       ? { type: "LUnit" }
       : a2[1].length === 0
-      ? a2[0]
-      : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+        ? a2[0]
+        : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
 
   visitFactor2: (a: Token): Expression => ({
     type: "LInt",
@@ -626,8 +628,8 @@ const visitor: Visitor<
     a2 === undefined
       ? { type: "PUnit" }
       : a2[1].length === 0
-      ? a2[0]
-      : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+        ? a2[0]
+        : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
 
   visitPattern2: (a: Token): Pattern => ({
     type: "PInt",
@@ -723,8 +725,8 @@ const visitor: Visitor<
     visibility: a2 === undefined
       ? Visibility.Private
       : a2[2] === "*"
-      ? Visibility.Public
-      : Visibility.Opaque,
+        ? Visibility.Public
+        : Visibility.Opaque,
     parameters: a3.map((a) => a[2]),
     constructors: [a5].concat(a6.map((a) => a[1])),
   }),
@@ -748,26 +750,32 @@ const visitor: Visitor<
   ): Type => {
     const mkTypeConstructor = (
       qualifier: string | undefined,
+      qualifierLocation: Location | undefined,
       name: string,
+      nameLocation: Location,
       args: Array<Type>,
     ): Type => ({
       type: "TypeConstructor",
       qualifier,
+      qualifierLocation,
       name,
+      nameLocation,
       arguments: args,
     });
 
     const args: Array<Type> = a3.map((a) =>
       Array.isArray(a)
         ? a[1] === undefined
-          ? mkTypeConstructor(undefined, a[0][2], [])
-          : mkTypeConstructor(a[0][2], a[1][0][2], [])
+          ? mkTypeConstructor(undefined, undefined, a[0][2], a[0][1], [])
+          : mkTypeConstructor(a[0][2], a[0][1], a[1][0][2], a[1][0][1], [])
         : a
     );
 
     return mkTypeConstructor(
       a2 === undefined ? undefined : a1[2],
+      a2 === undefined ? undefined : a1[1],
       a2 === undefined ? a1[2] : a2[1][2],
+      a2 === undefined ? a1[1] : a2[1][1],
       args,
     );
   },
@@ -833,8 +841,8 @@ const visitor: Visitor<
     visibility: a2 === undefined
       ? Visibility.Private
       : a2[2] === "*"
-      ? Visibility.Public
-      : Visibility.Opaque,
+        ? Visibility.Public
+        : Visibility.Opaque,
     parameters: a3.map((a) => a[2]),
     typ: a5,
   }),
@@ -875,8 +883,8 @@ const visitor: Visitor<
     visibility: a2 === undefined
       ? Visibility.Private
       : a2[2] === "*"
-      ? Visibility.Public
-      : Visibility.Opaque,
+        ? Visibility.Public
+        : Visibility.Opaque,
   }),
   visitImportItem2: (
     a1: Token,

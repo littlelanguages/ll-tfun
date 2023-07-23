@@ -23,7 +23,7 @@ import {
 } from "./Typing.ts";
 import { emptyImportEnv, ImportEnv } from "./Values.ts";
 import { Src } from "./Src.ts";
-import { UnknownNameException, UnknownQualifierException } from "./Errors.ts";
+import { UnknownDataNameException, UnknownNameException, UnknownQualifierException } from "./Errors.ts";
 
 export type Env = {
   type: TypeEnv;
@@ -396,7 +396,7 @@ export const translateType = (t: AST.Type, env: Env): Type => {
         if (tc === undefined) {
           const aliasType = qualifiedEnv?.findAlias(t.name);
           if (aliasType === undefined) {
-            throw { type: "UnknownDataError", name: t.name };
+            throw new UnknownDataNameException(env.src, t.name, t.nameLocation)
           } else if (aliasType.names.length !== t.arguments.length) {
             throw {
               type: "IncorrectTypeArguments",

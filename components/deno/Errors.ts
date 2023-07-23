@@ -25,6 +25,25 @@ export class SyntaxErrorException extends Error {
   }
 }
 
+export class UnknownDataNameException extends Error {
+  src: Src;
+  name: string;
+  location: Location.Location;
+
+  constructor(src: Src, name: string, location: Location.Location) {
+    super();
+    this.src = src;
+    this.name = name;
+    this.location = location;
+  }
+
+  toString(): string {
+    return `Unknown Data Name: ${this.name} at ${
+      locationToString(this.src, this.location)
+    }`;
+  }
+}
+
 export class UnknownNameException extends Error {
   src: Src;
   name: string;

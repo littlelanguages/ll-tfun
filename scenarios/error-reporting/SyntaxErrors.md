@@ -61,3 +61,11 @@ let x = T1.y + 1
 ---
 Unknown Qualifier: T1 at ../../scenarios/error-reporting/SyntaxErrors.md 1:9-10
 ```
+
+There are also a number of scenarios where a type identifier is unknown.  The first is where an unknown type is used in a type annotation.
+
+```fsharp xt id=UnknownTypeIdentifier
+let x: Fred = 1
+---
+Unknown Data Name: Fred at ../../scenarios/error-reporting/SyntaxErrors.md 1:8-11
+```
