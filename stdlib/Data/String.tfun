@@ -1,0 +1,20 @@
+let length* (s: String): Int =
+    builtin "Data.String.length" s ;
+
+let isEmpty* (s: String): Bool =
+    length s == 0 ;
+
+let slice* (start: Int) (end: Int) (s: String): Int =
+    builtin "Data.String.slice" start end s ;
+
+let startsWith* (needle: String) (haystack: String): Bool =
+    let needleLength = length needle 
+    and haystackLength = length haystack in
+    if (needleLength > haystackLength) then
+        False
+    else
+        (slice 0 needleLength haystack) == needle ;
+
+let indexOf* (needle: String) (haystack: String): Int =
+    builtin "Data.String.indexOf" needle haystack
+

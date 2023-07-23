@@ -17,6 +17,8 @@ import {
 import { home } from "./Src.ts";
 import { emptyImportEnv } from "./Values.ts";
 
+const urn = home.newSrc("./Infer.test.ts");
+
 const assertTypeEquals = (ts: Array<Type>, expected: Array<string>) => {
   assertEquals(ts.map((t) => t.toString()), expected);
 };
@@ -327,7 +329,7 @@ const inferProgram = (
 ): [Constraints, Array<Type>, Infer.Env] => {
   return Infer.inferProgram(
     { type: defaultEnv, imports: emptyImportEnv() },
-    parse(input),
+    parse(urn, input),
     new Constraints(),
     createFresh(),
   );

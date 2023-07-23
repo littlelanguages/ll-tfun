@@ -19,4 +19,3 @@ let isJust* maybe =
   match maybe with
   | Nothing -> False
   | Just _ -> True
-

@@ -10,5 +10,3 @@ let assign* (v: a) (r: Ref a) : a =
 let modify* (f: a -> a) (r: Ref a) : a =
   let newValue = f (ref r)
   in builtin "Data.Ref.Assign" newValue r
-
--- import * as R from "../stdlib/Data/Ref.tfun" ;;

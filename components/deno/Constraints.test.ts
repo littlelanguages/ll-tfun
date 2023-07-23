@@ -3,13 +3,16 @@ import { Constraints } from "./Constraints.ts";
 import { emptyEnv, inferProgram } from "./Infer.ts";
 import { parse } from "./Parser.ts";
 import { createFresh, Type } from "./Typing.ts";
+import { home } from "./Src.ts";
+
+const urn = home.newSrc("./Constraints.test.ts");
 
 const solve = (expression: string): Array<Type> => {
   const pump = createFresh();
 
   const [constraints, types] = inferProgram(
     emptyEnv(),
-    parse(expression),
+    parse(urn, expression),
     new Constraints(),
     pump,
   );

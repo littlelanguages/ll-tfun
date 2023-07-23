@@ -631,7 +631,7 @@ export type ExecuteResult = [Array<[RuntimeValue, Type | undefined]>, Env];
 export const execute = (
   input: string,
   env: Env,
-): ExecuteResult => executeProgram(parse(input), env);
+): ExecuteResult => executeProgram(parse(env.src, input), env);
 
 export const executeImport = (
   name: string,
@@ -646,7 +646,7 @@ export const executeImport = (
     const importValues: ImportValues = new Map();
     let env = emptyTypeEnv;
 
-    const ast = parse(Deno.readTextFileSync(urn));
+    const ast = parse(src, Deno.readTextFileSync(urn));
     const [result, resultEnv] = executeProgram(ast, defaultEnv(src));
 
     ast.forEach((e, i) => {

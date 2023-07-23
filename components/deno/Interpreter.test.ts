@@ -8,6 +8,8 @@ import { parse } from "./Parser.ts";
 import { expressionToNestedString, NestedString } from "./Values.ts";
 import { home } from "./Src.ts";
 
+const urn = home.newSrc("./Constraints.test.ts");
+
 Deno.test("App 1", () => {
   assertExecute("(\\n = n + 1) 1", ["2: Int"]);
 });
@@ -634,7 +636,7 @@ Deno.test("Import - aliases", () => {
 });
 
 const assertExecute = (expression: string, expected: NestedString) => {
-  const ast = parse(expression);
+  const ast = parse(urn, expression);
   const [result, newEnv] = executeProgram(ast, defaultEnv(home));
 
   ast.forEach((e, i) => {
@@ -657,7 +659,7 @@ const assertExecute = (expression: string, expected: NestedString) => {
 type MyError = any;
 
 const assertError = (expression: string, error: MyError) => {
-  const ast = parse(expression);
+  const ast = parse(urn, expression);
   try {
     executeProgram(ast, defaultEnv(home));
     assert(false);
@@ -670,7 +672,7 @@ const assertCatchError = (
   expression: string,
   error: (error: MyError) => void,
 ) => {
-  const ast = parse(expression);
+  const ast = parse(urn, expression);
   try {
     executeProgram(ast, defaultEnv(home));
     assert(false);

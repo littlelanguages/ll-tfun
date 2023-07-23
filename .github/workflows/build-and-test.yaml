@@ -47,3 +47,8 @@ jobs:
         run: |
           cd ./components/deno
           ./tasks/dev scenario
+
+      - name: Markdown Tests
+        run: |
+          cd ./components/deno
+          ./tasks/dev markdown

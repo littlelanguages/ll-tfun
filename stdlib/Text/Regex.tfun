@@ -7,5 +7,3 @@ let parse* (s: String) : Regex =
 
 let split* (re: Regex) (s: String) : List String =
   builtin "Text.Regex.split" re s
-
--- import * as RE from "../../stdlib/Text/Regex.tfun" ;;

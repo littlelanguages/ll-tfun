@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 LANGUAGE=tfun
 PROJECT_HOME=$(dirname "$0")/..
@@ -21,6 +21,11 @@ build_parser() {
     )
 }
 
+markdown_tests() {
+    echo "---| markdown tests"
+
+    deno run --allow-read ../test-runner/TestRunner.ts ../../scenarios/**/*.md
+}
 scenario_tests() {
     echo "---| scenario tests"
 
@@ -53,6 +58,8 @@ case "$1" in
     echo "Commands:"
     echo "  help"
     echo "    This help page"
+    echo "  markdown"
+    echo "    Scenario tests stored in markdown files"
     echo "  parser"
     echo "    Builds the parser from specs"
     echo "  run"
@@ -67,6 +74,11 @@ run)
     build_parser
     unit_tests
     scenario_tests
+    markdown_tests
+    ;;
+
+markdown)
+    markdown_tests
     ;;
 
 parser)
