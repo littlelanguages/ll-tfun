@@ -1,8 +1,14 @@
 # String Calculator Kata
 
-This code is of the [String Calculator Kata](https://katalyst.codurance.com/string-calculator) coded in `tfun`.  The code in this note is the entire kata completed so, when reading it, one does not see each individual step but rather the entire solution.  Nonetheless it is helpful to see the entire solution in one place and then, of course, to use it to verify that the `tfun` implementation is working as expected.
+This code is of the
+[String Calculator Kata](https://katalyst.codurance.com/string-calculator) coded
+in `tfun`. The code in this note is the entire kata completed so, when reading
+it, one does not see each individual step but rather the entire solution.
+Nonetheless it is helpful to see the entire solution in one place and then, of
+course, to use it to verify that the `tfun` implementation is working as
+expected.
 
-``` fsharp xt id=StringCalculatorKata
+```fsharp xt id=StringCalculatorKata
 import * as Integer from "../stdlib/Data/Integer.tfun" ;
 import * as List from "../stdlib/Data/List.tfun" ;
 import * as Maybe from "../stdlib/Data/Maybe.tfun" ;
@@ -20,7 +26,7 @@ add = function: String -> Int
 
 The first test is to return `0` when the input is an empty string.
 
-``` fsharp xt id=Given a blank; use=StringCalculatorKata
+```fsharp xt id=Given a blank; use=StringCalculatorKata
 add ""
 ---
 0: Int
@@ -28,7 +34,7 @@ add ""
 
 The second test is to return the number when the input is a single number.
 
-``` fsharp xt id=Given a value; use=StringCalculatorKata
+```fsharp xt id=Given a value; use=StringCalculatorKata
 add "1" ;
 add "123"
 ---
@@ -38,25 +44,26 @@ add "123"
 
 The third test is to return the sum of numbers when separated with a comma
 
-``` fsharp xt id=Given values separated with a comma; use=StringCalculatorKata
+```fsharp xt id=Given values separated with a comma; use=StringCalculatorKata
 add "1,2,3,4"
 ---
 10: Int
 ```
 
-The next test is to return the sum of numbers when separated with a comma or newline.
+The next test is to return the sum of numbers when separated with a comma or
+newline.
 
-``` fsharp xt id=Given values separated with a comma or newline; use=StringCalculatorKata
+```fsharp xt id=Given values separated with a comma or newline; use=StringCalculatorKata
 add "1,2\n3,4\n5"
 ---
 15: Int
 ```
 
-The custom separator test is to return the sum of numbers when separated with a single character custom separator.
+The custom separator test is to return the sum of numbers when separated with a
+single character custom separator.
 
-``` fsharp xt id=Given values separated with a single character separator; use=StringCalculatorKata
+```fsharp xt id=Given values separated with a single character separator; use=StringCalculatorKata
 add "//;\n1;2;3;4;5"
 ---
 1: Int
 ```
-
