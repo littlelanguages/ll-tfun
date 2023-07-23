@@ -11,7 +11,7 @@ const solve = (expression: string): Array<Type> => {
   const pump = createFresh();
 
   const [constraints, types] = inferProgram(
-    emptyEnv(),
+    emptyEnv(urn),
     parse(urn, expression),
     new Constraints(),
     pump,

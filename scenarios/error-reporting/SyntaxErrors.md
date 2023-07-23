@@ -28,3 +28,29 @@ Syntax Error: Expected Lower Identifier but found end-of-input at ../../scenario
 ---
 Syntax Error: Expected Lower Identifier but found '}' at ../../scenarios/error-reporting/SyntaxErrors.md 1:9
 ```
+
+## Unknown Identifier Errors
+
+These errors relate to the use of an identifier that has not been defined.  There are two forms - value and types.
+
+``` fsharp xt id=UnknownValueIdentifier
+let x = y + 1
+---
+Unknown Name: y at ../../scenarios/error-reporting/SyntaxErrors.md 1:9
+```
+
+``` fsharp xt id=UnknownConstructorIdentifier
+data LList x = LNil | LCons x (LList x) ;
+
+LCons 1 (LKons 2 Nil)
+---
+Unknown Name: LKons at ../../scenarios/error-reporting/SyntaxErrors.md 3:10-14
+```
+
+These errors relate to the use of an identifier that has not been defined.  There are two forms - value and types.
+
+``` fsharp xt id=UnknownQualifierIdentifier
+let x = T1.y + 1
+---
+Unknown Qualifier: T1 at ../../scenarios/error-reporting/SyntaxErrors.md 1:9-10
+```

@@ -22,14 +22,18 @@ import {
   typeUnit,
 } from "./Typing.ts";
 import { emptyImportEnv, ImportEnv } from "./Values.ts";
+import { Src } from "./Src.ts";
+import { UnknownNameException, UnknownQualifierException } from "./Errors.ts";
 
 export type Env = {
   type: TypeEnv;
+  src: Src;
   imports: ImportEnv;
 };
 
-export const emptyEnv = (): Env => ({
+export const emptyEnv = (src: Src): Env => ({
   type: emptyTypeEnv,
+  src,
   imports: emptyImportEnv(),
 });
 
@@ -282,13 +286,17 @@ export const inferExpression = (
         if (expr.qualifier !== undefined) {
           varEnv = env.type.import(expr.qualifier);
           if (varEnv === undefined) {
-            throw `Unknown qualifier: ${expr.qualifier}`;
+            throw new UnknownQualifierException(
+              env.src,
+              expr.qualifier,
+              expr.qualifierLocation!,
+            );
           }
         }
         const scheme = varEnv.scheme(expr.name);
 
         if (scheme === undefined) {
-          throw `Unknown name: ${expr.name}`;
+          throw new UnknownNameException(env.src, expr.name, expr.nameLocation);
         }
 
         return [scheme.instantiate(pump), env];

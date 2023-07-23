@@ -310,7 +310,7 @@ Deno.test("Import - simple values", () => {
   ]);
   assertError(
     'import x, double from "./tests/simple.tfun"; square y',
-    "Unknown name: square",
+    "Unknown Name: square at Constraints.test.ts 1:46-51",
   );
 
   assertExecute(
@@ -489,7 +489,7 @@ Deno.test("Import - nested types", () => {
 
   assertError(
     'import * from "./tests/maybe-nested.tfun" ; Nothing ; Cons',
-    "Unknown name: Cons",
+    "Unknown Name: Cons at Constraints.test.ts 1:55-58",
   );
 });
 
@@ -661,10 +661,14 @@ type MyError = any;
 const assertError = (expression: string, error: MyError) => {
   const ast = parse(urn, expression);
   try {
-    executeProgram(ast, defaultEnv(home));
+    executeProgram(ast, defaultEnv(urn));
     assert(false);
   } catch (e) {
-    assertEquals(e, error);
+    if (e instanceof Error) {
+      assertEquals(e.toString(), error);
+    } else {
+      assertEquals(e, error);
+    }
   }
 };
 

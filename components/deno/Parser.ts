@@ -1,3 +1,4 @@
+import { Location } from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 import { SyntaxErrorException } from "./Errors.ts";
 import { Src } from "./Src.ts";
 import { parseProgram, SyntaxError, Visitor } from "./parser/Parser.ts";
@@ -164,7 +165,9 @@ export type TypingExpression = {
 export type VarExpression = {
   type: "Var";
   qualifier: string | undefined;
+  qualifierLocation: Location | undefined;
   name: string;
+  nameLocation: Location;
 };
 
 export type MatchCase = {
@@ -520,13 +523,17 @@ const visitor: Visitor<
   visitFactor9: (a1: Token, a2: [Token, string] | undefined): Expression => ({
     type: "Var",
     qualifier: a2 === undefined ? undefined : a1[2],
+    qualifierLocation: a2 === undefined ? undefined : a1[1],
     name: a2 === undefined ? a1[2] : a2[1],
+    nameLocation: a2 === undefined ? a1[1] : a2[0][1],
   }),
 
   visitFactor10: (a1: Token): Expression => ({
     type: "Var",
     qualifier: undefined,
+    qualifierLocation: undefined,
     name: a1[2],
+    nameLocation: a1[1],
   }),
 
   visitFactor11: (

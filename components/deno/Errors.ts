@@ -1,4 +1,4 @@
-import { relative } from "https://deno.land/std/path/mod.ts";
+import { relative } from "https://deno.land/std@0.137.0/path/mod.ts";
 import { Src } from "./Src.ts";
 import { Token, TToken } from "./parser/Scanner.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
@@ -9,7 +9,7 @@ export class SyntaxErrorException extends Error {
   expected: Array<TToken>;
 
   constructor(src: Src, found: Token, expected: Array<TToken>) {
-    super(`SyntaxError: Expected ${expected.join(" or ")}, found ${found}`);
+    super();
 
     this.src = src;
     this.found = found;
@@ -21,6 +21,45 @@ export class SyntaxErrorException extends Error {
       commaSeparated(this.expected.map((t) => ttokens.get(t)))
     } but found ${ttokens.get(this.found[0])} at ${
       locationToString(this.src, this.found[1])
+    }`;
+  }
+}
+
+export class UnknownNameException extends Error {
+  src: Src;
+  name: string;
+  location: Location.Location;
+
+  constructor(src: Src, name: string, location: Location.Location) {
+    super();
+    this.src = src;
+    this.name = name;
+    this.location = location;
+  }
+
+  toString(): string {
+    return `Unknown Name: ${this.name} at ${
+      locationToString(this.src, this.location)
+    }`;
+  }
+}
+
+export class UnknownQualifierException extends Error {
+  src: Src;
+  name: string;
+  location: Location.Location;
+
+  constructor(src: Src, name: string, location: Location.Location) {
+    super();
+
+    this.src = src;
+    this.name = name;
+    this.location = location;
+  }
+
+  toString(): string {
+    return `Unknown Qualifier: ${this.name} at ${
+      locationToString(this.src, this.location)
     }`;
   }
 }
