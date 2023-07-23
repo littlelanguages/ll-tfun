@@ -36,6 +36,59 @@ export const tupleComponent = (
 export const tupleComponents = (value: RuntimeValue): Array<RuntimeValue> =>
   value.values;
 
+export const equals = (v1: RuntimeValue, v2: RuntimeValue): boolean => {
+  if (v1 === v2) {
+    return true;
+  }
+
+  if (isTuple(v1) && isTuple(v2)) {
+    if (v1.values.length !== v2.values.length) {
+      return false;
+    }
+    for (let i = 0; i < v1.values.length; i++) {
+      if (!equals(v1.values[i], v2.values[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (Array.isArray(v1) && Array.isArray(v2)) {
+    if (v1.length !== v2.length) {
+      return false;
+    }
+    for (let i = 0; i < v1.length; i++) {
+      if (!equals(v1[i], v2[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (v1 instanceof RegExp && v2 instanceof RegExp) {
+    return v1.toString() === v2.toString();
+  }
+  if (typeof v1 === "object" && typeof v2 === "object") {
+    const fields1 = Object.entries(v1).sort();
+    const fields2 = Object.entries(v2).sort();
+
+    if (fields1.length !== fields2.length) {
+      return false;
+    }
+
+    for (let i = 0; i < fields1.length; i++) {
+      if (fields1[i][0] !== fields2[i][0]) {
+        return false;
+      }
+      if (!equals(fields1[i][1], fields2[i][1])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
+};
+
 export const valueToString = (v: RuntimeValue): string => {
   if (v === null) {
     return "()";

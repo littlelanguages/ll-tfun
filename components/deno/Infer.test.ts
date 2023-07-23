@@ -263,7 +263,26 @@ Deno.test("infer PWildCard pattern", () => {
   );
 });
 
-Deno.test("infer Op", () => {
+Deno.test("infer Op '=='", () => {
+  const scenario = (input: string, resultType: Type) => {
+    const [constraints, type] = inferProgram(
+      emptyTypeEnv
+        .extend("a", new TVar("T").toScheme())
+        .extend("b", new TVar("T").toScheme()),
+      input,
+    );
+
+    assertConstraintsEquals(constraints, [
+      `V1 ~ V2`,
+      `V3 ~ ${resultType}`,
+    ]);
+    assertTypeEquals(type, ["V3"]);
+  };
+
+  scenario("a == b", typeBool);
+});
+
+Deno.test("infer Op excluding '=='", () => {
   const scenario = (input: string, resultType: Type) => {
     const [constraints, type] = inferProgram(
       emptyTypeEnv
@@ -282,7 +301,6 @@ Deno.test("infer Op", () => {
   scenario("a - b", typeInt);
   scenario("a * b", typeInt);
   scenario("a / b", typeInt);
-  scenario("a == b", typeBool);
 });
 
 Deno.test("infer Var", () => {

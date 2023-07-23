@@ -34,7 +34,6 @@ export const emptyEnv = (): Env => ({
 });
 
 const ops = new Map([
-  [AST.Op.Equals, new TArr(typeInt, new TArr(typeInt, typeBool))],
   [AST.Op.Plus, new TArr(typeInt, new TArr(typeInt, typeInt))],
   [AST.Op.Minus, new TArr(typeInt, new TArr(typeInt, typeInt))],
   [AST.Op.Times, new TArr(typeInt, new TArr(typeInt, typeInt))],
@@ -242,8 +241,13 @@ export const inferExpression = (
         const tv = pump.next();
 
         const u1 = new TArr(tl, new TArr(tr, tv));
-        const u2 = ops.get(expr.op)!;
-        constraints.add(u1, u2);
+        if (expr.op === AST.Op.Equals) {
+          constraints.add(tl, tr);
+          constraints.add(tv, typeBool);
+        } else {
+          const u2 = ops.get(expr.op)!;
+          constraints.add(u1, u2);
+        }
         return [tv, env];
       }
       case "RecordEmpty":

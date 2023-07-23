@@ -29,6 +29,7 @@ import {
   typeString,
 } from "./Typing.ts";
 import {
+  equals,
   ImportEnv,
   ImportPackage,
   ImportValues,
@@ -142,7 +143,7 @@ const binaryOps = new Map<
   number,
   (v1: RuntimeValue, v2: RuntimeValue) => RuntimeValue
 >([
-  [Op.Equals, (a, b) => a === b],
+  [Op.Equals, (a, b) => equals(a, b)],
   [Op.Plus, (a, b) => (a + b) | 0],
   [Op.Minus, (a, b) => (a - b) | 0],
   [Op.Times, (a, b) => (a * b) | 0],
