@@ -56,10 +56,15 @@ type Handler = {
   ) => TestResult;
 };
 
-const parseCodeBlockLang = (codeBlockLang: string): BlockLang => {
+const parseCodeBlockLang = (codeBlockLang: string): BlockLang | undefined => {
   const parts = codeBlockLang.split(" ");
   const lang = parts[0];
   const name = parts[1];
+
+  if (lang === undefined || name === undefined) {
+    return undefined;
+  }
+
   const options = new Map(
     codeBlockLang.substring(lang.length + 1 + name.length + 1).split(";").map(
       (part) => {
@@ -150,13 +155,15 @@ const assertCodeBlockResult = (
   } else {
     const { expected, error } = codeBlockResult;
 
-    if (error.toString() === expected) {
+    const errorString = error instanceof Error ? error.toString() : JSON.stringify(error);
+
+    if (errorString === expected) {
       return { type: "Success" };
     } else {
       return {
         type: "Failure",
         expected,
-        actual: error.toString(),
+        actual: errorString,
       };
     }
   }
@@ -241,7 +248,10 @@ const parseTest = async (
         codeBlock += tkn.content;
       } else if (tkn.type === "end" && tkn.tag === "codeBlock") {
         inCodeBlock = false;
-        result.push([parseCodeBlockLang(codeBlockLang), codeBlock]);
+        const cbl = parseCodeBlockLang(codeBlockLang)
+        if (cbl !== undefined) {
+          result.push([cbl, codeBlock]);
+        }
       }
     }
   }
@@ -260,8 +270,7 @@ for (const file of Deno.args) {
   const tests = await parseTest(file);
 
   console.log(
-    `%crunning ${tests.length} test${
-      tests.length === 1 ? "" : "s"
+    `%crunning ${tests.length} test${tests.length === 1 ? "" : "s"
     } from ${file}%c`,
     "color: grey",
     "",
@@ -282,7 +291,6 @@ for (const file of Deno.args) {
     const startTime = performance.now();
     if (handler === undefined) {
       testResult = { type: "Ignored" };
-      numberIgnored += 1;
     } else {
       try {
         testResult = handler.apply(src, lang.options, code);
@@ -299,16 +307,19 @@ for (const file of Deno.args) {
       numberIgnored += 1;
     }
 
-    console.log(
-      `${
-        lang.options.get("id") ?? lang.options.get("name") ?? "test"
-      } ... %c${testResult.type.toLowerCase()} %c(${startEnd - startTime}ms)`,
-      `color: ${testResult.type === "Success" ? "green" : "red"}`,
-      "color: grey",
-    );
-    if (testResult.type === "Failure") {
-      console.log(`%c  expected:%c ${testResult.expected}`, "color: grey", "");
-      console.log(`%c  actual:%c ${testResult.actual}`, "color: grey", "");
+    const id = lang.options.get("id") ?? lang.options.get("name") ?? "test";
+    if (testResult.type === "Ignored") {
+      console.log(`%c${id} ... ${testResult.type.toLowerCase()}`, "color: grey");
+    } else {
+      console.log(
+        `${id} ... %c${testResult.type.toLowerCase()} %c(${startEnd - startTime}ms)`,
+        `color: ${testResult.type === "Success" ? "green" : "red"}`,
+        "color: grey",
+      );
+      if (testResult.type === "Failure") {
+        console.log(`%c  expected:%c ${testResult.expected}`, "color: grey", "");
+        console.log(`%c  actual:%c ${testResult.actual}`, "color: grey", "");
+      }
     }
   }
 }
@@ -317,8 +328,7 @@ const messageContent =
   `${numberOfTests} tests | ${numberOfSuccesses} passed | ${numberOfFailures} failed | ${numberIgnored} ignored`;
 console.log("");
 console.log(
-  `%c${
-    numberOfFailures === 0 ? "ok" : "not ok"
+  `%c${numberOfFailures === 0 ? "ok" : "not ok"
   }%c ${messageContent} %c(${performance.now()}ms)`,
   `color: ${numberOfFailures === 0 ? "green" : "red"}`,
   "",

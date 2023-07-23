@@ -69,3 +69,43 @@ let x: Fred = 1
 ---
 Unknown Data Name: Fred at ../../scenarios/error-reporting/SyntaxErrors.md 1:8-11
 ```
+
+The second type identifier is where a data declaration refers to an unknown type.
+
+```fsharp xt id=UnknownTypeIdentifier
+data LList x = LNil | LCons x (Fred x)
+---
+Unknown Data Name: Fred at ../../scenarios/error-reporting/SyntaxErrors.md 1:32-35
+```
+
+The following test is ignored because, rather than reporting an error, it ignores that `y` is never defined and allows the declaration.
+
+```fsharp -xt id=UnknownDataTypeIdentifier
+data LList x = LNil | LCons y (LList x)
+---
+Unknown Data Name: Fred at ../../scenarios/error-reporting/SyntaxErrors.md 1:32-35
+```
+
+```fsharp -xt id=UnknownTypeAliasIdentifier
+type Fred x = (x * y)
+---
+Unknown Type Alias Parameter: y at ../../scenarios/error-reporting/SyntaxErrors.md 1:32-35
+```
+
+What is odd is, unlike in languages that support generics, when declaring a function value with free variables, it is not necessary to declare the free variables.  For example, the following is valid.
+
+```fsharp
+let compose (f: b -> c) (g: a -> b) (x: a): c = f (g x)
+```
+
+It does seem that, using generic style of syntax, it would be helpful to be more consistent and then to declare the above as
+
+```fsharp
+let compose <a b c> (f: b -> c) (g: a -> b) (x: a): c = f (g x)
+```
+
+Given that they are type variable, perhaps sticking to upper case would be better.
+
+```fsharp
+let compose <A B C> (f: B -> C) (g: A -> B) (x: A): C = f (g x)
+```
