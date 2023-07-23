@@ -457,8 +457,8 @@ const visitor: Visitor<
     a2 === undefined
       ? { type: "LUnit" }
       : a2[1].length === 0
-        ? a2[0]
-        : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+      ? a2[0]
+      : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
 
   visitFactor2: (a: Token): Expression => ({
     type: "LInt",
@@ -619,8 +619,8 @@ const visitor: Visitor<
     a2 === undefined
       ? { type: "PUnit" }
       : a2[1].length === 0
-        ? a2[0]
-        : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+      ? a2[0]
+      : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
 
   visitPattern2: (a: Token): Pattern => ({
     type: "PInt",
@@ -716,8 +716,8 @@ const visitor: Visitor<
     visibility: a2 === undefined
       ? Visibility.Private
       : a2[2] === "*"
-        ? Visibility.Public
-        : Visibility.Opaque,
+      ? Visibility.Public
+      : Visibility.Opaque,
     parameters: a3.map((a) => a[2]),
     constructors: [a5].concat(a6.map((a) => a[1])),
   }),
@@ -826,8 +826,8 @@ const visitor: Visitor<
     visibility: a2 === undefined
       ? Visibility.Private
       : a2[2] === "*"
-        ? Visibility.Public
-        : Visibility.Opaque,
+      ? Visibility.Public
+      : Visibility.Opaque,
     parameters: a3.map((a) => a[2]),
     typ: a5,
   }),
@@ -868,8 +868,8 @@ const visitor: Visitor<
     visibility: a2 === undefined
       ? Visibility.Private
       : a2[2] === "*"
-        ? Visibility.Public
-        : Visibility.Opaque,
+      ? Visibility.Public
+      : Visibility.Opaque,
   }),
   visitImportItem2: (
     a1: Token,
