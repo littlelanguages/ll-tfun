@@ -288,19 +288,23 @@ export const inferExpression = (
       case "Var": {
         let varEnv: TypeEnv | undefined = env.type;
         if (expr.qualifier !== undefined) {
-          varEnv = env.type.import(expr.qualifier);
+          varEnv = env.type.import(expr.qualifier.name);
           if (varEnv === undefined) {
             throw new UnknownQualifierException(
               env.src,
-              expr.qualifier,
-              expr.qualifierLocation!,
+              expr.qualifier.name,
+              expr.qualifier.location,
             );
           }
         }
-        const scheme = varEnv.scheme(expr.name);
+        const scheme = varEnv.scheme(expr.name.name);
 
         if (scheme === undefined) {
-          throw new UnknownNameException(env.src, expr.name, expr.nameLocation);
+          throw new UnknownNameException(
+            env.src,
+            expr.name.name,
+            expr.name.location,
+          );
         }
 
         return [scheme.instantiate(pump), env];

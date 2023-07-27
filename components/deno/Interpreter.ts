@@ -250,8 +250,8 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
       return evaluate(expr.expr, runtimeEnv);
     case "Var":
       return (expr.qualifier === undefined)
-        ? runtimeEnv.get(expr.name)
-        : runtimeEnv.get(expr.qualifier).get(expr.name)![0];
+        ? runtimeEnv.get(expr.name.name)
+        : runtimeEnv.get(expr.qualifier.name).get(expr.name.name)![0];
     default:
       return null;
   }

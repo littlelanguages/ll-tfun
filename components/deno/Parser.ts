@@ -11,6 +11,11 @@ export enum Visibility {
   None,
 }
 
+export type NameLocation = {
+  name: string;
+  location: Location;
+};
+
 export type Program = Array<Element>;
 
 export type Element =
@@ -164,10 +169,8 @@ export type TypingExpression = {
 
 export type VarExpression = {
   type: "Var";
-  qualifier: string | undefined;
-  qualifierLocation: Location | undefined;
-  name: string;
-  nameLocation: Location;
+  qualifier: NameLocation | undefined;
+  name: NameLocation;
 };
 
 export type MatchCase = {
@@ -524,18 +527,16 @@ const visitor: Visitor<
 
   visitFactor9: (a1: Token, a2: [Token, string] | undefined): Expression => ({
     type: "Var",
-    qualifier: a2 === undefined ? undefined : a1[2],
-    qualifierLocation: a2 === undefined ? undefined : a1[1],
-    name: a2 === undefined ? a1[2] : a2[1],
-    nameLocation: a2 === undefined ? a1[1] : a2[0][1],
+    qualifier: a2 === undefined ? undefined : { name: a1[2], location: a1[1] },
+    name: a2 === undefined
+      ? { name: a1[2], location: a1[1] }
+      : { name: a2[1], location: a2[0][1] },
   }),
 
   visitFactor10: (a1: Token): Expression => ({
     type: "Var",
     qualifier: undefined,
-    qualifierLocation: undefined,
-    name: a1[2],
-    nameLocation: a1[1],
+    name: { name: a1[2], location: a1[1] },
   }),
 
   visitFactor11: (
