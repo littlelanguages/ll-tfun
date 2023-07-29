@@ -24,6 +24,7 @@ import {
 import { emptyImportEnv, ImportEnv } from "./Values.ts";
 import { Src } from "./Src.ts";
 import {
+  ArityMismatchException,
   UnknownDataNameException,
   UnknownNameException,
   UnknownTypeNameException,
@@ -328,7 +329,13 @@ export const inferPattern = (
         );
 
       if (constructor.args.length !== pattern.args.length) {
-        throw { type: "ArityMismatchError", constructor: constructor, pattern };
+        throw new ArityMismatchException(
+          env.src,
+          pattern.name.name,
+          pattern.args.length,
+          constructor.args.length,
+          pattern.name.location,
+        );
       }
 
       const parameters = pump.nextN(adt.parameters.length);
@@ -404,12 +411,13 @@ export const translateType = (
           if (aliasType === undefined) {
             throw new UnknownDataNameException(env.src, t.name, t.nameLocation);
           } else if (aliasType.names.length !== t.arguments.length) {
-            throw {
-              type: "IncorrectTypeArguments",
-              name: t.name,
-              expected: aliasType.names.length,
-              actual: t.arguments.length,
-            };
+            throw new ArityMismatchException(
+              env.src,
+              t.name,
+              t.arguments.length,
+              aliasType.names.length,
+              t.nameLocation,
+            );
           } else {
             return new TAlias(
               t.name,
@@ -419,12 +427,13 @@ export const translateType = (
           }
         }
         if (t.arguments.length !== tc.parameters.length) {
-          throw {
-            type: "IncorrectTypeArguments",
-            name: t.name,
-            expected: tc.parameters.length,
-            actual: t.arguments.length,
-          };
+          throw new ArityMismatchException(
+            env.src,
+            t.name,
+            t.arguments.length,
+            tc.parameters.length,
+            t.nameLocation,
+          );
         }
 
         return new TCon(tc, t.arguments.map(translate));

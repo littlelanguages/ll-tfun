@@ -3,6 +3,37 @@ import { Src } from "./Src.ts";
 import { Token, TToken } from "./parser/Scanner.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 
+export class ArityMismatchException extends Error {
+  src: Src;
+  name: string;
+  supplied: number;
+  expected: number;
+  location: Location.Location;
+
+  constructor(
+    src: Src,
+    name: string,
+    supplied: number,
+    expected: number,
+    location: Location.Location,
+  ) {
+    super();
+    this.src = src;
+    this.name = name;
+    this.supplied = supplied;
+    this.expected = expected;
+    this.location = location;
+  }
+
+  toString(): string {
+    return `Arity Mismatch: ${this.name} supplied with ${this.supplied} argument${
+      this.supplied === 1 ? "" : "s"
+    } but expected ${this.expected} at ${
+      locationToString(this.src, this.location)
+    }`;
+  }
+}
+
 export class DuplicateDataDeclarationException extends Error {
   src: Src;
   name: string;
@@ -21,6 +52,7 @@ export class DuplicateDataDeclarationException extends Error {
     }`;
   }
 }
+
 export class SyntaxErrorException extends Error {
   src: Src;
   found: Token;

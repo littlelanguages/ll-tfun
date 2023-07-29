@@ -133,3 +133,53 @@ data List x = LNil | LCons x (List x)
 ---
 Duplicate Data Declaration: List at ../../scenarios/error-reporting/SyntaxErrors.md 1:6-9
 ```
+
+## Arity Mismatch Errors
+
+Arity errors are errors where the number of supplied arguments does not match the number of arguments expected.
+
+The first error is where a data constructor is supplied with too many arguments.  This occurs when the data constructor is supplied with more arguments than it has parameters during pattern matching.
+
+```fsharp xt id=ArityMismatchDataConstructor
+match (Cons 1 Nil) with
+| Nil -> 0
+| Cons a b c -> a
+---
+Arity Mismatch: Cons supplied with 3 arguments but expected 2 at ../../scenarios/error-reporting/SyntaxErrors.md 3:3-6
+```
+
+This can also happen when using a type alias with a data constructor.
+
+```fsharp xt id=ArityMismatchTypeAlias
+type Pair x y = (x * y) ;
+
+data Funny = Funny (Pair Int)
+---
+Arity Mismatch: Pair supplied with 1 argument but expected 2 at ../../scenarios/error-reporting/SyntaxErrors.md 3:21-24
+```
+
+An error is reported when not supplying the correct number of arguments in a data declaration.
+
+```fsharp xt id=ArityMismatchDataDeclaration
+data Funny = Funny List
+---
+Arity Mismatch: List supplied with 0 arguments but expected 1 at ../../scenarios/error-reporting/SyntaxErrors.md 1:20-23
+```
+
+Further arity scenarios pertain to type qualify variables. The first is where a data declaration is referenced.
+
+```fsharp xt id=ArityMismatchDataQualifier
+let x: List = Nil
+---
+Arity Mismatch: List supplied with 0 arguments but expected 1 at ../../scenarios/error-reporting/SyntaxErrors.md 1:8-11
+```
+
+
+The second scenario is where a type alias is referenced.
+
+```fsharp xt id=ArityMismatchTypeAliasQualifier
+type Pair x y = (x * y) ;
+let x: Pair Int = (1, 2)
+---
+Arity Mismatch: Pair supplied with 1 argument but expected 2 at ../../scenarios/error-reporting/SyntaxErrors.md 2:8-11
+```
