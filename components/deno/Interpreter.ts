@@ -398,7 +398,11 @@ const executeDataDeclaration = (
 
   dd.declarations.forEach((d) => {
     if (env.type.data(d.name.name) !== undefined) {
-      throw new DuplicateDataDeclarationException(env.src, d.name.name, d.name.location);
+      throw new DuplicateDataDeclarationException(
+        env.src,
+        d.name.name,
+        d.name.location,
+      );
     }
 
     const adt = new DataDefinition(env.src, d.name.name, d.parameters, []);

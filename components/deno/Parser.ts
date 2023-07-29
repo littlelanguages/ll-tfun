@@ -722,7 +722,7 @@ const visitor: Visitor<
     a6: Array<[Token, ConstructorDeclaration]>,
   ): TypeDeclaration => ({
     type: "TypeDeclaration",
-    name: {name: a1[2], location: a1[1]},
+    name: { name: a1[2], location: a1[1] },
     visibility: a2 === undefined
       ? Visibility.Private
       : a2[2] === "*"
