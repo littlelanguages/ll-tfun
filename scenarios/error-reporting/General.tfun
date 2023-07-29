@@ -1,0 +1,5 @@
+type Pair* a b = (a * b) ;
+
+data Data* a = Data a ;
+
+let someFun* f g x = f (g x)

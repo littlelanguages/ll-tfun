@@ -1,4 +1,4 @@
-import { relative } from "https://deno.land/std@0.137.0/path/mod.ts";
+import * as Path from "https://deno.land/std@0.137.0/path/mod.ts";
 import { Src } from "./Src.ts";
 import { Token, TToken } from "./parser/Scanner.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
@@ -53,6 +53,58 @@ export class DuplicateDataDeclarationException extends Error {
   }
 }
 
+export class ImportNameAlreadyDeclaredException extends Error {
+  src: Src;
+  name: string;
+  location: Location.Location;
+
+  constructor(src: Src, name: string, location: Location.Location) {
+    super();
+    this.src = src;
+    this.name = name;
+    this.location = location;
+  }
+
+  toString(): string {
+    return `Import Name Already Declared: ${this.name} at ${
+      locationToString(this.src, this.location)
+    }`;
+  }
+}
+
+export class FileNotFoundException extends Error {
+  src: Src;
+  name: string;
+  location: Location.Location;
+
+  constructor(src: Src, name: string, location: Location.Location) {
+    super();
+    this.src = src;
+    this.name = name;
+    this.location = location;
+  }
+
+  toString(): string {
+    const path = Path.relative(
+      Path.dirname(this.src.urn()),
+      Path.dirname(this.name),
+    );
+    let r: string;
+
+    if (path.startsWith(".") || path.startsWith("/")) {
+      r = path + "/";
+    } else if (path === "") {
+      r = "./";
+    } else {
+      r = "./" + path + "/";
+    }
+
+    return `File Not Found: ${r + Path.basename(this.name)} at ${
+      locationToString(this.src, this.location)
+    }`;
+  }
+}
+
 export class SyntaxErrorException extends Error {
   src: Src;
   found: Token;
@@ -91,6 +143,32 @@ export class UnknownDataNameException extends Error {
     return `Unknown Data Name: ${this.name} at ${
       locationToString(this.src, this.location)
     }`;
+  }
+}
+
+export class UnknownImportNameException extends Error {
+  src: Src;
+  name: string;
+  location: Location.Location;
+  available: Array<string>;
+
+  constructor(
+    src: Src,
+    name: string,
+    location: Location.Location,
+    available: Array<string>,
+  ) {
+    super();
+    this.src = src;
+    this.name = name;
+    this.location = location;
+    this.available = available;
+  }
+
+  toString(): string {
+    return `Unknown Import Name: ${this.name} not one of ${
+      commaSeparated(this.available)
+    } at ${locationToString(this.src, this.location)}`;
   }
 }
 
@@ -166,7 +244,7 @@ const commaSeparated = (items: Array<any>): string => {
 };
 
 const locationToString = (src: Src, location: Location.Location): string => {
-  return Location.toString(location, relative(Deno.cwd(), src.urn()));
+  return Location.toString(location, Path.relative(Deno.cwd(), src.urn()));
 };
 
 const ttokens = new Map<TToken, string>([

@@ -310,12 +310,12 @@ export type TypeAliasDeclaration = {
 export type ImportStatement = {
   type: "ImportStatement";
   items: ImportAll | ImportNames;
-  from: string;
+  from: NameLocation;
 };
 
 export type ImportAll = {
   type: "ImportAll";
-  as: string | undefined;
+  as: NameLocation | undefined;
   visibility: Visibility;
 };
 
@@ -325,8 +325,8 @@ export type ImportNames = {
 };
 
 export type ImportName = {
-  name: string;
-  as: string | undefined;
+  name: NameLocation;
+  as: NameLocation | undefined;
   visibility: Visibility;
 };
 
@@ -858,7 +858,7 @@ const visitor: Visitor<
   ): ImportStatement => ({
     type: "ImportStatement",
     items: a2,
-    from: transformLiteralString(a4[2]),
+    from: { name: transformLiteralString(a4[2]), location: a4[1] },
   }),
 
   visitImportItems1: (
@@ -866,7 +866,7 @@ const visitor: Visitor<
     a2: [Token, Token] | undefined,
   ): ImportAll | ImportNames => ({
     type: "ImportAll",
-    as: a2 === undefined ? undefined : a2[1][2],
+    as: a2 === undefined ? undefined : { name: a2[1][2], location: a2[1][1] },
     visibility: Visibility.None,
   }),
   visitImportItems2: (
@@ -881,7 +881,7 @@ const visitor: Visitor<
     a1: Token,
     a2: (Token | Token) | undefined,
   ): ImportName => ({
-    name: a1[2],
+    name: { name: a1[2], location: a1[1] },
     as: undefined,
     visibility: a2 === undefined
       ? Visibility.Private
@@ -894,8 +894,8 @@ const visitor: Visitor<
     a2: [Token, Token] | undefined,
     a3: Token | undefined,
   ): ImportName => ({
-    name: a1[2],
-    as: a2 === undefined ? undefined : a2[1][2],
+    name: { name: a1[2], location: a1[1] },
+    as: a2 === undefined ? undefined : { name: a2[1][2], location: a2[1][1] },
     visibility: a3 === undefined ? Visibility.None : Visibility.Public,
   }),
 };

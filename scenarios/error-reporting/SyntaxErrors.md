@@ -183,3 +183,148 @@ let x: Pair Int = (1, 2)
 ---
 Arity Mismatch: Pair supplied with 1 argument but expected 2 at ../../scenarios/error-reporting/SyntaxErrors.md 2:8-11
 ```
+
+## Import Errors
+
+Import errors are errors that occur when importing a module and fall into 4 categories
+
+- Unknown module aka File Not Found,
+- Duplicate declaration,
+- Reference to an unknown declaration, and
+- Cyclic dependency
+
+### Unknown Module
+
+The first error is where an unknown module is imported.  A number of examples are used to ensure that the relative paths are correctly set up.
+
+```fsharp xt id=ImportUnknownModule1
+import * from "./fred/known-file-name.tfun"
+---
+File Not Found: ./fred/known-file-name.tfun at ../../scenarios/error-reporting/SyntaxErrors.md 1:15-43
+```
+
+```fsharp xt id=ImportUnknownModule2
+import * from "fred/known-file-name.tfun"
+---
+File Not Found: ./fred/known-file-name.tfun at ../../scenarios/error-reporting/SyntaxErrors.md 1:15-41
+```
+
+```fsharp xt id=ImportUnknownModule3
+import * from "./known-file-name.tfun"
+---
+File Not Found: ./known-file-name.tfun at ../../scenarios/error-reporting/SyntaxErrors.md 1:15-38
+```
+
+```fsharp xt id=ImportUnknownModule4
+import * from "known-file-name.tfun"
+---
+File Not Found: ./known-file-name.tfun at ../../scenarios/error-reporting/SyntaxErrors.md 1:15-36
+```
+
+```fsharp xt id=ImportUnknownModule5
+import * from "../known-file-name.tfun"
+---
+File Not Found: ../known-file-name.tfun at ../../scenarios/error-reporting/SyntaxErrors.md 1:15-39
+```
+
+### Duplicate Declaration
+
+The next error is where a name is imported however the name is already in use.
+
+```fsharp xt id=ImportDuplicateValueDeclaration
+import parse from "../../stdlib/Data/Integer.tfun" ;
+import parse from "../../stdlib/Data/Integer.tfun"
+---
+Import Name Already Declared: parse at ../../scenarios/error-reporting/SyntaxErrors.md 2:8-12
+```
+
+```fsharp xt id=ImportDuplicateValueDeclaration
+import * from "../../stdlib/Data/Integer.tfun" ;
+import parse from "../../stdlib/Data/Integer.tfun"
+---
+Import Name Already Declared: parse at ../../scenarios/error-reporting/SyntaxErrors.md 2:8-12
+```
+
+```fsharp xt id=ImportDuplicateValueDeclaration
+import * from "../../stdlib/Data/Integer.tfun" ;
+import * from "../../stdlib/Data/Integer.tfun"
+---
+Import Name Already Declared: parse at ../../scenarios/error-reporting/SyntaxErrors.md 2:15-46
+```
+
+```fsharp xt id=ImportDuplicateValueDeclaration
+import parse, parse from "../../stdlib/Data/Integer.tfun"
+---
+Import Name Already Declared: parse at ../../scenarios/error-reporting/SyntaxErrors.md 1:15-19
+```
+
+```fsharp xt id=ImportDuplicateValueDeclaration
+let fred = 1 ;
+import parse as fred from "../../stdlib/Data/Integer.tfun"
+---
+Import Name Already Declared: fred at ../../scenarios/error-reporting/SyntaxErrors.md 2:17-20
+```
+
+The following two errors are where an alias has been defined and at attempt is made to an alias with the same name.
+
+```fsharp xt id=ImportDuplicateAliasDeclaration
+type Pair* a b = (a * b) ;
+import Pair from "./General.tfun"
+---
+Import Name Already Declared: Pair at ../../scenarios/error-reporting/SyntaxErrors.md 2:8-11
+```
+
+```fsharp xt id=ImportDuplicateAliasDeclaration
+type Pair* a b = (a * b) ;
+import * from "./General.tfun"
+---
+Import Name Already Declared: Pair at ../../scenarios/error-reporting/SyntaxErrors.md 2:15-30
+```
+
+The following two errors are where a data declarations has been defined.
+
+```fsharp xt id=ImportDuplicateDataDeclaration
+data Data a = Data a ;
+import Data from "./General.tfun"
+---
+Import Name Already Declared: Data at ../../scenarios/error-reporting/SyntaxErrors.md 2:8-11
+```
+
+```fsharp xt id=ImportDuplicateDataDeclaration
+data Data a = Data a ;
+import * from "./General.tfun"
+---
+Import Name Already Declared: Data at ../../scenarios/error-reporting/SyntaxErrors.md 2:15-30
+```
+
+The final two errors are where a constructor name clash is attempted during an import.
+
+```fsharp xt id=ImportDuplicateConstructorDeclaration
+data TheData a = Data a ;
+import Data from "./General.tfun"
+---
+Import Name Already Declared: Data at ../../scenarios/error-reporting/SyntaxErrors.md 2:8-11
+```
+
+```fsharp xt id=ImportDuplicateConstructorDeclaration
+data TheData a = Data a ;
+import * from "./General.tfun"
+---
+Import Name Already Declared: Data at ../../scenarios/error-reporting/SyntaxErrors.md 2:15-30
+```
+
+# Unknown Reference
+
+These scenarios are where a reference is make to a name that is not exported by the module being imported.
+
+``` fsharp xt id=ImportUnknownValueDeclaration
+import Fred from "./General.tfun"
+---
+Unknown Import Name: Fred not one of Data, Pair or someFun at ../../scenarios/error-reporting/SyntaxErrors.md 1:8-11
+```
+
+``` fsharp xt id=ImportUnknownValueDeclaration
+import fred from "./General.tfun"
+---
+Unknown Import Name: fred not one of Data, Pair or someFun at ../../scenarios/error-reporting/SyntaxErrors.md 1:8-11
+```

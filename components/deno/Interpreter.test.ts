@@ -7,8 +7,10 @@ import { defaultEnv, executeImport, executeProgram } from "./Interpreter.ts";
 import { parse } from "./Parser.ts";
 import { expressionToNestedString, NestedString } from "./Values.ts";
 import { home } from "./Src.ts";
+import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 
 const urn = home.newSrc("./Constraints.test.ts");
+const arbLocation = Location.mkCoordinate(0, 0, 0);
 
 Deno.test("App 1", () => {
   assertExecute("(\\n = n + 1) 1", ["2: Int"]);
@@ -274,7 +276,9 @@ Deno.test("Error - add visibility ot non-toplevel declaration", () => {
 });
 
 Deno.test("Import - raw mechanism using simple.tfun", () => {
-  const ip = executeImport("./tests/simple.tfun", home).values;
+  const ip =
+    executeImport({ name: "./tests/simple.tfun", location: arbLocation }, home)
+      .values;
 
   assertEquals(ip.size, 4);
 
@@ -288,7 +292,9 @@ Deno.test("Import - raw mechanism using simple.tfun", () => {
 });
 
 Deno.test("Import - raw mechanism using adt.tfun", () => {
-  const ip = executeImport("./tests/adt.tfun", home).values;
+  const ip =
+    executeImport({ name: "./tests/adt.tfun", location: arbLocation }, home)
+      .values;
 
   assertEquals(ip.size, 9);
 });
@@ -299,10 +305,6 @@ Deno.test("Import - simple values", () => {
     "20: Int",
     "400: Int",
   ]);
-  assertError('let y = 1 ; import * from "./tests/simple.tfun"', {
-    type: "ImportNameAlreadyDeclared",
-    name: "y",
-  });
 
   assertExecute('import x, double from "./tests/simple.tfun"; double x', [
     "import",
@@ -316,13 +318,6 @@ Deno.test("Import - simple values", () => {
   assertExecute(
     'import x as value, double as fun from "./tests/simple.tfun"; fun value',
     ["import", "20: Int"],
-  );
-  assertError(
-    'let value = 1 ; import x as value, double as fun from "./tests/simple.tfun"',
-    {
-      type: "ImportNameAlreadyDeclared",
-      name: "value",
-    },
   );
 });
 

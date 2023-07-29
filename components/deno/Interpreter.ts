@@ -1,5 +1,10 @@
 import { Constraints } from "./Constraints.ts";
-import { DuplicateDataDeclarationException } from "./Errors.ts";
+import {
+  DuplicateDataDeclarationException,
+  FileNotFoundException,
+  ImportNameAlreadyDeclaredException,
+  UnknownImportNameException,
+} from "./Errors.ts";
 import { inferExpression, translateType } from "./Infer.ts";
 import {
   DataDeclaration,
@@ -7,6 +12,7 @@ import {
   Expression,
   LetExpression,
   LetRecExpression,
+  NameLocation,
   Op,
   parse,
   Pattern,
@@ -38,6 +44,7 @@ import {
   RuntimeValue,
   tupleComponent,
 } from "./Values.ts";
+import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 
 type RuntimeEnvBindings = { [key: string]: RuntimeValue };
 
@@ -79,9 +86,11 @@ class RuntimeEnv {
   }
 }
 
-const importValueNames = (
-  values: ImportValues,
-): Array<string> => [...values.keys()];
+const importNames = (importPackage: ImportPackage): Array<string> =>
+  [
+    ...importPackage.values.keys(),
+    ...importPackage.types.aliases(),
+  ].sort();
 
 export type Env = {
   runtime: RuntimeEnv;
@@ -478,10 +487,11 @@ const executeElement = (
 
         imports.values.forEach(([v, t], n) => {
           if (runtime.has(n)) {
-            throw {
-              type: "ImportNameAlreadyDeclared",
-              name: n,
-            };
+            throw new ImportNameAlreadyDeclaredException(
+              env.src,
+              n,
+              e.from.location,
+            );
           }
 
           runtime.bind(n, v);
@@ -493,22 +503,31 @@ const executeElement = (
         });
 
         imports.types.aliases().forEach((name) => {
-          type = type.addAlias(name, imports.types.findAlias(name)!);
+          if (type.findAlias(name) === undefined) {
+            type = type.addAlias(name, imports.types.findAlias(name)!);
+          } else {
+            throw new ImportNameAlreadyDeclaredException(
+              env.src,
+              name,
+              e.from.location,
+            );
+          }
         });
 
         return [null, undefined, { ...env, runtime, type }];
       } else {
-        if (env.runtime.has(e.items.as)) {
-          throw {
-            type: "ImportNameAlreadyDeclared",
-            name: e.items.as,
-          };
+        if (env.runtime.has(e.items.as.name)) {
+          throw new ImportNameAlreadyDeclaredException(
+            env.src,
+            e.items.as.name,
+            e.items.as.location,
+          );
         }
         const runtime = env.runtime.clone();
         let type = env.type;
 
-        runtime.bind(e.items.as, imports.values);
-        type = type.addImport(e.items.as, imports.types);
+        runtime.bind(e.items.as.name, imports.values);
+        type = type.addImport(e.items.as.name, imports.types);
 
         return [null, undefined, { ...env, runtime, type }];
       }
@@ -518,34 +537,45 @@ const executeElement = (
       let type = env.type;
 
       e.items.items.forEach(({ name, as }) => {
-        if (startsWithUppercase(name[0])) {
-          const adt = imports.types.data(name);
+        if (startsWithUppercase(name.name[0])) {
+          const adt = imports.types.data(name.name);
 
           if (adt === undefined) {
-            const alias = imports.types.findAlias(name);
+            const alias = imports.types.findAlias(name.name);
             if (alias === undefined) {
-              throw {
-                type: "UnknownImportName",
-                name,
-                names: importValueNames(imports.values),
-              };
+              throw new UnknownImportNameException(
+                env.src,
+                name.name,
+                name.location,
+                importNames(imports),
+              );
+            } else if (type.findAlias(name.name) !== undefined) {
+              throw new ImportNameAlreadyDeclaredException(
+                env.src,
+                name.name,
+                name.location,
+              );
             }
-            type = type.addAlias(name, alias);
+            type = type.addAlias(name.name, alias);
           } else {
-            if (type.data(adt.name) !== undefined) {
-              throw {
-                type: "ImportNameAlreadyDeclared",
-                name: adt.name,
-              };
+            if (
+              type.data(adt.name) !== undefined
+            ) {
+              throw new ImportNameAlreadyDeclaredException(
+                env.src,
+                name.name,
+                name.location,
+              );
             }
             type = type.addData(adt);
 
             adt.constructors.forEach((c) => {
               if (runtime.has(c.name)) {
-                throw {
-                  type: "ImportNameAlreadyDeclared",
-                  name: adt.name,
-                };
+                throw new ImportNameAlreadyDeclaredException(
+                  env.src,
+                  name.name,
+                  name.location,
+                );
               }
               const v = imports.values.get(c.name)!;
               runtime.bind(
@@ -556,26 +586,28 @@ const executeElement = (
             });
           }
         } else {
-          const item = imports.values.get(name);
+          const item = imports.values.get(name.name);
 
           if (item === undefined) {
-            throw {
-              type: "UnknownImportName",
-              name,
-              names: importValueNames(imports.values),
-            };
+            throw new UnknownImportNameException(
+              env.src,
+              name.name,
+              name.location,
+              importNames(imports),
+            );
           }
           const n = as ?? name;
 
-          if (runtime.has(n)) {
-            throw {
-              type: "ImportNameAlreadyDeclared",
-              name: n,
-            };
+          if (runtime.has(n.name)) {
+            throw new ImportNameAlreadyDeclaredException(
+              env.src,
+              n.name,
+              n.location,
+            );
           }
 
-          runtime.bind(n, item[0]);
-          type = type.extend(n, item[1].toScheme());
+          runtime.bind(n.name, item[0]);
+          type = type.extend(n.name, item[1].toScheme());
         }
       });
 
@@ -626,12 +658,24 @@ export const execute = (
   env: Env,
 ): ExecuteResult => executeProgram(parse(env.src, input), env);
 
+const readTextFile = (
+  src: Src,
+  path: string,
+  location: Location.Location,
+): string => {
+  try {
+    return Deno.readTextFileSync(path);
+  } catch (_e) {
+    throw new FileNotFoundException(src, path, location);
+  }
+};
+
 export const executeImport = (
-  name: string,
+  from: NameLocation,
   referencedFrom: Src,
   importEnv: ImportEnv = {},
 ): ImportPackage => {
-  const src = referencedFrom.newSrc(name);
+  const src = referencedFrom.newSrc(from.name);
   const urn = src.urn();
 
   const env = importEnv[urn];
@@ -639,7 +683,7 @@ export const executeImport = (
     const importValues: ImportValues = new Map();
     let env = emptyTypeEnv;
 
-    const ast = parse(src, Deno.readTextFileSync(urn));
+    const ast = parse(src, readTextFile(referencedFrom, urn, from.location));
     const [result, resultEnv] = executeProgram(ast, defaultEnv(src));
 
     ast.forEach((e, i) => {
@@ -690,18 +734,19 @@ export const executeImport = (
         if (e.items.type === "ImportNames") {
           e.items.items.forEach(({ name, as, visibility }) => {
             if (visibility === Visibility.Public) {
-              if (startsWithUppercase(name[0])) {
-                const adt = imports.types.data(name);
+              if (startsWithUppercase(name.name[0])) {
+                const adt = imports.types.data(name.name);
                 if (adt === undefined) {
-                  const alias = imports.types.findAlias(name);
+                  const alias = imports.types.findAlias(name.name);
                   if (alias === undefined) {
-                    throw {
-                      type: "UnknownImportName",
-                      name,
-                      names: importValueNames(imports.values),
-                    };
+                    throw new UnknownImportNameException(
+                      src,
+                      name.name,
+                      name.location,
+                      importNames(imports),
+                    );
                   }
-                  env = env.addAlias(name, alias);
+                  env = env.addAlias(name.name, alias);
                 } else {
                   env = env.addData(adt);
 
@@ -712,20 +757,21 @@ export const executeImport = (
                   });
                 }
               } else {
-                const item = imports.values.get(name);
+                const item = imports.values.get(name.name);
 
                 if (item === undefined) {
-                  throw {
-                    type: "UnknownImportName",
-                    name,
-                    names: importValueNames(imports.values),
-                  };
+                  throw new UnknownImportNameException(
+                    src,
+                    name.name,
+                    name.location,
+                    importNames(imports),
+                  );
                 }
 
                 const n = as ?? name;
 
-                importValues.set(n, [item[0], item[1]]);
-                env = env.extend(n, item[1].toScheme());
+                importValues.set(n.name, [item[0], item[1]]);
+                env = env.extend(n.name, item[1].toScheme());
               }
             }
           });
