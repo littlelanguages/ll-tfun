@@ -193,8 +193,8 @@ export type Pattern =
 
 export type ConsPattern = {
   type: "PCons";
-  qualifier: string | undefined;
-  name: string;
+  qualifier: NameLocation | undefined;
+  name: NameLocation;
   args: Array<Pattern>;
 };
 
@@ -664,8 +664,10 @@ const visitor: Visitor<
     a3: Array<Pattern>,
   ): Pattern => ({
     type: "PCons",
-    qualifier: a2 === undefined ? undefined : a1[2],
-    name: a2 === undefined ? a1[2] : a2[1][2],
+    qualifier: a2 === undefined ? undefined : { name: a1[2], location: a1[1] },
+    name: a2 === undefined
+      ? { name: a1[2], location: a1[1] }
+      : { name: a2[1][2], location: a2[1][1] },
     args: a3,
   }),
   visitPattern8: (

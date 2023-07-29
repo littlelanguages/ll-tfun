@@ -16,8 +16,11 @@ import {
 } from "./Typing.ts";
 import { home } from "./Src.ts";
 import { emptyImportEnv } from "./Values.ts";
+import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 
 const src = home.newSrc("./Infer.test.ts");
+
+const arbLocation = Location.mkCoordinate(0, 0, 0);
 
 const assertTypeEquals = (ts: Array<Type>, expected: Array<string>) => {
   assertEquals(ts.map((t) => t.toString()), expected);
@@ -186,7 +189,12 @@ Deno.test("infer PCons pattern", () => {
 
   assertInferPatternWithEnv(
     origEnv,
-    { type: "PCons", qualifier: undefined, name: "Nil", args: [] },
+    {
+      type: "PCons",
+      qualifier: undefined,
+      name: { name: "Nil", location: arbLocation },
+      args: [],
+    },
     [],
     "List V1",
     origEnv,
@@ -197,7 +205,7 @@ Deno.test("infer PCons pattern", () => {
     {
       type: "PCons",
       qualifier: undefined,
-      name: "Cons",
+      name: { name: "Cons", location: arbLocation },
       args: [{ type: "PVar", name: "x" }, { type: "PVar", name: "xs" }],
     },
     ["V2 ~ V1", "V3 ~ List V1"],

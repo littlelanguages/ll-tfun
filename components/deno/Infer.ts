@@ -26,7 +26,6 @@ import { Src } from "./Src.ts";
 import {
   UnknownDataNameException,
   UnknownNameException,
-  UnknownQualifierException,
   UnknownTypeNameException,
 } from "./Errors.ts";
 
@@ -287,16 +286,9 @@ export const inferExpression = (
         return [t1, env];
       }
       case "Var": {
-        let varEnv: TypeEnv | undefined = env.type;
+        let varEnv: TypeEnv = env.type;
         if (expr.qualifier !== undefined) {
-          varEnv = env.type.import(expr.qualifier.name);
-          if (varEnv === undefined) {
-            throw new UnknownQualifierException(
-              env.src,
-              expr.qualifier.name,
-              expr.qualifier.location,
-            );
-          }
+          varEnv = env.type.getImport(env.src, expr.qualifier);
         }
         const scheme = varEnv.scheme(expr.name.name);
 
@@ -328,15 +320,13 @@ export const inferPattern = (
     case "PBool":
       return [typeBool, env];
     case "PCons": {
-      const c = pattern.qualifier === undefined
-        ? env.type.findConstructor(pattern.name)
-        : env.type.import(pattern.qualifier)?.findConstructor(pattern.name);
+      const [constructor, adt] = pattern.qualifier === undefined
+        ? env.type.getConstructor(env.src, pattern.name)
+        : env.type.getImport(env.src, pattern.qualifier).getConstructor(
+          env.src,
+          pattern.name,
+        );
 
-      if (c === undefined) {
-        throw { type: "UnknownConstructorError", name: pattern.name };
-      }
-
-      const [constructor, adt] = c;
       if (constructor.args.length !== pattern.args.length) {
         throw { type: "ArityMismatchError", constructor: constructor, pattern };
       }
@@ -404,10 +394,13 @@ export const translateType = (
       case "TypeConstructor": {
         const qualifiedEnv = t.qualifier === undefined
           ? env.type
-          : env.type.import(t.qualifier);
-        const tc = qualifiedEnv?.data(t.name);
+          : env.type.getImport(env.src, {
+            name: t.qualifier,
+            location: t.qualifierLocation!,
+          });
+        const tc = qualifiedEnv.data(t.name);
         if (tc === undefined) {
-          const aliasType = qualifiedEnv?.findAlias(t.name);
+          const aliasType = qualifiedEnv.findAlias(t.name);
           if (aliasType === undefined) {
             throw new UnknownDataNameException(env.src, t.name, t.nameLocation);
           } else if (aliasType.names.length !== t.arguments.length) {

@@ -54,12 +54,31 @@ LCons 1 (LKons 2 Nil)
 Unknown Name: LKons at ../../scenarios/error-reporting/SyntaxErrors.md 3:10-14
 ```
 
+A similar error is also reported in pattern matching when attempting to match against an unknown constructor.
+
+```fsharp xt id=UnknownConstructorIdentifier
+match (Cons 1 Nil) with
+| Nil -> 0
+| Kons x xs -> x
+---
+Unknown Data Name: Kons at ../../scenarios/error-reporting/SyntaxErrors.md 3:3-6
+```
+
 Finally an unknown qualifier.
 
 ```fsharp xt id=UnknownQualifierIdentifier
 let x = T1.y + 1
 ---
 Unknown Qualifier: T1 at ../../scenarios/error-reporting/SyntaxErrors.md 1:9-10
+```
+
+An unknown qualifier is also reported in pattern matching.
+```fsharp xt id=UnknownConstructorIdentifier
+match (Cons 1 Nil) with
+| Nil -> 0
+| T1.Cons x xs -> x
+---
+Unknown Qualifier: T1 at ../../scenarios/error-reporting/SyntaxErrors.md 3:3-4
 ```
 
 There are also a number of scenarios where a type identifier is unknown. The
@@ -95,6 +114,8 @@ type Fred x = (x * y)
 ---
 Unknown Type Name: y at ../../scenarios/error-reporting/SyntaxErrors.md 1:20
 ```
+
+## Duplicate Identifier Errors
 
 The next error is if an attempt is made to create a duplicate data type.
 

@@ -392,11 +392,6 @@ Deno.test("Import - simple types", () => {
     ],
   );
 
-  assertError(
-    'import * from "./tests/adt.tfun"; let v = find (\\n = n == 10) (Cons 1 Nil); match v with | None -> 0 | Some v -> v',
-    { type: "UnknownConstructorError", name: "None" },
-  );
-
   assertExecute(
     'import List from "./tests/adt.tfun"; match (Cons 1 Nil) with | Nil -> 0 | Cons v _ -> v',
     [

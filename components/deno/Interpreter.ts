@@ -272,7 +272,7 @@ const matchPattern = (
     case "PCons": {
       let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
 
-      if (value[0] !== pattern.name) {
+      if (value[0] !== pattern.name.name) {
         return null;
       }
       for (let i = 0; i < pattern.args.length; i++) {
@@ -462,19 +462,7 @@ const executeElement = (
     const [adts, newEnv] = executeDataDeclaration(e, env);
     return [adts, undefined, newEnv];
   } else if (e.type === "TypeAliasDeclaration") {
-    const parameters = new Set(e.parameters);
-    const typ = translateType(e.typ, env, parameters);
-
-    for (const p of typ.ftv()) {
-      if (!parameters.has(p)) {
-        throw {
-          type: "TypeAliasParameterNotDeclared",
-          name: p,
-          parameters: e.parameters,
-        };
-      }
-    }
-
+    const typ = translateType(e.typ, env, new Set(e.parameters));
     env = {
       ...env,
       type: env.type.addAlias(e.name, new Scheme(e.parameters, typ)),

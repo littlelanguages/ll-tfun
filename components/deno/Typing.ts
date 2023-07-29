@@ -1,6 +1,11 @@
 import * as Sets from "./Set.ts";
 import * as Maps from "./Map.ts";
 import { home, Src } from "./Src.ts";
+import { NameLocation } from "./Parser.ts";
+import {
+  UnknownDataNameException,
+  UnknownQualifierException,
+} from "./Errors.ts";
 
 export type Var = string;
 
@@ -404,18 +409,19 @@ export class TypeEnv {
     return new TypeEnv(this.values, this.adts, aliases, this.imports);
   }
 
-  findConstructor(
-    name: string,
-  ): [DataConstructor, DataDefinition] | undefined {
+  getConstructor(
+    src: Src,
+    name: NameLocation,
+  ): [DataConstructor, DataDefinition] {
     for (const adt of this.adts) {
       for (const constructor of adt.constructors) {
-        if (constructor.name === name) {
+        if (constructor.name === name.name) {
           return [constructor, adt];
         }
       }
     }
 
-    return undefined;
+    throw new UnknownDataNameException(src, name.name, name.location);
   }
 
   findAlias(name: string): Scheme | undefined {
@@ -451,8 +457,14 @@ export class TypeEnv {
     return this.adts;
   }
 
-  import(name: string): TypeEnv | undefined {
-    return this.imports.get(name);
+  getImport(src: Src, name: NameLocation): TypeEnv {
+    const result = this.imports.get(name.name);
+
+    if (result === undefined) {
+      throw new UnknownQualifierException(src, name.name, name.location);
+    } else {
+      return result;
+    }
   }
 
   generalise(t: Type): Scheme {
