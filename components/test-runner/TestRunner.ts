@@ -1,17 +1,13 @@
-import { parse, Program } from "../deno/Parser.ts";
-import { defaultEnv, Env, executeProgram } from "../deno/Interpreter.ts";
-import { from, home, Src } from "../deno/Src.ts";
-import {
-  expressionToNestedString,
-  nestedStringToString,
-  RuntimeValue,
-} from "../deno/Values.ts";
-import { Type } from "../deno/Typing.ts";
-import { performance } from "https://deno.land/std@0.137.0/node/perf_hooks.ts";
-
 // This is a tool is a test runner over markdown files.  I searches for code
 // blocks and then, if there is a handler for the code block, will ensure that
 // the code works as expected.
+
+import { parse, Program } from "../deno/Parser.ts";
+import { defaultEnv, Env, executeProgram } from "../deno/Interpreter.ts";
+import { from, home, Src } from "../deno/Src.ts";
+import { expressionToNestedString, nestedStringToString, RuntimeValue} from "../deno/Values.ts";
+import { Type } from "../deno/Typing.ts";
+import { performance } from "https://deno.land/std@0.137.0/node/perf_hooks.ts";
 
 if (Deno.args.length === 0) {
   console.log("Usage: deno run --allow-read TestRunner.ts <file>...<file>");
@@ -188,12 +184,6 @@ class XTHandler implements Handler {
     options: Map<string, string | undefined>,
     code: string,
   ): TestResult {
-    const id = () => options.get("id") ?? options.get("name") ?? "test";
-
-    const reportError = (e: Error) => {
-      console.error(`${id()} failed:`, e);
-    };
-
     try {
       let { env } = executeCodeBlock(
         'import * from "../../stdlib/Prelude.tfun"',
@@ -217,7 +207,6 @@ class XTHandler implements Handler {
       const executeCodeBlockResult = executeCodeBlock(code, env);
       return assertCodeBlockResult(executeCodeBlockResult);
     } catch (e) {
-      reportError(e);
       return { type: "Failure", expected: "", actual: e.toString() };
     }
   }
@@ -236,8 +225,7 @@ const parseTest = async (
 ): Promise<Array<Block>> => {
   const result: Array<Block> = [];
 
-  const text = await Deno.readTextFile(fileName);
-  const lines = text.split("\n");
+  const lines = (await Deno.readTextFile(fileName)).split("\n");
 
   let inCodeBlock = false;
   let codeBlock: Array<string> = [];
@@ -284,8 +272,7 @@ for (const file of Deno.args) {
   const tests = await parseTest(file);
 
   console.log(
-    `%crunning ${tests.length} test${
-      tests.length === 1 ? "" : "s"
+    `%crunning ${tests.length} test${tests.length === 1 ? "" : "s"
     } from ${file}%c`,
     "color: grey",
     "",
@@ -330,8 +317,7 @@ for (const file of Deno.args) {
       );
     } else {
       console.log(
-        `${id} (${startLine}-${endLine}) ... %c${testResult.type.toLowerCase()} %c(${
-          startEnd - startTime
+        `${id} (${startLine}-${endLine}) ... %c${testResult.type.toLowerCase()} %c(${startEnd - startTime
         }ms)`,
         `color: ${testResult.type === "Success" ? "green" : "red"}`,
         "color: grey",
@@ -352,8 +338,7 @@ const messageContent =
   `${numberOfTests} tests | ${numberOfSuccesses} passed | ${numberOfFailures} failed | ${numberIgnored} ignored`;
 console.log("");
 console.log(
-  `%c${
-    numberOfFailures === 0 ? "ok" : "not ok"
+  `%c${numberOfFailures === 0 ? "ok" : "not ok"
   }%c ${messageContent} %c(${performance.now()}ms)`,
   `color: ${numberOfFailures === 0 ? "green" : "red"}`,
   "",

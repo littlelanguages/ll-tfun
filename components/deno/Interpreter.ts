@@ -102,16 +102,19 @@ export type Env = {
 
 export const emptyRuntimeEnv = () => new RuntimeEnv();
 
-export const emptyImportEnv: ImportEnv = {};
+export const emptyImportEnv = (): ImportEnv => ({});
 
 export const emptyEnv = (src: Src): Env => ({
   runtime: emptyRuntimeEnv(),
   type: emptyTypeEnv,
   src,
-  imports: emptyImportEnv,
+  imports: emptyImportEnv(),
 });
 
-export const defaultEnv = (src: Src): Env => ({
+export const defaultEnv = (
+  src: Src,
+  imports: ImportEnv = emptyImportEnv(),
+): Env => ({
   runtime: emptyRuntimeEnv()
     .bind("string_length", (s: string) => s.length)
     .bind("string_concat", (s1: string) => (s2: string) => s1 + s2)
@@ -147,7 +150,7 @@ export const defaultEnv = (src: Src): Env => ({
       (new TArr(typeString, new TArr(typeString, typeInt))).toScheme(),
     ),
   src,
-  imports: emptyImportEnv,
+  imports,
 });
 
 const binaryOps = new Map<
@@ -692,7 +695,7 @@ export const executeImport = (
     let env = emptyTypeEnv;
 
     const ast = parse(src, readTextFile(referencedFrom, urn, from.location));
-    const [result, resultEnv] = executeProgram(ast, defaultEnv(src));
+    const [result, resultEnv] = executeProgram(ast, defaultEnv(src, importEnv));
 
     ast.forEach((e, i) => {
       if (e.type === "Let" || e.type === "LetRec") {
