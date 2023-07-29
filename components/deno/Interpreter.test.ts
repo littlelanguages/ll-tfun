@@ -8,6 +8,7 @@ import { parse } from "./Parser.ts";
 import { expressionToNestedString, NestedString } from "./Values.ts";
 import { home } from "./Src.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
+import { UnificationMismatchException } from "./Errors.ts";
 
 const urn = home.newSrc("./Constraints.test.ts");
 const arbLocation = Location.mkCoordinate(0, 0, 0);
@@ -420,9 +421,7 @@ Deno.test("Import - qualified simple type in data declaration", () => {
 Deno.test("Import - values of the same name from different packages do not inter-operate", () => {
   assertCatchError(
     'import * as ADT from "./tests/adt.tfun" ; import * as List from "./tests/nested/List.tfun" ; ADT.sum (List.range 10)',
-    (e: MyError) =>
-      e.type === "UnificationMismatch" &&
-      e.reason === "Types have same name but declared in different packages",
+    (e: MyError) => e instanceof UnificationMismatchException,
   );
 });
 

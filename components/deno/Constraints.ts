@@ -1,4 +1,9 @@
 import {
+  UnificationMismatchesException,
+  UnificationMismatchException,
+  UnknownLabelException,
+} from "./Errors.ts";
+import {
   nullSubs,
   Pump,
   Subst,
@@ -48,8 +53,9 @@ const unifies = (t1: Type, t2: Type, pump: Pump): Unifier => {
   if (t1 instanceof TRowExtend) {
     const rewriteRow = (row: Type): [Type, Type] | undefined => {
       if (row instanceof TRowEmpty) {
-        throw { type: "RowDoesNotContainLabel", label: t1.name, t1, t2 };
+        throw new UnknownLabelException(t1.name, t1, t2);
       }
+
       if (row instanceof TRowExtend) {
         if (t1.name === row.name) {
           return [row.type, row.row];
@@ -92,18 +98,10 @@ const unifies = (t1: Type, t2: Type, pump: Pump): Unifier => {
   if (t1 instanceof TCon && t2 instanceof TCon && t1.adt.name === t2.adt.name) {
     if (t1.qualifiedName() === t2.qualifiedName()) {
       return unifyMany(t1.args, t2.args, pump);
-    } else {
-      throw {
-        type: "UnificationMismatch",
-        reason: "Types have same name but declared in different packages",
-        t1,
-        t2,
-      };
     }
   }
 
-  throw `Unification Mismatch: ${t1.toString()} -- ${t2.toString()}`;
-  // throw `Unification Mismatch: ${JSON.stringify(t1)} ${JSON.stringify(t2)}`;
+  throw new UnificationMismatchException(t1, t2);
 };
 
 const applyTypes = (s: Subst, ts: Array<Type>): Array<Type> =>
@@ -114,8 +112,7 @@ const unifyMany = (ta: Array<Type>, tb: Array<Type>, pump: Pump): Unifier => {
 
   if (ta.length === 0 && tb.length === 0) return emptyUnifier;
   if (ta.length === 0 || tb.length === 0) {
-    throw `Unification Mismatch: ${ta.toString()} -- ${tb.toString()}`;
-    // throw `Unification Mismatch: ${JSON.stringify(ta)} ${JSON.stringify(tb)}`;
+    throw new UnificationMismatchesException(ta, tb);
   }
 
   const [t1, ...ts1] = ta;

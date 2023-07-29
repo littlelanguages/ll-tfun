@@ -2,6 +2,7 @@ import * as Path from "https://deno.land/std@0.137.0/path/mod.ts";
 import { Src } from "./Src.ts";
 import { Token, TToken } from "./parser/Scanner.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
+import { Type } from "./Typing.ts";
 
 export class ArityMismatchException extends Error {
   src: Src;
@@ -128,6 +129,24 @@ export class FileNotFoundException extends Error {
   }
 }
 
+export class UnknownLabelException extends Error {
+  label: string;
+  type1: Type;
+  type2: Type;
+
+  constructor(label: string, type1: Type, type2: Type) {
+    super();
+
+    this.label = label;
+    this.type1 = type1;
+    this.type2 = type2;
+  }
+
+  toString(): string {
+    return `Unknown Label: ${this.label} in ${this.type1.toString()} -- ${this.type2.toString()}`;
+  }
+}
+
 export class SyntaxErrorException extends Error {
   src: Src;
   found: Token;
@@ -147,6 +166,53 @@ export class SyntaxErrorException extends Error {
     } but found ${ttokens.get(this.found[0])} at ${
       locationToString(this.src, this.found[1])
     }`;
+  }
+}
+
+export class UnificationMismatchException extends Error {
+  type1: Type;
+  type2: Type;
+
+  constructor(type1: Type, type2: Type) {
+    super();
+
+    this.type1 = type1;
+    this.type2 = type2;
+  }
+
+  toString(): string {
+    const renderTypePosition = (type: Type): string => {
+      if (type.position === undefined) {
+        return type.toString();
+      } else {
+        return `${type.toString()} at ${
+          locationToString(
+            type.position[0],
+            type.position[1],
+          )
+        }`;
+      }
+    };
+
+    return `Unification Mismatch: ${renderTypePosition(this.type1)} and ${
+      renderTypePosition(this.type2)
+    }`;
+  }
+}
+
+export class UnificationMismatchesException extends Error {
+  type1: Array<Type>;
+  type2: Array<Type>;
+
+  constructor(type1: Array<Type>, type2: Array<Type>) {
+    super();
+
+    this.type1 = type1;
+    this.type2 = type2;
+  }
+
+  toString(): string {
+    return `Unification Mismatch: ${this.type1.toString()} -- ${this.type2.toString()}`;
   }
 }
 

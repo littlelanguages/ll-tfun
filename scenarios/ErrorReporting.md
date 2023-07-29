@@ -331,3 +331,12 @@ import * from "./CycleA.tfun"
 ---
 Cyclic Import: ./CycleA.tfun at ../../scenarios/CycleC.tfun 1:15-29
 ```
+
+## Type Inference
+
+Type inference errors are generally tricky to report as the location can be lost during inference and unification.
+
+```fsharp -xt id=TypeInferenceError
+let x = 1 + "hello"
+```
+

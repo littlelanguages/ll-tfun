@@ -6,12 +6,23 @@ import {
   UnknownDataNameException,
   UnknownQualifierException,
 } from "./Errors.ts";
+import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 
 export type Var = string;
 
+export type Position = [Src, Location.Location];
+
 export abstract class Type {
+  position: Position | undefined;
+
   abstract apply(s: Subst): Type;
   abstract ftv(): Set<Var>;
+
+  abstract atPosition(position: Position): Type;
+
+  constructor(position: Position | undefined) {
+    this.position = position;
+  }
 
   toScheme(): Scheme {
     return new Scheme([...this.ftv()], this);
@@ -23,8 +34,14 @@ export class TAlias extends Type {
   args: Array<Type>;
   scheme: Scheme;
 
-  constructor(name: string, args: Array<Type>, scheme: Scheme) {
-    super();
+  constructor(
+    name: string,
+    args: Array<Type>,
+    scheme: Scheme,
+    position: Position | undefined = undefined,
+  ) {
+    super(position);
+
     this.name = name;
     this.args = args;
     this.scheme = scheme;
@@ -59,14 +76,22 @@ export class TAlias extends Type {
 
     return this.scheme.type.apply(new Subst(bindings));
   }
+
+  atPosition(position: Position): Type {
+    return new TAlias(this.name, this.args, this.scheme, position);
+  }
 }
 
 export class TArr extends Type {
   domain: Type;
   range: Type;
 
-  constructor(domain: Type, range: Type) {
-    super();
+  constructor(
+    domain: Type,
+    range: Type,
+    position: Position | undefined = undefined,
+  ) {
+    super(position);
     this.domain = domain;
     this.range = range;
   }
@@ -86,6 +111,10 @@ export class TArr extends Type {
       return `${this.domain} -> ${this.range}`;
     }
   }
+
+  atPosition(position: Position): Type {
+    return new TArr(this.domain, this.range, position);
+  }
 }
 
 export class TCon extends Type {
@@ -95,8 +124,9 @@ export class TCon extends Type {
   constructor(
     adt: DataDefinition,
     args: Array<Type> = [],
+    position: Position | undefined = undefined,
   ) {
-    super();
+    super(position);
     this.adt = adt;
     this.args = args;
   }
@@ -126,9 +156,17 @@ export class TCon extends Type {
   qualifiedName(): string {
     return `${this.adt.src.urn()}#${this.adt.name}`;
   }
+
+  atPosition(position: Position): Type {
+    return new TCon(this.adt, this.args, position);
+  }
 }
 
 export class TRowEmpty extends Type {
+  constructor(position: Position | undefined = undefined) {
+    super(position);
+  }
+
   apply(_s: Subst): Type {
     return this;
   }
@@ -140,6 +178,10 @@ export class TRowEmpty extends Type {
   toString(): string {
     return "{}";
   }
+
+  atPosition(position: Position): Type {
+    return new TRowEmpty(position);
+  }
 }
 
 export class TRowExtend extends Type {
@@ -147,8 +189,13 @@ export class TRowExtend extends Type {
   type: Type;
   row: Type;
 
-  constructor(name: string, type: Type, row: Type) {
-    super();
+  constructor(
+    name: string,
+    type: Type,
+    row: Type,
+    position: Position | undefined = undefined,
+  ) {
+    super(position);
     this.name = name;
     this.type = type;
     this.row = row;
@@ -189,13 +236,17 @@ export class TRowExtend extends Type {
 
     return items.join("");
   }
+
+  atPosition(position: Position): Type {
+    return new TRowExtend(this.name, this.type, this.row, position);
+  }
 }
 
 export class TTuple extends Type {
   types: Type[];
 
-  constructor(types: Type[]) {
-    super();
+  constructor(types: Type[], position: Position | undefined = undefined) {
+    super(position);
     this.types = types;
   }
 
@@ -210,13 +261,17 @@ export class TTuple extends Type {
   toString(): string {
     return `(${this.types.join(" * ")})`;
   }
+
+  atPosition(position: Position): Type {
+    return new TTuple(this.types, position);
+  }
 }
 
 export class TVar extends Type {
   name: Var;
 
-  constructor(name: Var) {
-    super();
+  constructor(name: Var, position: Position | undefined = undefined) {
+    super(position);
     this.name = name;
   }
 
@@ -230,6 +285,10 @@ export class TVar extends Type {
 
   toString(): string {
     return this.name;
+  }
+
+  atPosition(position: Position): Type {
+    return new TVar(this.name, position);
   }
 }
 
