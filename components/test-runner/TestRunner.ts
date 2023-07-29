@@ -1,4 +1,3 @@
-import { tokens } from "https://deno.land/x/rusty_markdown@v0.4.1/mod.ts";
 import { parse, Program } from "../deno/Parser.ts";
 import { defaultEnv, Env, executeProgram } from "../deno/Interpreter.ts";
 import { from, home, Src } from "../deno/Src.ts";
@@ -155,7 +154,9 @@ const assertCodeBlockResult = (
   } else {
     const { expected, error } = codeBlockResult;
 
-    const errorString = error instanceof Error ? error.toString() : JSON.stringify(error);
+    const errorString = error instanceof Error
+      ? error.toString()
+      : JSON.stringify(error);
 
     if (errorString === expected) {
       return { type: "Success" };
@@ -224,34 +225,47 @@ class XTHandler implements Handler {
 
 const handlers = new Map<string, Handler>([["xt", new XTHandler()]]);
 
+type Block = {
+  lang: BlockLang;
+  code: string;
+  location: [number, number];
+};
+
 const parseTest = async (
   fileName: string,
-): Promise<Array<[BlockLang, string]>> => {
-  const result: Array<[BlockLang, string]> = [];
+): Promise<Array<Block>> => {
+  const result: Array<Block> = [];
 
   const text = await Deno.readTextFile(fileName);
-  const tkns = tokens(text);
+  const lines = text.split("\n");
 
   let inCodeBlock = false;
-  let codeBlock = "";
+  let codeBlock: Array<string> = [];
   let codeBlockLang = "";
+  let lineNumber = 0;
+  let codeBlockStartLine = 0;
 
-  for (const tkn of tkns) {
-    if (
-      tkn.type === "start" && tkn.tag === "codeBlock" && tkn.kind === "fenced"
-    ) {
+  for (const line of lines) {
+    lineNumber += 1;
+
+    if (line.startsWith("```") && !inCodeBlock) {
       inCodeBlock = true;
-      codeBlock = "";
-      codeBlockLang = tkn.language;
+      codeBlock = [];
+      codeBlockLang = line.slice(3).trim();
+      codeBlockStartLine = lineNumber;
     } else if (inCodeBlock) {
-      if (tkn.type === "text") {
-        codeBlock += tkn.content;
-      } else if (tkn.type === "end" && tkn.tag === "codeBlock") {
+      if (line.startsWith("```")) {
         inCodeBlock = false;
-        const cbl = parseCodeBlockLang(codeBlockLang)
-        if (cbl !== undefined) {
-          result.push([cbl, codeBlock]);
+        const lang = parseCodeBlockLang(codeBlockLang);
+        if (lang !== undefined) {
+          result.push({
+            lang,
+            code: codeBlock.join("\n"),
+            location: [codeBlockStartLine, lineNumber],
+          });
         }
+      } else {
+        codeBlock.push(line);
       }
     }
   }
@@ -270,19 +284,20 @@ for (const file of Deno.args) {
   const tests = await parseTest(file);
 
   console.log(
-    `%crunning ${tests.length} test${tests.length === 1 ? "" : "s"
+    `%crunning ${tests.length} test${
+      tests.length === 1 ? "" : "s"
     } from ${file}%c`,
     "color: grey",
     "",
   );
-  for (const [lang, code] of tests) {
+  for (const { lang, code } of tests) {
     const handler = handlers.get(lang.name);
     if (handler !== undefined) {
       handler.register(lang.options, code);
     }
   }
 
-  for (const [lang, code] of tests) {
+  for (const { lang, code, location: [startLine, endLine] } of tests) {
     numberOfTests += 1;
 
     let testResult: TestResult;
@@ -309,15 +324,24 @@ for (const file of Deno.args) {
 
     const id = lang.options.get("id") ?? lang.options.get("name") ?? "test";
     if (testResult.type === "Ignored") {
-      console.log(`%c${id} ... ${testResult.type.toLowerCase()}`, "color: grey");
+      console.log(
+        `%c${id} (${startLine}-${endLine}) ... ${testResult.type.toLowerCase()}`,
+        "color: grey",
+      );
     } else {
       console.log(
-        `${id} ... %c${testResult.type.toLowerCase()} %c(${startEnd - startTime}ms)`,
+        `${id} (${startLine}-${endLine}) ... %c${testResult.type.toLowerCase()} %c(${
+          startEnd - startTime
+        }ms)`,
         `color: ${testResult.type === "Success" ? "green" : "red"}`,
         "color: grey",
       );
       if (testResult.type === "Failure") {
-        console.log(`%c  expected:%c ${testResult.expected}`, "color: grey", "");
+        console.log(
+          `%c  expected:%c ${testResult.expected}`,
+          "color: grey",
+          "",
+        );
         console.log(`%c  actual:%c ${testResult.actual}`, "color: grey", "");
       }
     }
@@ -328,7 +352,8 @@ const messageContent =
   `${numberOfTests} tests | ${numberOfSuccesses} passed | ${numberOfFailures} failed | ${numberIgnored} ignored`;
 console.log("");
 console.log(
-  `%c${numberOfFailures === 0 ? "ok" : "not ok"
+  `%c${
+    numberOfFailures === 0 ? "ok" : "not ok"
   }%c ${messageContent} %c(${performance.now()}ms)`,
   `color: ${numberOfFailures === 0 ? "green" : "red"}`,
   "",
