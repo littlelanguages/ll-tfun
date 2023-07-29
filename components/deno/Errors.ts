@@ -3,6 +3,24 @@ import { Src } from "./Src.ts";
 import { Token, TToken } from "./parser/Scanner.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 
+export class DuplicateDataDeclarationException extends Error {
+  src: Src;
+  name: string;
+  location: Location.Location;
+
+  constructor(src: Src, name: string, location: Location.Location) {
+    super();
+    this.src = src;
+    this.name = name;
+    this.location = location;
+  }
+
+  toString(): string {
+    return `Duplicate Data Declaration: ${this.name} at ${
+      locationToString(this.src, this.location)
+    }`;
+  }
+}
 export class SyntaxErrorException extends Error {
   src: Src;
   found: Token;

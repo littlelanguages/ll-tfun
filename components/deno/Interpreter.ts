@@ -1,4 +1,5 @@
 import { Constraints } from "./Constraints.ts";
+import { DuplicateDataDeclarationException } from "./Errors.ts";
 import { inferExpression, translateType } from "./Infer.ts";
 import {
   DataDeclaration,
@@ -396,17 +397,17 @@ const executeDataDeclaration = (
   const adts: Array<DataDefinition> = [];
 
   dd.declarations.forEach((d) => {
-    if (env.type.data(d.name) !== undefined) {
-      throw { type: "DuplicateDataDeclaration", name: d.name };
+    if (env.type.data(d.name.name) !== undefined) {
+      throw new DuplicateDataDeclarationException(env.src, d.name.name, d.name.location);
     }
 
-    const adt = new DataDefinition(env.src, d.name, d.parameters, []);
+    const adt = new DataDefinition(env.src, d.name.name, d.parameters, []);
 
     env = { ...env, type: env.type.addData(adt) };
   });
 
   dd.declarations.forEach((d) => {
-    const adt = env.type.data(d.name)!;
+    const adt = env.type.data(d.name.name)!;
 
     d.constructors.forEach((c) => {
       adt.addConstructor(
@@ -679,12 +680,12 @@ export const executeImport = (
               ]);
               env = env.extend(c.name, constructorScheme);
             });
-            env = env.addData(resultEnv.type.data(d.name)!);
+            env = env.addData(resultEnv.type.data(d.name.name)!);
           } else if (d.visibility === Visibility.Opaque) {
             env = env.addData(
               new DataDefinition(
                 src,
-                d.name,
+                d.name.name,
                 d.parameters,
                 [],
               ),

@@ -98,3 +98,20 @@ type Fred x = (x * y)
 ---
 Unknown Type Alias Parameter: y at ../../scenarios/error-reporting/SyntaxErrors.md 1:32-35
 ```
+
+The next error is if an attempt is made to create a duplicate data type.
+
+```fsharp xt id=DuplicateDataType
+data LList x = LNil | LCons x (LList x) ;
+data LList x = LLNil | LLCons x (LList x)
+---
+Duplicate Data Declaration: LList at ../../scenarios/error-reporting/SyntaxErrors.md 2:6-10
+```
+
+It should be noted that, with the prelude importing a number of standard declarations like `List`, an attempt to redefine any one of these data declarations will also fail.
+
+```fsharp xt id=DuplicateDataType
+data List x = LNil | LCons x (List x)
+---
+Duplicate Data Declaration: LList at ../../scenarios/error-reporting/SyntaxErrors.md 2:6-9
+```

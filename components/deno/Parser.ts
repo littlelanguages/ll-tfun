@@ -244,7 +244,7 @@ export type DataDeclaration = {
 
 export type TypeDeclaration = {
   type: "TypeDeclaration";
-  name: string;
+  name: NameLocation;
   visibility: Visibility;
   parameters: Array<string>;
   constructors: Array<ConstructorDeclaration>;
@@ -722,7 +722,7 @@ const visitor: Visitor<
     a6: Array<[Token, ConstructorDeclaration]>,
   ): TypeDeclaration => ({
     type: "TypeDeclaration",
-    name: a1[2],
+    name: {name: a1[2], location: a1[1]},
     visibility: a2 === undefined
       ? Visibility.Private
       : a2[2] === "*"
