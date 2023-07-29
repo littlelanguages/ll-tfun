@@ -34,6 +34,29 @@ export class ArityMismatchException extends Error {
   }
 }
 
+export class CyclicImportException extends Error {
+  src: Src;
+  name: string;
+  location: Location.Location;
+
+  constructor(
+    src: Src,
+    name: string,
+    location: Location.Location,
+  ) {
+    super();
+    this.src = src;
+    this.name = name;
+    this.location = location;
+  }
+
+  toString(): string {
+    return `Cyclic Import: ${this.name} at ${
+      locationToString(this.src, this.location)
+    }`;
+  }
+}
+
 export class DuplicateDataDeclarationException extends Error {
   src: Src;
   name: string;
@@ -166,6 +189,12 @@ export class UnknownImportNameException extends Error {
   }
 
   toString(): string {
+    if (this.available.length === 0) {
+      return `Unknown Import Name: ${this.name} at ${
+        locationToString(this.src, this.location)
+      }`;
+    }
+
     return `Unknown Import Name: ${this.name} not one of ${
       commaSeparated(this.available)
     } at ${locationToString(this.src, this.location)}`;

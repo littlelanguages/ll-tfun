@@ -1,5 +1,6 @@
 import { Constraints } from "./Constraints.ts";
 import {
+  CyclicImportException,
   DuplicateDataDeclarationException,
   FileNotFoundException,
   ImportNameAlreadyDeclaredException,
@@ -670,6 +671,11 @@ const readTextFile = (
   }
 };
 
+const loadingImport: ImportPackage = {
+  values: new Map(),
+  types: emptyTypeEnv.extend("_Loading", new Scheme([], typeInt)),
+};
+
 export const executeImport = (
   from: NameLocation,
   referencedFrom: Src,
@@ -680,6 +686,8 @@ export const executeImport = (
 
   const env = importEnv[urn];
   if (env === undefined) {
+    importEnv[urn] = loadingImport;
+
     const importValues: ImportValues = new Map();
     let env = emptyTypeEnv;
 
@@ -786,6 +794,8 @@ export const executeImport = (
     const r: ImportPackage = { values: importValues, types: env };
     importEnv[urn] = r;
     return r;
+  } else if (env === loadingImport) {
+    throw new CyclicImportException(referencedFrom, from.name, from.location);
   } else {
     return env;
   }

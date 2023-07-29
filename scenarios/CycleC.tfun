@@ -1,0 +1,3 @@
+import a from "./CycleA.tfun" ;
+
+let c = 10
