@@ -547,11 +547,6 @@ Deno.test("Alias declaration", () => {
     ["Fred = ∀ a. (a * Int)"],
   );
 
-  assertError(
-    "type Fred a = (a * b)",
-    { type: "TypeAliasParameterNotDeclared", name: "b", parameters: ["a"] },
-  );
-
   assertExecute(
     [
       "type Fred a = (a * Int)",

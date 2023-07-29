@@ -27,6 +27,7 @@ import {
   UnknownDataNameException,
   UnknownNameException,
   UnknownQualifierException,
+  UnknownTypeNameException,
 } from "./Errors.ts";
 
 export type Env = {
@@ -393,7 +394,11 @@ export const inferPattern = (
   }
 };
 
-export const translateType = (t: AST.Type, env: Env): Type => {
+export const translateType = (
+  t: AST.Type,
+  env: Env,
+  parameters: Set<string> | undefined = undefined,
+): Type => {
   const translate = (t: AST.Type): Type => {
     switch (t.type) {
       case "TypeConstructor": {
@@ -447,7 +452,15 @@ export const translateType = (t: AST.Type, env: Env): Type => {
       case "TypeUnit":
         return typeUnit;
       case "TypeVariable":
-        return new TVar(t.name);
+        if (parameters !== undefined && !parameters.has(t.name.name)) {
+          throw new UnknownTypeNameException(
+            env.src,
+            t.name.name,
+            t.name.location,
+          );
+        }
+
+        return new TVar(t.name.name);
     }
   };
 

@@ -266,7 +266,7 @@ export type Type =
 
 export type TypeVariable = {
   type: "TypeVariable";
-  name: string;
+  name: NameLocation;
 };
 
 export type TypeConstructor = {
@@ -784,7 +784,7 @@ const visitor: Visitor<
 
   visitTermType1: (a: Token): Type => ({
     type: "TypeVariable",
-    name: a[2],
+    name: { name: a[2], location: a[1] },
   }),
   visitTermType2: (
     _a1: Token,

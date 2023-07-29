@@ -80,23 +80,20 @@ data LList x = LNil | LCons x (Fred x)
 Unknown Data Name: Fred at ../../scenarios/error-reporting/SyntaxErrors.md 1:32-35
 ```
 
-The following test is ignored because, rather than reporting an error, it
-ignores that `y` is never defined and allows the declaration.
+A reference to an unknown type name inside a data declaration is reported as an error.
 
-```fsharp -xt id=UnknownDataTypeIdentifier
+```fsharp xt id=UnknownDataTypeIdentifier
 data LList x = LNil | LCons y (LList x)
 ---
-Unknown Data Name: Fred at ../../scenarios/error-reporting/SyntaxErrors.md 1:32-35
+Unknown Type Name: y at ../../scenarios/error-reporting/SyntaxErrors.md 1:29
 ```
 
-The following is also ignored because it needs to be captured into an exception
-rather than throwing a JSON object. The complexity with this test is getting the
-source location correct.
+The same error is also reported in a type alias declaration.
 
-```fsharp -xt id=UnknownTypeAliasIdentifier
+```fsharp xt id=UnknownTypeAliasIdentifier
 type Fred x = (x * y)
 ---
-Unknown Type Alias Parameter: y at ../../scenarios/error-reporting/SyntaxErrors.md 1:32-35
+Unknown Type Name: y at ../../scenarios/error-reporting/SyntaxErrors.md 1:20
 ```
 
 The next error is if an attempt is made to create a duplicate data type.
@@ -110,8 +107,8 @@ Duplicate Data Declaration: LList at ../../scenarios/error-reporting/SyntaxError
 
 It should be noted that, with the prelude importing a number of standard declarations like `List`, an attempt to redefine any one of these data declarations will also fail.
 
-```fsharp xt id=DuplicateDataType
+```fsharp xt id=DuplicateListDataType
 data List x = LNil | LCons x (List x)
 ---
-Duplicate Data Declaration: LList at ../../scenarios/error-reporting/SyntaxErrors.md 2:6-9
+Duplicate Data Declaration: List at ../../scenarios/error-reporting/SyntaxErrors.md 1:6-9
 ```

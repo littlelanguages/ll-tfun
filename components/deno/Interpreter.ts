@@ -413,10 +413,12 @@ const executeDataDeclaration = (
   dd.declarations.forEach((d) => {
     const adt = env.type.data(d.name.name)!;
 
+    const parameters = new Set(d.parameters);
+
     d.constructors.forEach((c) => {
       adt.addConstructor(
         c.name,
-        c.parameters.map((t) => translateType(t, env)),
+        c.parameters.map((t) => translateType(t, env, parameters)),
       );
     });
 
@@ -424,16 +426,15 @@ const executeDataDeclaration = (
     const runtimeEnv = env.runtime;
     let typeEnv = env.type.addData(adt);
 
-    const parameters = adt.parameters;
     const constructorResultType = new TCon(
       adt,
-      parameters.map((p) => new TVar(p)),
+      adt.parameters.map((p) => new TVar(p)),
     );
     adt.constructors.forEach((c) => {
       typeEnv = typeEnv.extend(
         c.name,
         new Scheme(
-          parameters,
+          adt.parameters,
           c.args.reduceRight(
             (acc: Type, t: Type) => new TArr(t, acc),
             constructorResultType,
@@ -461,9 +462,8 @@ const executeElement = (
     const [adts, newEnv] = executeDataDeclaration(e, env);
     return [adts, undefined, newEnv];
   } else if (e.type === "TypeAliasDeclaration") {
-    const typ = translateType(e.typ, env);
-
     const parameters = new Set(e.parameters);
+    const typ = translateType(e.typ, env, parameters);
 
     for (const p of typ.ftv()) {
       if (!parameters.has(p)) {
