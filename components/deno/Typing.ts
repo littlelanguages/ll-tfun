@@ -27,6 +27,25 @@ export abstract class Type {
   toScheme(): Scheme {
     return new Scheme([...this.ftv()], this);
   }
+
+  combinePosition(other: Type): Position | undefined {
+    if (this.position === undefined) {
+      return other.position;
+    }
+
+    if (other.position === undefined) {
+      return this.position;
+    }
+
+    if (this.position[0] === other.position[0]) {
+      return [
+        this.position[0],
+        Location.combine(this.position[1], other.position[1]),
+      ];
+    }
+
+    return this.position;
+  }
 }
 
 export class TAlias extends Type {
@@ -52,6 +71,7 @@ export class TAlias extends Type {
       this.name,
       applyArray(s, this.args),
       this.scheme.apply(s),
+      this.position,
     );
   }
 
@@ -97,7 +117,7 @@ export class TArr extends Type {
   }
 
   apply(s: Subst): Type {
-    return new TArr(this.domain.apply(s), this.range.apply(s));
+    return new TArr(this.domain.apply(s), this.range.apply(s), this.position);
   }
 
   ftv(): Set<Var> {
@@ -136,7 +156,7 @@ export class TCon extends Type {
       return this;
     }
 
-    return new TCon(this.adt, applyArray(s, this.args));
+    return new TCon(this.adt, applyArray(s, this.args), this.position);
   }
 
   ftv(): Set<Var> {
@@ -202,7 +222,12 @@ export class TRowExtend extends Type {
   }
 
   apply(s: Subst): Type {
-    return new TRowExtend(this.name, this.type.apply(s), this.row.apply(s));
+    return new TRowExtend(
+      this.name,
+      this.type.apply(s),
+      this.row.apply(s),
+      this.position,
+    );
   }
 
   ftv(): Set<Var> {
@@ -251,7 +276,7 @@ export class TTuple extends Type {
   }
 
   apply(s: Subst): Type {
-    return new TTuple(applyArray(s, this.types));
+    return new TTuple(applyArray(s, this.types), this.position);
   }
 
   ftv(): Set<Var> {

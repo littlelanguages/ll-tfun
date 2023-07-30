@@ -351,5 +351,5 @@ Unification Mismatch: a -> b and Int at ../../scenarios/ErrorReporting.md 1:39-4
 ```fsharp xt id=TypeInferenceError
 1 + if (True) "a" else "b"
 ---
-Unification Mismatch: String at ../../scenarios/ErrorReporting.md 1:15-17 and Int
+Unification Mismatch: String at ../../scenarios/ErrorReporting.md 1:5-26 and Int
 ```

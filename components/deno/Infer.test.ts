@@ -217,8 +217,8 @@ Deno.test("infer PCons pattern", () => {
     ["V2 ~ V1", "V3 ~ List V1"],
     "List V1",
     origEnv
-      .extend("x", new Scheme([], new TVar("V2")))
-      .extend("xs", new Scheme([], new TVar("V3"))),
+      .extend("x", new Scheme([], new TVar("V2", [src, arbLocation])))
+      .extend("xs", new Scheme([], new TVar("V3", [src, arbLocation]))),
   );
 });
 
@@ -268,7 +268,10 @@ Deno.test("infer PVar pattern", () => {
     { type: "PVar", name: "x", location: arbLocation },
     [],
     "V1",
-    emptyTypeEnv.extend("x", new Scheme([], new TVar("V1"))),
+    emptyTypeEnv.extend(
+      "x",
+      new Scheme([], new TVar("V1", [src, arbLocation])),
+    ),
   );
 });
 

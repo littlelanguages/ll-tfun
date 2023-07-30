@@ -3,6 +3,7 @@ import { Constraints } from "./Constraints.ts";
 import {
   applyArray,
   emptyTypeEnv,
+  Position,
   Pump,
   Scheme,
   Subst,
@@ -107,18 +108,21 @@ export const inferExpression = (
   };
 
   const infer = (expr: AST.Expression, env: Env): [Type, Env] => {
+    const positionAt: Position = [env.src, expr.location];
+    const position = (t: Type): Type => t.atPosition(positionAt);
+
     switch (expr.type) {
       case "App": {
         const [t1] = infer(expr.e1, env);
         const [t2] = infer(expr.e2, env);
-        const tv = pump.next();
+        const tv = position(pump.next());
 
         constraints.add(t1, new TArr(t2, tv));
 
         return [tv, env];
       }
       case "Builtin":
-        return [pump.next(), env];
+        return [position(pump.next()), env];
       case "If": {
         const [tg] = infer(expr.guard, env);
         const [tt] = infer(expr.then, env);
@@ -127,11 +131,11 @@ export const inferExpression = (
         constraints.add(tg, typeBool);
         constraints.add(tt, et);
 
-        return [tt, env];
+        return [position(tt), env];
       }
       case "Lam": {
         const tv = expr.name.typ === undefined
-          ? pump.next()
+          ? pump.next().atPosition([env.src, expr.name.name.location])
           : translateType(expr.name.typ, env);
         const [t] = infer(
           expr.expr,
@@ -139,12 +143,12 @@ export const inferExpression = (
         );
 
         if (expr.returnType === undefined) {
-          return [new TArr(tv, t), env];
+          return [position(new TArr(tv, t)), env];
         } else {
           const returnType = translateType(expr.returnType, env);
 
           constraints.add(t, returnType);
-          return [new TArr(tv, returnType), env];
+          return [new TArr(tv, returnType, positionAt), env];
         }
       }
       case "Let": {
@@ -172,7 +176,10 @@ export const inferExpression = (
         }
 
         if (expr.expr === undefined) {
-          return [new TTuple(types), newEnv];
+          return [
+            new TTuple(types, positionAt),
+            newEnv,
+          ];
         } else {
           return [infer(expr.expr, newEnv)[0], env];
         }
@@ -228,24 +235,27 @@ export const inferExpression = (
         );
 
         if (expr.expr === undefined) {
-          return [new TTuple(types), solvedEnv];
+          return [new TTuple(types, positionAt), solvedEnv];
         } else {
           return [infer(expr.expr, solvedEnv)[0], env];
         }
       }
       case "LBool":
-        return [typeBool, env];
+        return [position(typeBool), env];
       case "LInt":
-        return [typeInt.atPosition([env.src, expr.location]), env];
+        return [position(typeInt), env];
       case "LString":
-        return [typeString.atPosition([env.src, expr.location]), env];
+        return [position(typeString), env];
       case "LTuple":
-        return [new TTuple(expr.values.map((v) => infer(v, env)[0])), env];
+        return [
+          new TTuple(expr.values.map((v) => infer(v, env)[0]), positionAt),
+          env,
+        ];
       case "LUnit":
-        return [typeUnit, env];
+        return [position(typeUnit), env];
       case "Match": {
         const [t] = infer(expr.expr, env);
-        const tv = pump.next();
+        const tv = position(pump.next());
 
         for (const { pattern, expr: pexpr } of expr.cases) {
           const [tp, newEnv] = inferPattern(pattern, env, constraints, pump);
@@ -259,7 +269,7 @@ export const inferExpression = (
       case "Op": {
         const [tl] = infer(expr.left, env);
         const [tr] = infer(expr.right, env);
-        const tv = pump.next();
+        const tv = position(pump.next());
 
         const u1 = new TArr(tl, new TArr(tr, tv));
         if (expr.op === AST.Op.Equals || expr.op === AST.Op.NotEquals) {
@@ -272,17 +282,17 @@ export const inferExpression = (
         return [tv, env];
       }
       case "RecordEmpty":
-        return [new TRowEmpty(), env];
+        return [new TRowEmpty(positionAt), env];
       case "RecordExtend": {
         const [t1] = infer(expr.expr, env);
         const [t2] = infer(expr.rest, env);
 
-        return [new TRowExtend(expr.name, t1, t2), env];
+        return [new TRowExtend(expr.name, t1, t2, positionAt), env];
       }
       case "RecordSelect": {
         const [t] = infer(expr.expr, env);
-        const t1 = pump.next();
-        const t2 = pump.next();
+        const t1 = position(pump.next());
+        const t2 = position(pump.next());
 
         constraints.add(t, new TRowExtend(expr.name, t1, t2));
 
@@ -309,10 +319,10 @@ export const inferExpression = (
           );
         }
 
-        return [scheme.instantiate(pump), env];
+        return [position(scheme.instantiate(pump)), env];
       }
       default:
-        return [typeError, env];
+        return [position(typeError), env];
     }
   };
 
@@ -325,9 +335,12 @@ export const inferPattern = (
   constraints: Constraints,
   pump: Pump,
 ): [Type, Env] => {
+  const positionAt: Position = [env.src, pattern.location];
+  const position = (t: Type): Type => t.atPosition(positionAt);
+
   switch (pattern.type) {
     case "PBool":
-      return [typeBool, env];
+      return [position(typeBool), env];
     case "PCons": {
       const [constructor, adt] = pattern.qualifier === undefined
         ? env.type.getConstructor(env.src, pattern.name)
@@ -357,13 +370,13 @@ export const inferPattern = (
         newEnv = e;
       });
 
-      return [new TCon(adt, parameters), newEnv];
+      return [new TCon(adt, parameters, positionAt), newEnv];
     }
     case "PInt":
       return [typeInt, env];
     case "PRecord": {
       const result: [Type, Env] = pattern.extension === undefined
-        ? [new TRowEmpty(), env]
+        ? [new TRowEmpty(positionAt), env]
         : inferPattern(pattern.extension, env, constraints, pump);
 
       for (const [name, p] of pattern.fields) {
@@ -375,7 +388,7 @@ export const inferPattern = (
       return result;
     }
     case "PString":
-      return [typeString, env];
+      return [position(typeString), env];
     case "PTuple": {
       const values: Array<Type> = [];
       let newEnv = env;
@@ -384,18 +397,18 @@ export const inferPattern = (
         values.push(t);
         newEnv = e;
       }
-      return [new TTuple(values), newEnv];
+      return [new TTuple(values, positionAt), newEnv];
     }
     case "PUnit":
-      return [typeUnit, env];
+      return [position(typeUnit), env];
     case "PVar": {
-      const tv = pump.next();
+      const tv = position(pump.next());
       return [tv, extend(env, pattern.name, new Scheme([], tv))];
     }
     case "PWildcard":
-      return [pump.next(), env];
+      return [position(pump.next()), env];
     default:
-      return [typeError, env];
+      return [position(typeError), env];
   }
 };
 
@@ -405,6 +418,9 @@ export const translateType = (
   parameters: Set<string> | undefined = undefined,
 ): Type => {
   const translate = (t: AST.Type): Type => {
+    const positionAt: Position = [env.src, t.location];
+    const position = (t: Type): Type => t.atPosition(positionAt);
+
     switch (t.type) {
       case "TypeConstructor": {
         const qualifiedEnv = t.qualifier === undefined
@@ -431,6 +447,7 @@ export const translateType = (
               t.name,
               t.arguments.map(translate),
               aliasType,
+              positionAt,
             );
           }
         }
@@ -444,23 +461,28 @@ export const translateType = (
           );
         }
 
-        return new TCon(tc, t.arguments.map(translate));
+        return new TCon(tc, t.arguments.map(translate), positionAt);
       }
       case "TypeFunction":
-        return new TArr(translate(t.left), translate(t.right));
+        return new TArr(translate(t.left), translate(t.right), positionAt);
       case "TypeRecord": {
-        const f = (acc: Type, field: [string, AST.Type]) =>
-          new TRowExtend(field[0], translate(field[1]), acc);
+        const f = (acc: Type, field: [string, AST.Type]) => {
+          const field1 = translate(field[1]);
+          return new TRowExtend(field[0], field1, acc, [
+            env.src,
+            t.location,
+          ]);
+        };
         const initial: Type = t.extension === undefined
-          ? new TRowEmpty()
+          ? new TRowEmpty(positionAt)
           : translate(t.extension);
 
         return t.fields.reduceRight(f, initial);
       }
       case "TypeTuple":
-        return new TTuple(t.values.map(translate));
+        return new TTuple(t.values.map(translate), positionAt);
       case "TypeUnit":
-        return typeUnit;
+        return position(typeUnit);
       case "TypeVariable":
         if (parameters !== undefined && !parameters.has(t.name.name)) {
           throw new UnknownTypeNameException(
@@ -470,7 +492,7 @@ export const translateType = (
           );
         }
 
-        return new TVar(t.name.name);
+        return new TVar(t.name.name, positionAt);
     }
   };
 
