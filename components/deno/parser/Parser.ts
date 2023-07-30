@@ -9,6 +9,7 @@ export interface Visitor<
   T_Program,
   T_Element,
   T_Expression,
+  T_Apply,
   T_Relational,
   T_RelationalOps,
   T_Additive,
@@ -40,7 +41,8 @@ export interface Visitor<
   visitElement2(a: T_DataDeclaration): T_Element;
   visitElement3(a: T_TypeAliasDeclarations): T_Element;
   visitElement4(a: T_ImportStatement): T_Element;
-  visitExpression(a1: T_Relational, a2: Array<T_Relational>): T_Expression;
+  visitExpression(a1: T_Apply, a2: Array<[Token, T_Apply]>): T_Expression;
+  visitApply(a1: T_Relational, a2: Array<T_Relational>): T_Apply;
   visitRelational(
     a1: T_Additive,
     a2: [T_RelationalOps, T_Additive] | undefined,
@@ -239,6 +241,7 @@ export const parseProgram = <
   T_Program,
   T_Element,
   T_Expression,
+  T_Apply,
   T_Relational,
   T_RelationalOps,
   T_Additive,
@@ -270,6 +273,7 @@ export const parseProgram = <
     T_Program,
     T_Element,
     T_Expression,
+    T_Apply,
     T_Relational,
     T_RelationalOps,
     T_Additive,
@@ -308,6 +312,7 @@ export const mkParser = <
   T_Program,
   T_Element,
   T_Expression,
+  T_Apply,
   T_Relational,
   T_RelationalOps,
   T_Additive,
@@ -339,6 +344,7 @@ export const mkParser = <
     T_Program,
     T_Element,
     T_Expression,
+    T_Apply,
     T_Relational,
     T_RelationalOps,
     T_Additive,
@@ -455,6 +461,18 @@ export const mkParser = <
       }
     },
     expression: function (): T_Expression {
+      const a1: T_Apply = this.apply();
+      const a2: Array<[Token, T_Apply]> = [];
+
+      while (isToken(TToken.BarGreaterThan)) {
+        const a2t1: Token = matchToken(TToken.BarGreaterThan);
+        const a2t2: T_Apply = this.apply();
+        const a2t: [Token, T_Apply] = [a2t1, a2t2];
+        a2.push(a2t);
+      }
+      return visitor.visitExpression(a1, a2);
+    },
+    apply: function (): T_Apply {
       const a1: T_Relational = this.relational();
       const a2: Array<T_Relational> = [];
 
@@ -478,7 +496,7 @@ export const mkParser = <
         const a2t: T_Relational = this.relational();
         a2.push(a2t);
       }
-      return visitor.visitExpression(a1, a2);
+      return visitor.visitApply(a1, a2);
     },
     relational: function (): T_Relational {
       const a1: T_Additive = this.additive();

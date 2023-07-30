@@ -16,7 +16,7 @@ import * as Result from "../stdlib/Data/Result.tfun" ;
 import * as String from "../stdlib/Data/String.tfun" ;
 import * as RE from "../stdlib/Text/Regex.tfun" ;
 
-let add (input: String): Result (List Int) Int =
+let add input =
   let content =
     if (input == "") 
       { separator: RE.parse ","
@@ -28,23 +28,38 @@ let add (input: String): Result (List Int) Int =
       | Maybe.Just i ->
           let separator: String = String.slice 2 i input
            in if (String.startsWith "[" separator)
-                { separator: RE.parse (List.join "|" (List.map RE.literal (RE.split (RE.parse "\]\[") (String.slice 1 ((String.length separator) - 1) separator))))
-                , input: String.drop (i + 1) input
+                { separator: separator
+                      |> String.dropLeft 1
+                      |> String.dropRight 1
+                      |> RE.split (RE.parse "\]\[") 
+                      |> List.map RE.literal 
+                      |> List.join "|" 
+                      |> RE.parse
+                , input: String.dropLeft i + 1 input
                 }
               else
-                { separator: RE.parse (RE.literal separator)
-                , input: String.drop (i + 1) input
+                { separator: separator |> RE.literal |> RE.parse
+                , input: String.dropLeft i + 1 input
                 }
     else
       { separator: RE.parse ",|\\n" 
       , input: input
       }
-  and numbers = List.map (Maybe.withDefault 0) (List.map Integer.parse (RE.split content.separator content.input))
+  and numbers = 
+        content.input
+          |> RE.split content.separator
+          |> List.map Integer.parse
+          |> List.map (Maybe.withDefault 0)
   and negative n = n < 0
    in if (List.any negative numbers)
-        Result.Error (List.filter negative numbers)
+        numbers
+          |> List.filter negative
+          |> Result.Error
       else
-        Result.Okay (List.sum (List.filter (\n = n < 1001) numbers))
+        numbers
+          |> List.filter (\n = n < 1001)
+          |> List.sum
+          |> Result.Okay
 ---
 add = function: String -> Result (List Int) Int
 ```

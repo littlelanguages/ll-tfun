@@ -9,8 +9,11 @@ let isEmpty* (s: String): Bool =
 let slice* (start: Int) (end: Int) (s: String): String =
   builtin "Data.String.slice" start end s ;
 
-let drop* (n: Int) (s: String): String =
+let dropLeft* (n: Int) (s: String): String =
   slice n (length s) s ;
+
+let dropRight* (n: Int) (s: String): String =
+  slice 0 ((length s) - n) s ;
 
 let startsWith* (needle: String) (haystack: String): Bool =
   let needleLength = length needle

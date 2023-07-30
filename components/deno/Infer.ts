@@ -271,15 +271,21 @@ export const inferExpression = (
         const [tr] = infer(expr.right, env);
         const tv = position(pump.next());
 
-        const u1 = new TArr(tl, new TArr(tr, tv));
-        if (expr.op === AST.Op.Equals || expr.op === AST.Op.NotEquals) {
-          constraints.add(tl, tr);
-          constraints.add(tv, typeBool);
+        if (expr.op === AST.Op.PipeRight) {
+          constraints.add(tr, new TArr(tl, tv, positionAt));
+
+          return [tv, env];
         } else {
-          const u2 = ops.get(expr.op)!;
-          constraints.add(u1, u2);
+          const u1 = new TArr(tl, new TArr(tr, tv));
+          if (expr.op === AST.Op.Equals || expr.op === AST.Op.NotEquals) {
+            constraints.add(tl, tr);
+            constraints.add(tv, typeBool);
+          } else {
+            const u2 = ops.get(expr.op)!;
+            constraints.add(u1, u2);
+          }
+          return [tv, env];
         }
-        return [tv, env];
       }
       case "RecordEmpty":
         return [new TRowEmpty(positionAt), env];

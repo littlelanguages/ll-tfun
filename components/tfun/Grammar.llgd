@@ -12,6 +12,10 @@ Element
     ;
 
 Expression
+    : Apply {"|>" Apply}
+    ;
+
+Apply
     : Relational {Relational}
     ;
 

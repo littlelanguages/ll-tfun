@@ -170,6 +170,7 @@ export type RecordSelectExpression = {
 };
 
 export enum Op {
+  PipeRight,
   Equals,
   NotEquals,
   LessThan,
@@ -397,6 +398,7 @@ const visitor: Visitor<
   Array<Element>, // T_Program
   Element, // T_Element
   Expression, // T_Expression
+  Expression, // T_Apply
   Expression, // T_Relational
   string, // T_RelationalOps
   Expression, // T_Additive
@@ -433,7 +435,22 @@ const visitor: Visitor<
   visitElement3: (a1: TypeAliasDeclaration): Element => a1,
   visitElement4: (a1: ImportStatement): Element => a1,
 
-  visitExpression: (a1: Expression, a2: Array<Expression>): Expression =>
+  visitExpression: (
+    a1: Expression,
+    a2: Array<[Token, Expression]>,
+  ): Expression =>
+    a2.reduce(
+      (acc: Expression, e: [Token, Expression]): Expression => ({
+        type: "Op",
+        left: acc,
+        right: e[1],
+        op: Op.PipeRight,
+        location: combine(acc.location, e[1].location),
+      }),
+      a1,
+    ),
+
+  visitApply: (a1: Expression, a2: Array<Expression>): Expression =>
     a2.reduce((acc: Expression, e: Expression): Expression => ({
       type: "App",
       e1: acc,
