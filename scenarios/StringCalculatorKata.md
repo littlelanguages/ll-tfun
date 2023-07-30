@@ -12,7 +12,7 @@ expected.
 import * as Integer from "../stdlib/Data/Integer.tfun" ;
 import * as List from "../stdlib/Data/List.tfun" ;
 import * as Maybe from "../stdlib/Data/Maybe.tfun" ;
--- import * as String from "../stdlib/Data/String.tfun" ;
+import * as String from "../stdlib/Data/String.tfun" ;
 import * as RE from "../stdlib/Text/Regex.tfun" ;
 
 let add input =

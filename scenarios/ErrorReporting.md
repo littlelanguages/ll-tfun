@@ -336,7 +336,20 @@ Cyclic Import: ./CycleA.tfun at ../../scenarios/CycleC.tfun 1:15-29
 
 Type inference errors are generally tricky to report as the location can be lost during inference and unification.
 
-```fsharp -xt id=TypeInferenceError
+```fsharp xt id=TypeInferenceError
 let x = 1 + "hello"
+---
+Unification Mismatch: String at ../../scenarios/ErrorReporting.md 1:13-19 and Int
 ```
 
+```fsharp xt id=TypeInferenceError
+let compose f g x = f (g x) ; compose 10
+---
+Unification Mismatch: a -> b and Int at ../../scenarios/ErrorReporting.md 1:39-40
+```
+
+```fsharp xt id=TypeInferenceError
+1 + if (True) "a" else "b"
+---
+Unification Mismatch: String at ../../scenarios/ErrorReporting.md 1:15-17 and Int
+```

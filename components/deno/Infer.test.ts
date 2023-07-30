@@ -168,13 +168,13 @@ Deno.test("infer RecordSelect 2", () => {
 
 Deno.test("infer PBool pattern", () => {
   assertInferPattern(
-    { type: "PBool", value: true },
+    { type: "PBool", value: true, location: arbLocation },
     [],
     "Bool",
   );
 
   assertInferPattern(
-    { type: "PBool", value: false },
+    { type: "PBool", value: false, location: arbLocation },
     [],
     "Bool",
   );
@@ -194,6 +194,7 @@ Deno.test("infer PCons pattern", () => {
       qualifier: undefined,
       name: { name: "Nil", location: arbLocation },
       args: [],
+      location: arbLocation,
     },
     [],
     "List V1",
@@ -206,7 +207,12 @@ Deno.test("infer PCons pattern", () => {
       type: "PCons",
       qualifier: undefined,
       name: { name: "Cons", location: arbLocation },
-      args: [{ type: "PVar", name: "x" }, { type: "PVar", name: "xs" }],
+      args: [{ type: "PVar", name: "x", location: arbLocation }, {
+        type: "PVar",
+        name: "xs",
+        location: arbLocation,
+      }],
+      location: arbLocation,
     },
     ["V2 ~ V1", "V3 ~ List V1"],
     "List V1",
@@ -218,7 +224,7 @@ Deno.test("infer PCons pattern", () => {
 
 Deno.test("infer PInt pattern", () => {
   assertInferPattern(
-    { type: "PInt", value: 123 },
+    { type: "PInt", value: 123, location: arbLocation },
     [],
     "Int",
   );
@@ -226,7 +232,7 @@ Deno.test("infer PInt pattern", () => {
 
 Deno.test("infer PString pattern", () => {
   assertInferPattern(
-    { type: "PString", value: "hello" },
+    { type: "PString", value: "hello", location: arbLocation },
     [],
     "String",
   );
@@ -237,11 +243,12 @@ Deno.test("infer PTuple pattern", () => {
     {
       type: "PTuple",
       values: [
-        { type: "PBool", value: true },
-        { type: "PInt", value: 123 },
-        { type: "PString", value: "hello" },
-        { type: "PUnit" },
+        { type: "PBool", value: true, location: arbLocation },
+        { type: "PInt", value: 123, location: arbLocation },
+        { type: "PString", value: "hello", location: arbLocation },
+        { type: "PUnit", location: arbLocation },
       ],
+      location: arbLocation,
     },
     [],
     "(Bool * Int * String * ())",
@@ -250,7 +257,7 @@ Deno.test("infer PTuple pattern", () => {
 
 Deno.test("infer PUnit pattern", () => {
   assertInferPattern(
-    { type: "PUnit" },
+    { type: "PUnit", location: arbLocation },
     [],
     "()",
   );
@@ -258,7 +265,7 @@ Deno.test("infer PUnit pattern", () => {
 
 Deno.test("infer PVar pattern", () => {
   assertInferPattern(
-    { type: "PVar", name: "x" },
+    { type: "PVar", name: "x", location: arbLocation },
     [],
     "V1",
     emptyTypeEnv.extend("x", new Scheme([], new TVar("V1"))),
@@ -267,7 +274,7 @@ Deno.test("infer PVar pattern", () => {
 
 Deno.test("infer PWildCard pattern", () => {
   assertInferPattern(
-    { type: "PWildcard" },
+    { type: "PWildcard", location: arbLocation },
     [],
     "V1",
   );

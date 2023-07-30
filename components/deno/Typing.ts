@@ -550,6 +550,25 @@ export const createFresh = (): Pump => {
   };
 };
 
+export const renameTypeVariables = (types: Array<Type>): Array<Type> => {
+  let i = 0;
+
+  const nextVar = (): string => {
+    if (i < 26) {
+      return String.fromCharCode(97 + i++);
+    } else {
+      return `t${i++}`;
+    }
+  };
+
+  const vars = Sets.flatUnion(types.map((t) => t.ftv()));
+
+  const subst = new Subst(
+    new Map([...vars].map((v) => [v, new TVar(nextVar())])),
+  );
+  return types.map((t) => t.apply(subst));
+};
+
 export const typeBool = emptyTypeEnv.data("Bool")!.instantiate();
 export const typeError = emptyTypeEnv.data("Error")!.instantiate();
 export const typeInt = emptyTypeEnv.data("Int")!.instantiate();

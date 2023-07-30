@@ -1,4 +1,7 @@
-import { Location } from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
+import {
+  combine,
+  Location,
+} from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 import { SyntaxErrorException } from "./Errors.ts";
 import { Src } from "./Src.ts";
 import { parseProgram, SyntaxError, Visitor } from "./parser/Parser.ts";
@@ -49,11 +52,13 @@ export type AppExpression = {
   type: "App";
   e1: Expression;
   e2: Expression;
+  location: Location;
 };
 
 export type BuiltinExpression = {
   type: "Builtin";
   name: string;
+  location: Location;
 };
 
 export type IfExpression = {
@@ -61,18 +66,21 @@ export type IfExpression = {
   guard: Expression;
   then: Expression;
   else: Expression;
+  location: Location;
 };
 
 export type LetExpression = {
   type: "Let";
   declarations: Array<Declaration>;
   expr: Expression | undefined;
+  location: Location;
 };
 
 export type LetRecExpression = {
   type: "LetRec";
   declarations: Array<Declaration>;
   expr: Expression | undefined;
+  location: Location;
 };
 
 export type Declaration = {
@@ -80,6 +88,7 @@ export type Declaration = {
   name: string;
   visibility: Visibility;
   expr: Expression;
+  location: Location;
 };
 
 export type LamExpression = {
@@ -87,41 +96,49 @@ export type LamExpression = {
   name: Parameter;
   expr: Expression;
   returnType: Type | undefined;
+  location: Location;
 };
 
 export type LBoolExpression = {
   type: "LBool";
   value: boolean;
+  location: Location;
 };
 
 export type LIntExpression = {
   type: "LInt";
   value: number;
+  location: Location;
 };
 
 export type LRecordExpression = {
   type: "LRecord";
   fields: Array<[string, Expression]>;
+  location: Location;
 };
 
 export type LStringExpression = {
   type: "LString";
   value: string;
+  location: Location;
 };
 
 export type LTupleExpression = {
   type: "LTuple";
   values: Array<Expression>;
+  location: Location;
 };
 
 export type LUnitExpression = {
   type: "LUnit";
+  location: Location;
 };
 
 export type MatchExpression = {
   type: "Match";
   expr: Expression;
   cases: Array<MatchCase>;
+  location: Location;
 };
 
 export type OpExpression = {
@@ -129,10 +146,12 @@ export type OpExpression = {
   left: Expression;
   op: Op;
   right: Expression;
+  location: Location;
 };
 
 export type RecordEmptyExpression = {
   type: "RecordEmpty";
+  location: Location;
 };
 
 export type RecordExtendExpression = {
@@ -140,12 +159,14 @@ export type RecordExtendExpression = {
   name: string;
   expr: Expression;
   rest: Expression;
+  location: Location;
 };
 
 export type RecordSelectExpression = {
   type: "RecordSelect";
   name: string;
   expr: Expression;
+  location: Location;
 };
 
 export enum Op {
@@ -165,20 +186,26 @@ export type TypingExpression = {
   type: "Typing";
   expr: Expression;
   typ: Type;
+  location: Location;
 };
 
 export type VarExpression = {
   type: "Var";
   qualifier: NameLocation | undefined;
   name: NameLocation;
+  location: Location;
 };
 
 export type MatchCase = {
   pattern: Pattern;
   expr: Expression;
+  location: Location;
 };
 
-export type Parameter = [string, Type | undefined];
+export type Parameter = {
+  name: NameLocation;
+  typ: Type | undefined;
+};
 
 export type Pattern =
   | ConsPattern
@@ -196,45 +223,54 @@ export type ConsPattern = {
   qualifier: NameLocation | undefined;
   name: NameLocation;
   args: Array<Pattern>;
+  location: Location;
 };
 
 export type LBoolPattern = {
   type: "PBool";
   value: boolean;
+  location: Location;
 };
 
 export type LIntPattern = {
   type: "PInt";
   value: number;
+  location: Location;
 };
 
 export type LStringPattern = {
   type: "PString";
   value: string;
+  location: Location;
 };
 
 export type LTuplePattern = {
   type: "PTuple";
   values: Array<Pattern>;
+  location: Location;
 };
 
 export type LUnitPattern = {
   type: "PUnit";
+  location: Location;
 };
 
 export type RecordPattern = {
   type: "PRecord";
   fields: Array<[string, Pattern]>;
   extension: Pattern | undefined;
+  location: Location;
 };
 
 export type VarPattern = {
   type: "PVar";
   name: string;
+  location: Location;
 };
 
 export type WildCardPattern = {
   type: "PWildcard";
+  location: Location;
 };
 
 export type DataDeclaration = {
@@ -267,6 +303,7 @@ export type Type =
 export type TypeVariable = {
   type: "TypeVariable";
   name: NameLocation;
+  location: Location;
 };
 
 export type TypeConstructor = {
@@ -276,27 +313,32 @@ export type TypeConstructor = {
   name: string;
   nameLocation: Location;
   arguments: Array<Type>;
+  location: Location;
 };
 
 export type TypeTuple = {
   type: "TypeTuple";
   values: Array<Type>;
+  location: Location;
 };
 
 export type TypeFunction = {
   type: "TypeFunction";
   left: Type;
   right: Type;
+  location: Location;
 };
 
 export type TypeRecord = {
   type: "TypeRecord";
   fields: Array<[string, Type]>;
   extension: Type | undefined;
+  location: Location;
 };
 
 export type TypeUnit = {
   type: "TypeUnit";
+  location: Location;
 };
 
 export type TypeAliasDeclaration = {
@@ -364,7 +406,7 @@ const visitor: Visitor<
   Expression, // T_Typing
   Expression, // T_Projection
   Expression, // T_Factor
-  string, // T_Identifier
+  NameLocation, // T_Identifier
   Declaration, // T_ValueDeclaration
   Parameter, // T_Parameter
   MatchCase, // T_Case
@@ -396,15 +438,20 @@ const visitor: Visitor<
       type: "App",
       e1: acc,
       e2: e,
+      location: combine(acc.location, e.location),
     }), a1),
 
   visitRelational: (
     a1: Expression,
     a2: [string, Expression] | undefined,
   ): Expression =>
-    a2 === undefined
-      ? a1
-      : { type: "Op", left: a1, op: stringToOps.get(a2[0])!, right: a2[1] },
+    a2 === undefined ? a1 : {
+      type: "Op",
+      left: a1,
+      op: stringToOps.get(a2[0])!,
+      right: a2[1],
+      location: combine(a1.location, a2[1].location),
+    },
 
   visitRelationalOps1: (a: Token): string => a[2],
   visitRelationalOps2: (a: Token): string => a[2],
@@ -423,6 +470,7 @@ const visitor: Visitor<
         left: acc,
         right: e[1],
         op: stringToOps.get(e[0])!,
+        location: combine(acc.location, e[1].location),
       }),
       a1,
     ),
@@ -440,6 +488,7 @@ const visitor: Visitor<
         left: acc,
         right: e[1],
         op: stringToOps.get(e[0])!,
+        location: combine(acc.location, e[1].location),
       }),
       a1,
     ),
@@ -448,44 +497,63 @@ const visitor: Visitor<
   visitAdditiveOps2: (a: Token): string => a[2],
 
   visitTyping: (a1: Expression, a2: [Token, Type] | undefined): Expression =>
-    a2 === undefined ? a1 : { type: "Typing", expr: a1, typ: a2[1] },
+    a2 === undefined ? a1 : {
+      type: "Typing",
+      expr: a1,
+      typ: a2[1],
+      location: combine(a1.location, a2[1].location),
+    },
 
   visitProjection: (a1: Expression, a2: Array<[Token, Token]>): Expression =>
     a2.length === 0 ? a1 : a2.reduce((acc, field) => ({
       type: "RecordSelect",
       expr: acc,
       name: field[1][2],
+      location: combine(acc.location, field[1][1]),
     }), a1),
 
   visitFactor1: (
-    _a1: Token,
+    a1: Token,
     a2: [Expression, Array<[Token, Expression]>] | undefined,
-    _a3: Token,
-  ): Expression =>
-    a2 === undefined
-      ? { type: "LUnit" }
-      : a2[1].length === 0
-      ? a2[0]
-      : { type: "LTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+    a3: Token,
+  ): Expression => {
+    if (a2 === undefined) {
+      return { type: "LUnit", location: combine(a1[1], a3[1]) };
+    }
+
+    if (a2[1].length === 0) {
+      return a2[0];
+    }
+
+    return {
+      type: "LTuple",
+      values: [a2[0]].concat(a2[1].map(([, e]) => e)),
+      location: combine(a1[1], a3[1]),
+    };
+  },
 
   visitFactor2: (a: Token): Expression => ({
     type: "LInt",
     value: parseInt(a[2]),
+    location: a[1],
   }),
 
   visitFactor3: (a: Token): Expression => ({
     type: "LString",
     value: transformLiteralString(a[2]),
+    location: a[1],
   }),
 
-  visitFactor4: (_a: Token): Expression => ({
+  visitFactor4: (a: Token): Expression => ({
     type: "LBool",
     value: true,
+    location: a[1],
   }),
 
-  visitFactor5: (_a: Token): Expression => ({
+  visitFactor5: (a: Token): Expression => ({
     type: "LBool",
     value: false,
+    location: a[1],
   }),
 
   visitFactor6: (
@@ -499,19 +567,32 @@ const visitor: Visitor<
     composeLambda([a2].concat(a3), a6, a4 === undefined ? undefined : a4[1]),
 
   visitFactor7: (
-    _a1: Token,
+    a1: Token,
     a2: Token | undefined,
     a3: Declaration,
     a4: Array<[Token, Declaration]>,
     a5: [Token, Expression] | undefined,
-  ): Expression => ({
-    type: a2 === undefined ? "Let" : "LetRec",
-    declarations: [a3].concat(a4.map((a) => a[1])),
-    expr: a5 === undefined ? undefined : a5[1],
-  }),
+  ): Expression => {
+    let endLocation: Location;
+
+    if (a5 !== undefined) {
+      endLocation = a5[1].location;
+    } else if (a4.length > 0) {
+      endLocation = a4[a4.length - 1][1].location;
+    } else {
+      endLocation = a3.location;
+    }
+
+    return {
+      type: a2 === undefined ? "Let" : "LetRec",
+      declarations: [a3].concat(a4.map((a) => a[1])),
+      expr: a5 === undefined ? undefined : a5[1],
+      location: combine(a1[1], endLocation),
+    };
+  },
 
   visitFactor8: (
-    _a1: Token,
+    a1: Token,
     _a2: Token,
     a3: Expression,
     _a4: Token,
@@ -523,37 +604,58 @@ const visitor: Visitor<
     guard: a3,
     then: a5,
     else: a7,
+    location: combine(a1[1], a7.location),
   }),
 
-  visitFactor9: (a1: Token, a2: [Token, string] | undefined): Expression => ({
-    type: "Var",
-    qualifier: a2 === undefined ? undefined : { name: a1[2], location: a1[1] },
-    name: a2 === undefined
-      ? { name: a1[2], location: a1[1] }
-      : { name: a2[1], location: a2[0][1] },
-  }),
+  visitFactor9: (
+    a1: Token,
+    a2: [Token, NameLocation] | undefined,
+  ): Expression => {
+    const location = a2 === undefined ? a1[1] : combine(a1[1], a2[1].location);
+
+    return {
+      type: "Var",
+      qualifier: a2 === undefined
+        ? undefined
+        : { name: a1[2], location: a1[1] },
+      name: a2 === undefined ? { name: a1[2], location: a1[1] } : a2[1],
+      location,
+    };
+  },
 
   visitFactor10: (a1: Token): Expression => ({
     type: "Var",
     qualifier: undefined,
     name: { name: a1[2], location: a1[1] },
+    location: a1[1],
   }),
 
   visitFactor11: (
-    _a1: Token,
+    a1: Token,
     a2: Expression,
     _a3: Token,
     _a4: Token | undefined,
     a5: MatchCase,
     a6: Array<[Token, MatchCase]>,
-  ): Expression => ({
-    type: "Match",
-    expr: a2,
-    cases: [a5].concat(a6.map((a) => a[1])),
-  }),
+  ): Expression => {
+    let endLocation: Location;
+
+    if (a6.length > 0) {
+      endLocation = a6[a6.length - 1][1].location;
+    } else {
+      endLocation = a5.location;
+    }
+
+    return {
+      type: "Match",
+      expr: a2,
+      cases: [a5].concat(a6.map((a) => a[1])),
+      location: combine(a1[1], endLocation),
+    };
+  },
 
   visitFactor12: (
-    _a1: Token,
+    a1: Token,
     a2: [
       Token,
       Token,
@@ -561,10 +663,10 @@ const visitor: Visitor<
       Array<[Token, Token, Token, Expression]>,
       [Token, Expression] | undefined,
     ] | undefined,
-    _a3: Token,
+    a3: Token,
   ): Expression => {
     if (a2 === undefined) {
-      return { type: "RecordEmpty" };
+      return { type: "RecordEmpty", location: combine(a1[1], a3[1]) };
     }
 
     const field: [Token, Token, Token, Expression] = [
@@ -577,21 +679,34 @@ const visitor: Visitor<
       a2[3],
     );
 
-    return fields.reduceRight((acc, e) => ({
-      type: "RecordExtend",
-      name: e[1][2],
-      expr: e[3],
-      rest: acc,
-    }), a2[4] === undefined ? { type: "RecordEmpty" } : a2[4][1]);
+    return fields.reduceRight(
+      (acc, e) => ({
+        type: "RecordExtend",
+        name: e[1][2],
+        expr: e[3],
+        rest: acc,
+        location: acc.location,
+      }),
+      a2[4] === undefined
+        ? { type: "RecordEmpty", location: combine(a1[1], a3[1]) }
+        : a2[4][1],
+    );
   },
 
-  visitFactor13: (_a1: Token, a2: Token): Expression => ({
+  visitFactor13: (a1: Token, a2: Token): Expression => ({
     type: "Builtin",
     name: transformLiteralString(a2[2]),
+    location: combine(a1[1], a2[1]),
   }),
 
-  visitIdentifier1: (a: Token): string => a[2],
-  visitIdentifier2: (a: Token): string => a[2],
+  visitIdentifier1: (a: Token): NameLocation => ({
+    name: a[2],
+    location: a[1],
+  }),
+  visitIdentifier2: (a: Token): NameLocation => ({
+    name: a[2],
+    location: a[1],
+  }),
 
   visitValueDeclaration: (
     a1: Token,
@@ -605,97 +720,142 @@ const visitor: Visitor<
     name: a1[2],
     visibility: a2 === undefined ? Visibility.None : Visibility.Public,
     expr: composeLambda(a3, a6, a4 === undefined ? undefined : a4[1]),
+    location: combine(a1[1], a6.location),
   }),
 
-  visitParameter1: (a: Token): Parameter => [a[2], undefined],
+  visitParameter1: (a: Token): Parameter => ({
+    name: { name: a[2], location: a[1] },
+    typ: undefined,
+  }),
   visitParameter2: (
     _a1: Token,
     a2: Token,
     _a3: Token,
     a4: Type,
     _a5: Token,
-  ): Parameter => [a2[2], a4],
+  ): Parameter => ({ name: { name: a2[2], location: a2[1] }, typ: a4 }),
 
   visitCase: (a1: Pattern, _a2: Token, a3: Expression): MatchCase => ({
     pattern: a1,
     expr: a3,
+    location: combine(a1.location, a3.location),
   }),
 
   visitPattern1: (
-    _a1: Token,
+    a1: Token,
     a2: [Pattern, Array<[Token, Pattern]>] | undefined,
-    _a3: Token,
-  ): Pattern =>
-    a2 === undefined
-      ? { type: "PUnit" }
-      : a2[1].length === 0
-      ? a2[0]
-      : { type: "PTuple", values: [a2[0]].concat(a2[1].map(([, e]) => e)) },
+    a3: Token,
+  ): Pattern => {
+    if (a2 === undefined) {
+      return { type: "PUnit", location: combine(a1[1], a3[1]) };
+    }
+
+    if (a2[1].length === 0) {
+      return a2[0];
+    }
+
+    return {
+      type: "PTuple",
+      values: [a2[0]].concat(a2[1].map(([, e]) => e)),
+      location: combine(a1[1], a3[1]),
+    };
+  },
 
   visitPattern2: (a: Token): Pattern => ({
     type: "PInt",
     value: parseInt(a[2]),
+    location: a[1],
   }),
 
   visitPattern3: (a: Token): Pattern => ({
     type: "PString",
     value: transformLiteralString(a[2]),
+    location: a[1],
   }),
 
-  visitPattern4: (_a: Token): Pattern => ({
+  visitPattern4: (a: Token): Pattern => ({
     type: "PBool",
     value: true,
+    location: a[1],
   }),
 
-  visitPattern5: (_a: Token): Pattern => ({
+  visitPattern5: (a: Token): Pattern => ({
     type: "PBool",
     value: false,
+    location: a[1],
   }),
 
-  visitPattern6: (a: Token): Pattern =>
-    a[2] === "_" ? { type: "PWildcard" } : {
+  visitPattern6: (a: Token): Pattern => {
+    if (a[2] === "_") {
+      return { type: "PWildcard", location: a[1] };
+    }
+
+    return {
       type: "PVar",
       name: a[2],
-    },
+      location: a[1],
+    };
+  },
 
   visitPattern7: (
     a1: Token,
     a2: [Token, Token] | undefined,
     a3: Array<Pattern>,
-  ): Pattern => ({
-    type: "PCons",
-    qualifier: a2 === undefined ? undefined : { name: a1[2], location: a1[1] },
-    name: a2 === undefined
-      ? { name: a1[2], location: a1[1] }
-      : { name: a2[1][2], location: a2[1][1] },
-    args: a3,
-  }),
+  ): Pattern => {
+    let endLocation: Location;
+
+    if (a3.length > 0) {
+      endLocation = a3[Array.length - 1].location;
+    } else if (a2 !== undefined) {
+      endLocation = a2[0][1];
+    } else {
+      endLocation = a1[1];
+    }
+
+    return {
+      type: "PCons",
+      qualifier: a2 === undefined
+        ? undefined
+        : { name: a1[2], location: a1[1] },
+      name: a2 === undefined
+        ? { name: a1[2], location: a1[1] }
+        : { name: a2[1][2], location: a2[1][1] },
+      args: a3,
+      location: combine(a1[1], endLocation),
+    };
+  },
   visitPattern8: (
-    _a1: Token,
+    a1: Token,
     a2: [
       Token,
       [Token, Pattern] | undefined,
       Array<[Token, Token, [Token, Pattern] | undefined]>,
       [Token, Pattern] | undefined,
     ] | undefined,
-    _a3: Token,
+    a3: Token,
   ): Pattern => {
     if (a2 === undefined) {
       return {
         type: "PRecord",
         fields: [],
         extension: undefined,
+        location: combine(a1[1], a3[1]),
       };
     }
 
     const field: [string, Pattern] = [
       a2[0][2],
-      a2[1] === undefined ? { type: "PVar", name: a2[0][2] } : a2[1][1],
+      a2[1] === undefined
+        ? { type: "PVar", name: a2[0][2], location: a2[0][1] }
+        : a2[1][1],
     ];
     const fields = [field].concat(
       a2[2].map((
         [, a, b],
-      ) => [a[2], b === undefined ? { type: "PVar", name: a[2] } : b[1]]),
+      ) => [
+        a[2],
+        b === undefined ? { type: "PVar", name: a[2], location: a[1] } : b[1],
+      ]),
     );
     const extension = a2[3] === undefined ? undefined : a2[3][1];
 
@@ -703,6 +863,7 @@ const visitor: Visitor<
       type: "PRecord",
       fields,
       extension,
+      location: combine(a1[1], a3[1]),
     };
   },
 
@@ -764,6 +925,10 @@ const visitor: Visitor<
       name,
       nameLocation,
       arguments: args,
+      location: combine(
+        qualifierLocation === undefined ? nameLocation : qualifierLocation,
+        args.length > 0 ? args[args.length - 1].location : nameLocation,
+      ),
     });
 
     const args: Array<Type> = a3.map((a) =>
@@ -787,18 +952,29 @@ const visitor: Visitor<
   visitTermType1: (a: Token): Type => ({
     type: "TypeVariable",
     name: { name: a[2], location: a[1] },
+    location: a[1],
   }),
   visitTermType2: (
-    _a1: Token,
+    a1: Token,
     a2: [Type, Array<[Token, Type]>] | undefined,
-    _a3: Token,
-  ): Type =>
-    a2 === undefined ? { type: "TypeUnit" } : a2[1].length === 0 ? a2[0] : {
+    a3: Token,
+  ): Type => {
+    if (a2 === undefined) {
+      return { type: "TypeUnit", location: combine(a1[1], a3[1]) };
+    }
+
+    if (a2[1].length === 0) {
+      return a2[0];
+    }
+
+    return {
       type: "TypeTuple",
       values: [a2[0]].concat(a2[1].map(([, e]) => e)),
-    },
+      location: combine(a1[1], a3[1]),
+    };
+  },
   visitTermType3: (
-    _a1: Token,
+    a1: Token,
     a2: [
       Token,
       Token,
@@ -806,13 +982,14 @@ const visitor: Visitor<
       Array<[Token, Token, Token, Type]>,
       [Token, Type] | undefined,
     ] | undefined,
-    _a3: Token,
+    a3: Token,
   ): Type => {
     if (a2 === undefined) {
       return {
         type: "TypeRecord",
         fields: [],
         extension: undefined,
+        location: combine(a1[1], a3[1]),
       };
     }
 
@@ -824,6 +1001,7 @@ const visitor: Visitor<
       type: "TypeRecord",
       fields,
       extension,
+      location: combine(a1[1], a3[1]),
     };
   },
 
@@ -910,6 +1088,7 @@ const composeLambda = (
       type: "Typing",
       expr,
       typ: returnType,
+      location: combine(expr.location, returnType.location),
     };
   }
 
@@ -918,6 +1097,7 @@ const composeLambda = (
     name,
     expr: acc,
     returnType: expr === acc ? returnType : undefined,
+    location: combine(name.name.location, acc.location),
   }), expr);
 };
 
@@ -926,6 +1106,7 @@ const composeFunctionType = (types: Array<Type>): Type =>
     type: "TypeFunction",
     left: acc,
     right: type,
+    location: combine(acc.location, type.location),
   }), types[0]);
 
 // console.log(JSON.stringify(parse("data List n = Nil | Cons n (List n) ; let compose f g x = f(g x) ; compose"), null, 2));

@@ -202,7 +202,7 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
             r[1] = v;
             return result;
           };
-        case "Data.String.Length":
+        case "Data.String.length":
           return (s: string) => s.length;
         case "Text.Regex.parse":
           return (s: string) => new RegExp(s);
@@ -219,7 +219,7 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
     case "Lam":
       return (x: RuntimeValue): RuntimeValue => {
         const newRuntimeEnv = runtimeEnv.clone();
-        newRuntimeEnv.bind(expr.name[0], x);
+        newRuntimeEnv.bind(expr.name.name.name, x);
         return evaluate(expr.expr, newRuntimeEnv);
       };
     case "Let":

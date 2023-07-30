@@ -2,7 +2,7 @@ import * as Path from "https://deno.land/std@0.137.0/path/mod.ts";
 import { Src } from "./Src.ts";
 import { Token, TToken } from "./parser/Scanner.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
-import { Type } from "./Typing.ts";
+import { renameTypeVariables, Type } from "./Typing.ts";
 
 export class ArityMismatchException extends Error {
   src: Src;
@@ -194,9 +194,21 @@ export class UnificationMismatchException extends Error {
       }
     };
 
-    return `Unification Mismatch: ${renderTypePosition(this.type1)} and ${
-      renderTypePosition(this.type2)
-    }`;
+    const [t1, t2] = renameTypeVariables([this.type1, this.type2]);
+    if (
+      t1.position !== undefined && t2.position !== undefined &&
+      t1.position[0] === t2.position[0]
+    ) {
+      return `Unification Mismatch: ${t1.toString()} ${
+        Location.toString(t1.position[1])
+      } and ${t2.toString()} ${Location.toString(t2.position[1])} from ${
+        Path.relative(Deno.cwd(), t1.position[0].urn())
+      }`;
+    } else {
+      return `Unification Mismatch: ${renderTypePosition(t1)} and ${
+        renderTypePosition(t2)
+      }`;
+    }
   }
 }
 

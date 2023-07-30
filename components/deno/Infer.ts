@@ -29,6 +29,9 @@ import {
   UnknownNameException,
   UnknownTypeNameException,
 } from "./Errors.ts";
+import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
+
+const arbLocation = Location.mkCoordinate(0, 0, 0);
 
 export type Env = {
   type: TypeEnv;
@@ -127,12 +130,12 @@ export const inferExpression = (
         return [tt, env];
       }
       case "Lam": {
-        const tv = expr.name[1] === undefined
+        const tv = expr.name.typ === undefined
           ? pump.next()
-          : translateType(expr.name[1], env);
+          : translateType(expr.name.typ, env);
         const [t] = infer(
           expr.expr,
-          extend(env, expr.name[0], new Scheme([], tv)),
+          extend(env, expr.name.name.name, new Scheme([], tv)),
         );
 
         if (expr.returnType === undefined) {
@@ -191,12 +194,17 @@ export const inferExpression = (
           newEnv,
           {
             type: "Lam",
-            name: ["_bob", undefined],
+            name: {
+              name: { name: "_bob", location: arbLocation },
+              typ: undefined,
+            },
             expr: {
               type: "LTuple",
               values: expr.declarations.map((d) => d.expr),
+              location: arbLocation,
             },
             returnType: undefined,
+            location: arbLocation,
           },
           constraints,
         );
@@ -228,9 +236,9 @@ export const inferExpression = (
       case "LBool":
         return [typeBool, env];
       case "LInt":
-        return [typeInt, env];
+        return [typeInt.atPosition([env.src, expr.location]), env];
       case "LString":
-        return [typeString, env];
+        return [typeString.atPosition([env.src, expr.location]), env];
       case "LTuple":
         return [new TTuple(expr.values.map((v) => infer(v, env)[0])), env];
       case "LUnit":
