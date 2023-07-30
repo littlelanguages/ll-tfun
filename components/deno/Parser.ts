@@ -386,7 +386,7 @@ const stringToOps = new Map<string, Op>([
 ]);
 
 export const transformLiteralString = (s: string): string =>
-  s.substring(1, s.length - 1).replaceAll('\\"', '"');
+  s.substring(1, s.length - 1).replaceAll('\\"', '"').replaceAll("\\n", "\n");
 
 export const parse = (src: Src, input: string): Program =>
   parseProgram(input, visitor).either((l: SyntaxError): Program => {

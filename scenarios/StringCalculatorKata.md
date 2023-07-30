@@ -12,58 +12,140 @@ expected.
 import * as Integer from "../stdlib/Data/Integer.tfun" ;
 import * as List from "../stdlib/Data/List.tfun" ;
 import * as Maybe from "../stdlib/Data/Maybe.tfun" ;
+import * as Result from "../stdlib/Data/Result.tfun" ;
 import * as String from "../stdlib/Data/String.tfun" ;
 import * as RE from "../stdlib/Text/Regex.tfun" ;
 
-let add input =
-  if (input == "") 0
-  else let separator = RE.parse ",|\\n"
-       and numbers = List.map (Maybe.withDefault 0) (List.map Integer.parse (RE.split separator input))
-        in List.sum numbers
+let add (input: String): Result (List Int) Int =
+  let content =
+    if (input == "") 
+      { separator: RE.parse ","
+      , input: "0" 
+      }
+    else if (String.startsWith "//" input)
+      match String.indexOf "\n" input with
+      | Maybe.Nothing -> { separator: RE.parse ",", input: "0" }
+      | Maybe.Just i ->
+          let separator: String = String.slice 2 i input
+           in if (String.startsWith "[" separator)
+                { separator: RE.parse (List.join "|" (List.map RE.literal (RE.split (RE.parse "\]\[") (String.slice 1 ((String.length separator) - 1) separator))))
+                , input: String.drop (i + 1) input
+                }
+              else
+                { separator: RE.parse (RE.literal separator)
+                , input: String.drop (i + 1) input
+                }
+    else
+      { separator: RE.parse ",|\\n" 
+      , input: input
+      }
+  and numbers = List.map (Maybe.withDefault 0) (List.map Integer.parse (RE.split content.separator content.input))
+  and negative n = n < 0
+   in if (List.any negative numbers)
+        Result.Error (List.filter negative numbers)
+      else
+        Result.Okay (List.sum (List.filter (\n = n < 1001) numbers))
 ---
-add = function: String -> Int
+add = function: String -> Result (List Int) Int
 ```
 
-The first test is to return `0` when the input is an empty string.
+## TDD Scenarios
 
-```fsharp xt id=Given a blank; use=StringCalculatorKata
+Test Empty String: The function should return 0 for an empty string input.
+
+```fsharp xt id=EmptyString; use=StringCalculatorKata
 add ""
 ---
-0: Int
+Okay 0: Result (List Int) Int
 ```
 
-The second test is to return the number when the input is a single number.
+Test Single Number: The function should return the number itself if there is only one number in the input.
 
-```fsharp xt id=Given a value; use=StringCalculatorKata
-add "1" ;
-add "123"
+```fsharp xt id=SingleNumber; use=StringCalculatorKata
+add "1"
 ---
-1: Int
-123: Int
+Okay 1: Result (List Int) Int
 ```
 
-The third test is to return the sum of numbers when separated with a comma
+Test Two Numbers: The function should return the sum of two numbers separated by a comma.
 
-```fsharp xt id=Given values separated with a comma; use=StringCalculatorKata
-add "1,2,3,4"
+```fsharp xt id=TwoNumbers; use=StringCalculatorKata
+add "1,2"
 ---
-10: Int
+Okay 3: Result (List Int) Int
 ```
 
-The next test is to return the sum of numbers when separated with a comma or
-newline.
-
-```fsharp xt id=Given values separated with a comma or newline; use=StringCalculatorKata
-add "1,2\n3,4\n5"
+Test Multiple Numbers: The function should handle more than two numbers.
+```fsharp xt id=MultipleNumbers; use=StringCalculatorKata
+add "1,2,3,4,5,6"
 ---
-15: Int
+Okay 21: Result (List Int) Int
 ```
 
-The custom separator test is to return the sum of numbers when separated with a
-single character custom separator.
+Test Newline Delimiter: The function should handle newline delimiters as well as commas.
 
-```fsharp xt id=Given values separated with a single character separator; use=StringCalculatorKata
-add "//;\n1;2;3;4;5"
+```fsharp xt id=NewlineDelimiter; use=StringCalculatorKata
+add "1,2\n3,4\n5\n6"
 ---
-1: Int
+Okay 21: Result (List Int) Int
+```
+
+Test Custom Delimiter: The function should support a custom delimiter specified at the beginning of the input.
+
+```fsharp xt id=CustomDelimiter; use=StringCalculatorKata
+add "//;\n1" ;
+add "//;\n1;2;3;4;5" ;
+add "//*\n1*2*3*4*5"
+---
+Okay 1: Result (List Int) Int
+Okay 15: Result (List Int) Int
+Okay 15: Result (List Int) Int
+```
+
+Test Negative Numbers: The function should raise an exception with the negative numbers listed if negative numbers are present in the input.
+
+```fsharp xt id=NegativeNumbers; use=StringCalculatorKata
+add "1,4,-3,-2" ;
+add "1,4\n-3,-2" ;
+add "//*\n1*4*-3*-2"
+---
+Error (Cons -3 (Cons -2 Nil)): Result (List Int) Int
+Error (Cons -3 (Cons -2 Nil)): Result (List Int) Int
+Error (Cons -3 (Cons -2 Nil)): Result (List Int) Int
+```
+
+Test Ignore Large Numbers: The function should ignore numbers greater than 1000 in the sum.
+
+```fsharp xt id=IgnoreLargeNumbers; use=StringCalculatorKata
+add "2,1001,6,999" ;
+add "2,1001\n6,999" ;
+add "//;\n2;1001;6;999"
+---
+Okay 1007: Result (List Int) Int
+Okay 1007: Result (List Int) Int
+Okay 1007: Result (List Int) Int
+```
+
+Test Multiple Custom Delimiters: The function should support multiple custom delimiters.
+
+```fsharp xt id=MultipleCustomDelimiters; use=StringCalculatorKata
+add "//[*][%]\n1*2%3"
+---
+Okay 6: Result (List Int) Int
+```
+
+Test Multiple Custom Delimiters with Any Length: The function should handle multiple custom delimiters with any length, enclosed in square brackets.
+
+```fsharp xt id=MultipleCustomDelimiters; use=StringCalculatorKata
+add "//[***][%%]\n1***2%%3"
+---
+Okay 6: Result (List Int) Int
+```
+
+Test Delimiters with Special Characters: The function should handle delimiters that include special characters.
+
+```fsharp xt id=MultipleCustomDelimiters; use=StringCalculatorKata
+add "//[#@][&]\n2#@3&5"
+---
+Okay 10: Result (List Int) Int
 ```

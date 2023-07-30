@@ -1,4 +1,5 @@
 import * from "./Maybe.tfun" ;
+import * as String from "./String.tfun" ;
 
 data List* a = Nil | Cons a (List a) ;
 
@@ -24,4 +25,20 @@ let map* f =
 let rec find* p lst =
   match lst with
   | Nil -> Nothing
-  | Cons x xs -> if (p x) Just x else find p xs
+  | Cons x xs -> if (p x) Just x else find p xs ;
+
+let rec any* p lst =
+  match lst with
+  | Nil -> False
+  | Cons x xs -> if (p x) True else any p xs ;
+
+let rec filter* p lst =
+  match lst with
+  | Nil -> Nil
+  | Cons x xs -> if (p x) (Cons x (filter p xs)) else filter p xs ;
+
+let rec join* (sep: String) (lst: List String): String =
+  match lst with
+  | Nil -> ""
+  | (Cons x Nil) -> x
+  | (Cons x xs) -> (String.concat (String.concat x sep) (join sep xs))

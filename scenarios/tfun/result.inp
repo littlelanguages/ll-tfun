@@ -1,7 +1,4 @@
-data Result c b = Error c | Okay b ;
 data Option a = None | Some a ;
-
-data List a = Cons a (List a) | Nil ;
 
 let rec find p lst =
   match lst with

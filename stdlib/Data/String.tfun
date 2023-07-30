@@ -1,3 +1,5 @@
+import Maybe from "./Maybe.tfun" ;
+
 let length* (s: String): Int =
   builtin "Data.String.length" s ;
 
@@ -7,6 +9,9 @@ let isEmpty* (s: String): Bool =
 let slice* (start: Int) (end: Int) (s: String): String =
   builtin "Data.String.slice" start end s ;
 
+let drop* (n: Int) (s: String): String =
+  slice n (length s) s ;
+
 let startsWith* (needle: String) (haystack: String): Bool =
   let needleLength = length needle
   and haystackLength = length haystack in
@@ -15,5 +20,8 @@ let startsWith* (needle: String) (haystack: String): Bool =
   else
     (slice 0 needleLength haystack) == needle ;
 
-let indexOf* (needle: String) (haystack: String): Int =
-  builtin "Data.String.indexOf" needle haystack
+let indexOf* (needle: String) (haystack: String): Maybe Int =
+  builtin "Data.String.indexOf" needle haystack ;
+
+let concat* (s1: String) (s2: String): String =
+  builtin "Data.String.concat" s1 s2

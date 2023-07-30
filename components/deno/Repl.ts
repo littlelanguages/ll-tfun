@@ -119,7 +119,14 @@ if (Deno.args.length === 0) {
     }
   }
 } else if (Deno.args.length === 1) {
-  execute(Deno.readTextFileSync(Deno.args[0]), defaultEnv(from(Deno.args[0])));
+  try {
+    execute(
+      Deno.readTextFileSync(Deno.args[0]),
+      loadPrelude(defaultEnv(from(Deno.args[0]))),
+    );
+  } catch (e) {
+    console.log(e.toString());
+  }
 } else {
   console.error("Invalid arguments");
 }

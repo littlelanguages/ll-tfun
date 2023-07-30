@@ -1,5 +1,3 @@
-data List a = Cons a (List a) | Nil ;
-
 let range n = 
   let rec helper m =
      if (n == m) Nil else Cons m (helper m + 1)

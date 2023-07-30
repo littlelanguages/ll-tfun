@@ -202,8 +202,23 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
             r[1] = v;
             return result;
           };
+        case "Data.String.indexOf":
+          return (n: string) => (s: string) => {
+            const i = s.indexOf(n);
+
+            return (i == -1)
+              ? runtimeEnv.get("Nothing")
+              : runtimeEnv.get("Just")(i);
+          };
+        case "Data.String.concat":
+          return (a: string) => (b: string) => a + b;
         case "Data.String.length":
           return (s: string) => s.length;
+        case "Data.String.slice":
+          return (start: number) => (end: number) => (s: string) =>
+            s.slice(start, end);
+        case "Text.Regex.literal":
+          return (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         case "Text.Regex.parse":
           return (s: string) => new RegExp(s);
         case "Text.Regex.split":
