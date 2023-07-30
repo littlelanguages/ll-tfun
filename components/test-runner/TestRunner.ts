@@ -300,7 +300,7 @@ for (const file of Deno.args) {
         testResult = { type: "Failure", expected: "", actual: e.toString() };
       }
     }
-    const startEnd = performance.now();
+    const endTime = performance.now();
     if (testResult.type === "Success") {
       numberOfSuccesses += 1;
     } else if (testResult.type === "Failure") {
@@ -317,7 +317,7 @@ for (const file of Deno.args) {
       );
     } else {
       console.log(
-        `${id} (${startLine}-${endLine}) ... %c${testResult.type.toLowerCase()} %c(${startEnd - startTime
+        `${id} (${startLine}-${endLine}) ... %c${testResult.type.toLowerCase()} %c(${endTime - startTime
         }ms)`,
         `color: ${testResult.type === "Success" ? "green" : "red"}`,
         "color: grey",
