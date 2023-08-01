@@ -38,6 +38,7 @@ Reverse a string.
 Repeat a string *n* times.
 
 ```fsharp xassert id=repeat; use=Import
+(repeat 0 "Rodger") == ""
 (repeat 2 "Rodger") == "RodgerRodger"
 ```
 
