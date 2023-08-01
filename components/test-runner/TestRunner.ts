@@ -3,6 +3,7 @@
 // the code works as expected.
 
 import { Handler, run } from "./Runner.ts";
+import { XAssertHandler } from "./XAssertHandler.ts";
 import { XTHandler } from "./XTHandler.ts";
 
 if (Deno.args.length === 0) {
@@ -10,8 +11,10 @@ if (Deno.args.length === 0) {
   Deno.exit(1);
 }
 
-const handlers = new Map<string, Handler>([["xt", new XTHandler()]]);
-
+const handlers = new Map<string, Handler>([
+  ["xt", new XTHandler()],
+  ["xassert", new XAssertHandler()],
+]);
 
 const errorResult = await run(Deno.args, handlers);
 

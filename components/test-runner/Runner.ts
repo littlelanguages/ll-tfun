@@ -99,7 +99,10 @@ const parseTest = async (
   return result;
 };
 
-export const run = async (fileNames: Array<string>, handlers: Map<string, Handler>): Promise<number> => {
+export const run = async (
+  fileNames: Array<string>,
+  handlers: Map<string, Handler>,
+): Promise<number> => {
   let numberOfFiles = 0;
   let numberOfTests = 0;
   let numberOfSuccesses = 0;
@@ -117,7 +120,8 @@ export const run = async (fileNames: Array<string>, handlers: Map<string, Handle
     const tests = await parseTest(file);
 
     console.log(
-      `%crunning ${tests.length} test${tests.length === 1 ? "" : "s"
+      `%crunning ${tests.length} test${
+        tests.length === 1 ? "" : "s"
       } from ${file}%c`,
       "color: grey",
       "",
@@ -162,7 +166,8 @@ export const run = async (fileNames: Array<string>, handlers: Map<string, Handle
         );
       } else {
         console.log(
-          `${id} (${startLine}-${endLine}) ... %c${testResult.type.toLowerCase()} %c(${endTime - startTime
+          `${id} (${startLine}-${endLine}) ... %c${testResult.type.toLowerCase()} %c(${
+            endTime - startTime
           }ms)`,
           `color: ${testResult.type === "Success" ? "green" : "red"}`,
           "color: grey",
@@ -183,12 +188,12 @@ export const run = async (fileNames: Array<string>, handlers: Map<string, Handle
     `${numberOfTests} tests | ${numberOfSuccesses} passed | ${numberOfFailures} failed | ${numberIgnored} ignored`;
   console.log("");
   console.log(
-    `%c${numberOfFailures === 0 ? "ok" : "not ok"
+    `%c${
+      numberOfFailures === 0 ? "ok" : "not ok"
     }%c ${messageContent} %c(${performance.now()}ms)`,
     `color: ${numberOfFailures === 0 ? "green" : "red"}`,
     "",
     "color: grey",
   );
   return (numberOfFailures === 0 ? 0 : 1);
-}
-
+};

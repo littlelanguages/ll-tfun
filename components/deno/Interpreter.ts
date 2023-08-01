@@ -181,6 +181,9 @@ const arrayToList = (
   return result;
 };
 
+const literalReg = /[.*+?^${}()|[\]\\]/g;
+const literal = (s: string) => s.replace(literalReg, "\\$&");
+
 const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
   switch (expr.type) {
     case "App": {
@@ -215,11 +218,16 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
           return (a: string) => (b: string) => a + b;
         case "Data.String.length":
           return (s: string) => s.length;
+        case "Data.String.replace":
+          return (searchValue: string) => (replaceValue: string) => (s: string) =>
+            s.replace(new RegExp(literal(searchValue), "g"), replaceValue);
+        case "Data.String.reverse":
+          return (s: string) => s.split("").reverse().join("");
         case "Data.String.slice":
           return (start: number) => (end: number) => (s: string) =>
             s.slice(start, end);
         case "Text.Regex.literal":
-          return (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          return literal;
         case "Text.Regex.parse":
           return (s: string) => new RegExp(s);
         case "Text.Regex.split":
@@ -404,16 +412,16 @@ const mkConstructorFunction = (name: string, arity: number): RuntimeValue => {
   }
   if (arity === 4) {
     return (x1: RuntimeValue) =>
-    (x2: RuntimeValue) =>
-    (x3: RuntimeValue) =>
-    (x4: RuntimeValue) => [name, x1, x2, x3, x4];
+      (x2: RuntimeValue) =>
+        (x3: RuntimeValue) =>
+          (x4: RuntimeValue) => [name, x1, x2, x3, x4];
   }
   if (arity === 5) {
     return (x1: RuntimeValue) =>
-    (x2: RuntimeValue) =>
-    (x3: RuntimeValue) =>
-    (x4: RuntimeValue) =>
-    (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
+      (x2: RuntimeValue) =>
+        (x3: RuntimeValue) =>
+          (x4: RuntimeValue) =>
+            (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
   }
 
   throw { type: "TooManyConstructorArgumentsErrors", name, arity };

@@ -1,15 +1,15 @@
-// This is a tool is a test runner over markdown files.  I searches for code
-// blocks and then, if there is a handler for the code block, will ensure that
-// the code works as expected.
-
 import { parse, Program } from "../deno/Parser.ts";
 import { defaultEnv, Env, executeProgram } from "../deno/Interpreter.ts";
 import { home, Src } from "../deno/Src.ts";
-import { expressionToNestedString, nestedStringToString, RuntimeValue} from "../deno/Values.ts";
+import {
+  expressionToNestedString,
+  nestedStringToString,
+  RuntimeValue,
+} from "../deno/Values.ts";
 import { Type } from "../deno/Typing.ts";
 import { Handler, TestResult } from "./Runner.ts";
 
-type ExecuteCodeBlockResult =
+export type ExecuteCodeBlockResult =
   | SuccessfulExecuteCodeBlockResult
   | ErrorExecuteCodeResult;
 
@@ -31,11 +31,14 @@ type ErrorExecuteCodeResult = {
   env: Env;
 };
 
-const executeCodeBlock = (
+export const executeCodeBlock = (
   codeBlock: string,
   env: Env,
 ): ExecuteCodeBlockResult => {
-  const [expression, expected] = codeBlock.split("---").map((v) => v.trim());
+  const [expression, parsedExpected] = codeBlock.split("---").map((v) =>
+    v.trim()
+  );
+  const expected = parsedExpected ?? "";
 
   let ast: Program | undefined;
   try {
