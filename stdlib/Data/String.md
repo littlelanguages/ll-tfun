@@ -11,8 +11,8 @@ import * from "./String.tfun"
 Determine if a string is empty.
 
 ```fsharp xassert id=isEmpty; use=Import
-(isEmpty "") == True
-(isEmpty "the world") == False
+isEmpty "" == True
+isEmpty "the world" == False
 ```
 
 ### length: String -> Int
@@ -20,8 +20,8 @@ Determine if a string is empty.
 Get the length of a string.
 
 ```fsharp xassert id=length; use=Import
-(length "") == 0
-(length "the world") == 9
+length "" == 0
+length "the world" == 9
 ```
 
 ### reverse: String -> String
@@ -29,8 +29,8 @@ Get the length of a string.
 Reverse a string.
 
 ```fsharp xassert id=reverse; use=Import
-(reverse "") == ""
-(reverse "stressed") == "desserts"
+reverse "" == ""
+reverse "stressed" == "desserts"
 ```
 
 ### repeat: Int -> String -> String 
@@ -38,8 +38,8 @@ Reverse a string.
 Repeat a string *n* times.
 
 ```fsharp xassert id=repeat; use=Import
-(repeat 0 "Rodger") == ""
-(repeat 2 "Rodger") == "RodgerRodger"
+repeat 0 "Rodger" == ""
+repeat 2 "Rodger" == "RodgerRodger"
 ```
 
 ### replace: String -> String -> String -> String
@@ -47,7 +47,7 @@ Repeat a string *n* times.
 Replace all occurrences of some substring.
 
 ```fsharp xassert id=replace; use=Import
-(replace " " "-" "Bye bye love") == "Bye-bye-love"
-(replace "," "/" "a,b,c,d,e") == "a/b/c/d/e"
-(replace "*" "" "a*b*c*d*e") == "abcde"
+replace " " "-" "Bye bye love" == "Bye-bye-love"
+replace "," "/" "a,b,c,d,e" == "a/b/c/d/e"
+replace "*" "" "a*b*c*d*e" == "abcde"
 ```

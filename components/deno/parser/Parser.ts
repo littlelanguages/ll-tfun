@@ -9,9 +9,9 @@ export interface Visitor<
   T_Program,
   T_Element,
   T_Expression,
-  T_Apply,
   T_Relational,
   T_RelationalOps,
+  T_Apply,
   T_Additive,
   T_AdditiveOps,
   T_Multiplicative,
@@ -41,11 +41,13 @@ export interface Visitor<
   visitElement2(a: T_DataDeclaration): T_Element;
   visitElement3(a: T_TypeAliasDeclarations): T_Element;
   visitElement4(a: T_ImportStatement): T_Element;
-  visitExpression(a1: T_Apply, a2: Array<[Token, T_Apply]>): T_Expression;
-  visitApply(a1: T_Relational, a2: Array<T_Relational>): T_Apply;
+  visitExpression(
+    a1: T_Relational,
+    a2: Array<[Token, T_Relational]>,
+  ): T_Expression;
   visitRelational(
-    a1: T_Additive,
-    a2: [T_RelationalOps, T_Additive] | undefined,
+    a1: T_Apply,
+    a2: [T_RelationalOps, T_Apply] | undefined,
   ): T_Relational;
   visitRelationalOps1(a: Token): T_RelationalOps;
   visitRelationalOps2(a: Token): T_RelationalOps;
@@ -53,6 +55,7 @@ export interface Visitor<
   visitRelationalOps4(a: Token): T_RelationalOps;
   visitRelationalOps5(a: Token): T_RelationalOps;
   visitRelationalOps6(a: Token): T_RelationalOps;
+  visitApply(a1: T_Additive, a2: Array<T_Additive>): T_Apply;
   visitAdditive(
     a1: T_Multiplicative,
     a2: Array<[T_AdditiveOps, T_Multiplicative]>,
@@ -241,9 +244,9 @@ export const parseProgram = <
   T_Program,
   T_Element,
   T_Expression,
-  T_Apply,
   T_Relational,
   T_RelationalOps,
+  T_Apply,
   T_Additive,
   T_AdditiveOps,
   T_Multiplicative,
@@ -273,9 +276,9 @@ export const parseProgram = <
     T_Program,
     T_Element,
     T_Expression,
-    T_Apply,
     T_Relational,
     T_RelationalOps,
+    T_Apply,
     T_Additive,
     T_AdditiveOps,
     T_Multiplicative,
@@ -312,9 +315,9 @@ export const mkParser = <
   T_Program,
   T_Element,
   T_Expression,
-  T_Apply,
   T_Relational,
   T_RelationalOps,
+  T_Apply,
   T_Additive,
   T_AdditiveOps,
   T_Multiplicative,
@@ -344,9 +347,9 @@ export const mkParser = <
     T_Program,
     T_Element,
     T_Expression,
-    T_Apply,
     T_Relational,
     T_RelationalOps,
+    T_Apply,
     T_Additive,
     T_AdditiveOps,
     T_Multiplicative,
@@ -461,46 +464,20 @@ export const mkParser = <
       }
     },
     expression: function (): T_Expression {
-      const a1: T_Apply = this.apply();
-      const a2: Array<[Token, T_Apply]> = [];
+      const a1: T_Relational = this.relational();
+      const a2: Array<[Token, T_Relational]> = [];
 
       while (isToken(TToken.BarGreaterThan)) {
         const a2t1: Token = matchToken(TToken.BarGreaterThan);
-        const a2t2: T_Apply = this.apply();
-        const a2t: [Token, T_Apply] = [a2t1, a2t2];
+        const a2t2: T_Relational = this.relational();
+        const a2t: [Token, T_Relational] = [a2t1, a2t2];
         a2.push(a2t);
       }
       return visitor.visitExpression(a1, a2);
     },
-    apply: function (): T_Apply {
-      const a1: T_Relational = this.relational();
-      const a2: Array<T_Relational> = [];
-
-      while (
-        isTokens([
-          TToken.LParen,
-          TToken.LiteralInt,
-          TToken.LiteralString,
-          TToken.True,
-          TToken.False,
-          TToken.Backslash,
-          TToken.Let,
-          TToken.If,
-          TToken.UpperIdentifier,
-          TToken.LowerIdentifier,
-          TToken.Match,
-          TToken.LCurly,
-          TToken.Builtin,
-        ])
-      ) {
-        const a2t: T_Relational = this.relational();
-        a2.push(a2t);
-      }
-      return visitor.visitApply(a1, a2);
-    },
     relational: function (): T_Relational {
-      const a1: T_Additive = this.additive();
-      let a2: [T_RelationalOps, T_Additive] | undefined = undefined;
+      const a1: T_Apply = this.apply();
+      let a2: [T_RelationalOps, T_Apply] | undefined = undefined;
 
       if (
         isTokens([
@@ -513,8 +490,8 @@ export const mkParser = <
         ])
       ) {
         const a2t1: T_RelationalOps = this.relationalOps();
-        const a2t2: T_Additive = this.additive();
-        const a2t: [T_RelationalOps, T_Additive] = [a2t1, a2t2];
+        const a2t2: T_Apply = this.apply();
+        const a2t: [T_RelationalOps, T_Apply] = [a2t1, a2t2];
         a2 = a2t;
       }
       return visitor.visitRelational(a1, a2);
@@ -546,6 +523,32 @@ export const mkParser = <
           ],
         };
       }
+    },
+    apply: function (): T_Apply {
+      const a1: T_Additive = this.additive();
+      const a2: Array<T_Additive> = [];
+
+      while (
+        isTokens([
+          TToken.LParen,
+          TToken.LiteralInt,
+          TToken.LiteralString,
+          TToken.True,
+          TToken.False,
+          TToken.Backslash,
+          TToken.Let,
+          TToken.If,
+          TToken.UpperIdentifier,
+          TToken.LowerIdentifier,
+          TToken.Match,
+          TToken.LCurly,
+          TToken.Builtin,
+        ])
+      ) {
+        const a2t: T_Additive = this.additive();
+        a2.push(a2t);
+      }
+      return visitor.visitApply(a1, a2);
     },
     additive: function (): T_Additive {
       const a1: T_Multiplicative = this.multiplicative();

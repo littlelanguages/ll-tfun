@@ -12,15 +12,11 @@ Element
     ;
 
 Expression
-    : Apply {"|>" Apply}
-    ;
-
-Apply
-    : Relational {Relational}
+    : Relational {"|>" Relational}
     ;
 
 Relational
-    : Additive [RelationalOps Additive]
+    : Apply [RelationalOps Apply]
     ;
 
 RelationalOps
@@ -30,6 +26,10 @@ RelationalOps
     | "<="
     | ">"
     | ">="
+    ;
+
+Apply
+    : Additive {Additive}
     ;
 
 Additive

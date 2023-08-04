@@ -398,9 +398,9 @@ const visitor: Visitor<
   Array<Element>, // T_Program
   Element, // T_Element
   Expression, // T_Expression
-  Expression, // T_Apply
   Expression, // T_Relational
   string, // T_RelationalOps
+  Expression, // T_Apply
   Expression, // T_Additive
   string, // T_AdditiveOps
   Expression, // T_Multiplicative
