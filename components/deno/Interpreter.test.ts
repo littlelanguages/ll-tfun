@@ -60,29 +60,29 @@ Deno.test("LetRec", () => {
     "let rec isOdd n = if (n == 0) False else isEven (n - 1) and isEven n = if (n == 0) True else isOdd (n - 1) ; isEven 5",
     [
       ["isOdd = function: Int -> Bool", "isEven = function: Int -> Bool"],
-      "false: Bool",
+      "False: Bool",
     ],
   );
   assertExecute(
     "let rec isOdd n = if (n == 0) False else isEven (n - 1) and isEven n = if (n == 0) True else isOdd (n - 1) ; isOdd 5",
     [
       ["isOdd = function: Int -> Bool", "isEven = function: Int -> Bool"],
-      "true: Bool",
+      "True: Bool",
     ],
   );
   assertExecute(
     "let rec isOdd n = if (n == 0) False else isEven (n - 1) and isEven n = if (n == 0) True else isOdd (n - 1) in isEven 5",
-    ["false: Bool"],
+    ["False: Bool"],
   );
   assertExecute(
     "let rec isOdd n = if (n == 0) False else isEven (n - 1) and isEven n = if (n == 0) True else isOdd (n - 1) in isOdd 5",
-    ["true: Bool"],
+    ["True: Bool"],
   );
 });
 
 Deno.test("LBool", () => {
-  assertExecute("True", ["true: Bool"]);
-  assertExecute("False", ["false: Bool"]);
+  assertExecute("True", ["True: Bool"]);
+  assertExecute("False", ["False: Bool"]);
 });
 
 Deno.test("LInt", () => {
@@ -96,7 +96,7 @@ Deno.test("LString", () => {
 
 Deno.test("LTuple", () => {
   assertExecute('(1, "hello", (), True)', [
-    '(1, "hello", (), true): (Int * String * () * Bool)',
+    '(1, "hello", (), True): (Int * String * () * Bool)',
   ]);
 });
 
@@ -105,8 +105,8 @@ Deno.test("LUnit", () => {
 });
 
 Deno.test("Match", () => {
-  assertExecute("match True with x -> x", ["true: Bool"]);
-  assertExecute("match False with x -> x", ["false: Bool"]);
+  assertExecute("match True with x -> x", ["True: Bool"]);
+  assertExecute("match False with x -> x", ["False: Bool"]);
   assertExecute("match () with x -> x", ["(): ()"]);
   assertExecute('match "hello" with x -> x', ['"hello": String']);
   assertExecute("match (1, 2) with (x, y) -> x + y", ["3: Int"]);
@@ -147,26 +147,26 @@ Deno.test("Match", () => {
 });
 
 Deno.test("Op", () => {
-  assertExecute("1 == 2", ["false: Bool"]);
-  assertExecute("2 == 2", ["true: Bool"]);
-  assertExecute("1 /= 2", ["true: Bool"]);
-  assertExecute("2 /= 2", ["false: Bool"]);
+  assertExecute("1 == 2", ["False: Bool"]);
+  assertExecute("2 == 2", ["True: Bool"]);
+  assertExecute("1 /= 2", ["True: Bool"]);
+  assertExecute("2 /= 2", ["False: Bool"]);
 
-  assertExecute("1 < 2", ["true: Bool"]);
-  assertExecute("2 < 2", ["false: Bool"]);
-  assertExecute("3 < 2", ["false: Bool"]);
+  assertExecute("1 < 2", ["True: Bool"]);
+  assertExecute("2 < 2", ["False: Bool"]);
+  assertExecute("3 < 2", ["False: Bool"]);
 
-  assertExecute("1 <= 2", ["true: Bool"]);
-  assertExecute("2 <= 2", ["true: Bool"]);
-  assertExecute("3 <= 2", ["false: Bool"]);
+  assertExecute("1 <= 2", ["True: Bool"]);
+  assertExecute("2 <= 2", ["True: Bool"]);
+  assertExecute("3 <= 2", ["False: Bool"]);
 
-  assertExecute("1 > 2", ["false: Bool"]);
-  assertExecute("2 > 2", ["false: Bool"]);
-  assertExecute("3 > 2", ["true: Bool"]);
+  assertExecute("1 > 2", ["False: Bool"]);
+  assertExecute("2 > 2", ["False: Bool"]);
+  assertExecute("3 > 2", ["True: Bool"]);
 
-  assertExecute("1 >= 2", ["false: Bool"]);
-  assertExecute("2 >= 2", ["true: Bool"]);
-  assertExecute("3 >= 2", ["true: Bool"]);
+  assertExecute("1 >= 2", ["False: Bool"]);
+  assertExecute("2 >= 2", ["True: Bool"]);
+  assertExecute("3 >= 2", ["True: Bool"]);
 
   assertExecute("3 + 2", ["5: Int"]);
   assertExecute("3 - 2", ["1: Int"]);
@@ -202,14 +202,14 @@ Deno.test("Records", () => {
 
 Deno.test("Var", () => {
   assertExecute("let x = 1 ; x", [["x = 1: Int"], "1: Int"]);
-  assertExecute("let x = True ; x", [["x = true: Bool"], "true: Bool"]);
+  assertExecute("let x = True ; x", [["x = True: Bool"], "True: Bool"]);
   assertExecute("let x = \\a = a ; x", [
     ["x = function: V1 -> V1"],
     "function: V1 -> V1",
   ]);
 
   assertExecute("let x = 1 in x", ["1: Int"]);
-  assertExecute("let x = True in x", ["true: Bool"]);
+  assertExecute("let x = True in x", ["True: Bool"]);
   assertExecute("let x = \\a = a in x", ["function: V2 -> V2"]);
 });
 
@@ -456,8 +456,8 @@ Deno.test("Import - nested types", () => {
       "import",
       "Nothing: Maybe V1",
       "Just 10: Maybe Int",
-      "true: Bool",
-      "false: Bool",
+      "True: Bool",
+      "False: Bool",
       "Cons 0 (Cons 1 (Cons 2 Nil)): List Int",
       "45: Int",
     ],
@@ -469,8 +469,8 @@ Deno.test("Import - nested types", () => {
       "import",
       "Nothing: Maybe V1",
       "Just 10: Maybe Int",
-      "true: Bool",
-      "false: Bool",
+      "True: Bool",
+      "False: Bool",
       "Cons 0 (Cons 1 (Cons 2 Nil)): List Int",
       "45: Int",
     ],

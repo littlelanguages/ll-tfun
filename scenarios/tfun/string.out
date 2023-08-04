@@ -25,11 +25,11 @@ y = "hello world": String
 "": String
 "": String
 "-- string_equal": String
-true: Bool
-false: Bool
-false: Bool
-false: Bool
-true: Bool
+True: Bool
+False: Bool
+False: Bool
+False: Bool
+True: Bool
 "-- string_compare": String
 0: Int
 -1: Int

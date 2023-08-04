@@ -1,9 +1,9 @@
 isOdd = function: Int -> Bool
 isEven = function: Int -> Bool
-true: Bool
-false: Bool
-false: Bool
-true: Bool
+True: Bool
+False: Bool
+False: Bool
+True: Bool
 5: Int
 5: Int
 6: Int

@@ -96,7 +96,10 @@ export const valueToString = (v: RuntimeValue): string => {
   if (typeof v === "string") {
     return `"${v.replaceAll('"', '\\"')}"`;
   }
-  if (typeof v === "boolean" || typeof v === "number") {
+  if (typeof v === "boolean") {
+    return v ? "True" : "False";
+  }
+  if (typeof v === "number") {
     return `${v}`;
   }
   if (typeof v === "function") {
