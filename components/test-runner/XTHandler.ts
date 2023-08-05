@@ -1,5 +1,10 @@
-import { parse, Program } from "../deno/Parser.ts";
-import { defaultEnv, emptyImportEnv, Env, executeProgram } from "../deno/Interpreter.ts";
+import { Program } from "../deno/Parser.ts";
+import {
+  defaultEnv,
+  emptyImportEnv,
+  Env,
+  parseExecute,
+} from "../deno/Interpreter.ts";
 import { home, Src } from "../deno/Src.ts";
 import {
   expressionToNestedString,
@@ -40,19 +45,19 @@ export const executeCodeBlock = (
   );
   const expected = parsedExpected ?? "";
 
-  let ast: Program | undefined;
   try {
-    ast = parse(env.src, expression);
-  } catch (e) {
-    return { type: "Error", expression, expected, ast, error: e, env };
-  }
-
-  try {
-    const [result, newEnv] = executeProgram(ast, env);
+    const [ast, result, newEnv] = parseExecute(env.src, expression, env);
 
     return { type: "Success", expression, expected, ast, result, env: newEnv };
   } catch (e) {
-    return { type: "Error", expression, expected, ast, error: e, env };
+    return {
+      type: "Error",
+      expression,
+      expected,
+      ast: undefined,
+      error: e,
+      env,
+    };
   }
 };
 
@@ -126,7 +131,11 @@ export class XTHandler implements Handler {
     code: string,
   ): TestResult {
     try {
-      let env = defaultEnv(home, emptyImportEnv(), home.newSrc("../../stdlib/Prelude.tfun"));
+      let env = defaultEnv(
+        home,
+        emptyImportEnv(),
+        home.newSrc("../../stdlib/Prelude.tfun"),
+      );
       env.src = src;
 
       if (options.has("use")) {

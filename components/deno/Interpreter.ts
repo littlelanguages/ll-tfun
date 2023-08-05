@@ -709,7 +709,7 @@ const loadingImport: ImportPackage = {
   types: emptyTypeEnv.extend("_Loading", new Scheme([], typeInt)),
 };
 
-const parseExecute = (
+export const parseExecute = (
   src: Src,
   program: string,
   initialEnv: Env,
@@ -724,12 +724,8 @@ const parseExecute = (
 };
 
 const loadPrelude = (env: Env): Env => {
-  const execute = (line: string, env: Env): Env => {
-    const ast = parse(env.src, line);
-    const [_, newEnv] = executeProgram(ast, env);
-
-    return newEnv;
-  };
+  const execute = (line: string, env: Env): Env =>
+    parseExecute(env.src, line, env)[2];
 
   return execute(`import * from "${env.preludeSrc?.urn()}"`, env);
 };

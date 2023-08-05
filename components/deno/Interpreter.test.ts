@@ -7,9 +7,8 @@ import {
   defaultEnv,
   emptyEnv,
   executeImport,
-  executeProgram,
+  parseExecute,
 } from "./Interpreter.ts";
-import { parse } from "./Parser.ts";
 import {
   emptyImportEnv,
   expressionToNestedString,
@@ -633,9 +632,9 @@ Deno.test("Import - aliases", () => {
 });
 
 const assertExecute = (expression: string, expected: NestedString) => {
-  const ast = parse(urn, expression);
-  const [result, newEnv] = executeProgram(
-    ast,
+  const [ast, result, newEnv] = parseExecute(
+    urn,
+    expression,
     defaultEnv(home, emptyImportEnv(), undefined),
   );
 
@@ -659,9 +658,8 @@ const assertExecute = (expression: string, expected: NestedString) => {
 type MyError = any;
 
 const assertError = (expression: string, error: MyError) => {
-  const ast = parse(urn, expression);
   try {
-    executeProgram(ast, defaultEnv(urn, emptyImportEnv(), undefined));
+    parseExecute(urn, expression, defaultEnv(urn, emptyImportEnv(), undefined));
     assert(false);
   } catch (e) {
     if (e instanceof Error) {
@@ -676,9 +674,12 @@ const assertCatchError = (
   expression: string,
   error: (error: MyError) => void,
 ) => {
-  const ast = parse(urn, expression);
   try {
-    executeProgram(ast, defaultEnv(home, emptyImportEnv(), undefined));
+    parseExecute(
+      urn,
+      expression,
+      defaultEnv(home, emptyImportEnv(), undefined),
+    );
     assert(false);
   } catch (e) {
     assertEquals(error(e), true);

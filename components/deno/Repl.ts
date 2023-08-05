@@ -2,10 +2,9 @@ import {
   defaultEnv,
   emptyImportEnv,
   Env,
-  executeProgram,
+  parseExecute,
 } from "./Interpreter.ts";
-import { parse } from "./Parser.ts";
-import { from, home } from "./Src.ts";
+import { home } from "./Src.ts";
 import { renameTypeVariables } from "./Typing.ts";
 import {
   expressionToNestedString,
@@ -33,8 +32,7 @@ const readline = (): string | null => {
 };
 
 const execute = (line: string, env: Env): Env => {
-  const ast = parse(env.src, line);
-  const [result, newEnv] = executeProgram(ast, env);
+  const [ast, result, newEnv] = parseExecute(env.src, line, env);
 
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
@@ -55,20 +53,9 @@ const execute = (line: string, env: Env): Env => {
   return newEnv;
 };
 
-const loadPrelude = (env: Env): Env =>
-  execute('import * from "../../stdlib/Prelude.tfun"', env);
-
-if (Deno.args.length === 0) {
-  console.log(
-    "Welcome to the REPL of the Lambda Calculus with ADTs Interpreter!",
-  );
-  console.log('Type ".quit" to exit.');
-  console.log("Enter a multi-line expression with ;; as a terminator.");
-
-  let env: Env;
-
+const mkDefaultEnv = () => {
   try {
-    env = defaultEnv(
+    return defaultEnv(
       home,
       emptyImportEnv(),
       home.newSrc("../../stdlib/Prelude.tfun"),
@@ -77,6 +64,16 @@ if (Deno.args.length === 0) {
     console.error(e.toString());
     Deno.exit(1);
   }
+};
+
+if (Deno.args.length === 0) {
+  console.log(
+    "Welcome to the REPL of the Lambda Calculus with ADTs Interpreter!",
+  );
+  console.log('Type ".quit" to exit.');
+  console.log("Enter a multi-line expression with ;; as a terminator.");
+
+  let env: Env = mkDefaultEnv();
 
   env.src = home.newSrc("repl");
 
@@ -124,10 +121,7 @@ if (Deno.args.length === 0) {
   }
 } else if (Deno.args.length === 1) {
   try {
-    execute(
-      Deno.readTextFileSync(Deno.args[0]),
-      loadPrelude(defaultEnv(from(Deno.args[0]), emptyImportEnv(), undefined)),
-    );
+    execute(Deno.readTextFileSync(Deno.args[0]), mkDefaultEnv());
   } catch (e) {
     console.log(e.toString());
   }

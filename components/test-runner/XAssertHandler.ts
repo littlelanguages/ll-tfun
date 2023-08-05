@@ -1,5 +1,10 @@
-import { parse, Program } from "../deno/Parser.ts";
-import { defaultEnv, emptyImportEnv, Env, executeProgram } from "../deno/Interpreter.ts";
+import { Program } from "../deno/Parser.ts";
+import {
+  defaultEnv,
+  emptyImportEnv,
+  Env,
+  parseExecute,
+} from "../deno/Interpreter.ts";
 import { home, Src } from "../deno/Src.ts";
 import { RuntimeValue } from "../deno/Values.ts";
 import { Handler, TestResult } from "./Runner.ts";
@@ -29,20 +34,18 @@ const executeAssertBlock = (
 
   for (const expression of expressions) {
     if (expression !== "") {
-      let ast: Program | undefined;
       try {
-        ast = parse(env.src, expression);
-      } catch (e) {
-        return { type: "Error", expression, ast, error: e, env };
-      }
-      try {
-        const [[[result]], _newEnv] = executeProgram(ast, env);
+        const [ast, [[result]], _newEnv] = parseExecute(
+          env.src,
+          expression,
+          env,
+        );
 
         if (typeof result !== "boolean" || !result) {
           return { type: "Error", expression, ast, error: result, env };
         }
       } catch (e) {
-        return { type: "Error", expression, ast, error: e, env };
+        return { type: "Error", expression, ast: undefined, error: e, env };
       }
     }
   }
@@ -69,7 +72,11 @@ export class XAssertHandler implements Handler {
     code: string,
   ): TestResult {
     try {
-      let env = defaultEnv(home, emptyImportEnv(), home.newSrc("../../stdlib/Prelude.tfun"));
+      let env = defaultEnv(
+        home,
+        emptyImportEnv(),
+        home.newSrc("../../stdlib/Prelude.tfun"),
+      );
       env.src = src;
 
       if (options.has("use")) {
