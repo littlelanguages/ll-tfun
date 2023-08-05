@@ -2,7 +2,7 @@ let length* (s: String): Int =
   builtin "Data.String.length" s ;
 
 let isEmpty* (s: String): Bool =
-  (length s) == 0 ;
+  length s == 0 ;
 
 let slice* (start: Int) (end: Int) (s: String): String =
   builtin "Data.String.slice" start end s ;
@@ -19,7 +19,7 @@ let startsWith* (needle: String) (haystack: String): Bool =
   if (needleLength > haystackLength)
     False
   else
-    (slice 0 needleLength haystack) == needle ;
+    slice 0 needleLength haystack == needle ;
 
 let indexOf* (needle: String) (haystack: String): Maybe Int =
   builtin "Data.String.indexOf" needle haystack ;

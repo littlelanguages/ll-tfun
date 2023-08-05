@@ -36,7 +36,7 @@ let rec any* p lst =
 let rec filter* p lst =
   match lst with
   | Nil -> Nil
-  | Cons x xs -> if (p x) (Cons x (filter p xs)) else filter p xs ;
+  | Cons x xs -> if (p x) Cons x (filter p xs) else filter p xs ;
 
 let rec join* (sep: String) (lst: List String): String =
   match lst with
