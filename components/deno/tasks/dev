@@ -65,6 +65,8 @@ case "$1" in
     echo "    Builds the parser from specs"
     echo "  run"
     echo "    Run all tasks"
+    echo "  run-watch"
+    echo "    Run all tasks and watch for changes"
     echo "  scenario"
     echo "    Run all scenario tests"
     echo "  unit"
@@ -76,6 +78,10 @@ run)
     unit_tests
     scenario_tests
     markdown_tests
+    ;;
+
+run-watch)
+    ls -1 *.ts ../../scenarios/*.md | entr -c -s "$0 run"
     ;;
 
 markdown)
