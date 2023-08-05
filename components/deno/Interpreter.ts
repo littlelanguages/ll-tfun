@@ -11,6 +11,7 @@ import {
   DataDeclaration,
   Element,
   Expression,
+  ImportStatement,
   LetExpression,
   LetRecExpression,
   NameLocation,
@@ -18,6 +19,7 @@ import {
   parse,
   Pattern,
   Program,
+  TypeAliasDeclaration,
   Visibility,
 } from "./Parser.ts";
 import { Src } from "./Src.ts";
@@ -46,46 +48,7 @@ import {
   VChar,
 } from "./Values.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
-
-type RuntimeEnvBindings = { [key: string]: RuntimeValue };
-
-class RuntimeEnv {
-  private bindings: RuntimeEnvBindings;
-
-  constructor(
-    bindings: RuntimeEnvBindings = {},
-  ) {
-    this.bindings = bindings;
-  }
-
-  bind(name: string, value: RuntimeValue): RuntimeEnv {
-    this.bindings[name] = value;
-
-    return this;
-  }
-
-  has(name: string): boolean {
-    return Object.hasOwn(this.bindings, name);
-  }
-
-  get(name: string): RuntimeValue {
-    const v = this.bindings[name];
-
-    if (v === undefined) {
-      throw { type: "UnknownName", name };
-    } else {
-      return v;
-    }
-  }
-
-  clone(): RuntimeEnv {
-    return new RuntimeEnv({ ...this.bindings });
-  }
-
-  names(): Array<string> {
-    return Object.keys(this.bindings);
-  }
-}
+import * as Runtime from "./Runtime.ts";
 
 const importNames = (importPackage: ImportPackage): Array<string> =>
   [
@@ -94,17 +57,15 @@ const importNames = (importPackage: ImportPackage): Array<string> =>
   ].sort();
 
 export type Env = {
-  runtime: RuntimeEnv;
+  runtime: Runtime.Env;
   type: TypeEnv;
   src: Src;
   imports: ImportEnv;
   preludeSrc: Src | undefined;
 };
 
-const emptyRuntimeEnv = () => new RuntimeEnv();
-
 export const emptyEnv = (src: Src, preludeSrc: Src | undefined): Env => ({
-  runtime: emptyRuntimeEnv(),
+  runtime: Runtime.emptyEnv(),
   type: emptyTypeEnv,
   src,
   imports: {},
@@ -117,7 +78,7 @@ export const defaultEnv = (
   imports: ImportEnv = {},
 ): Env => {
   const initialEnv = {
-    runtime: emptyRuntimeEnv(),
+    runtime: Runtime.emptyEnv(),
     type: emptyTypeEnv,
     src,
     imports,
@@ -153,7 +114,7 @@ const binaryOps = new Map<
 
 const arrayToList = (
   arr: Array<RuntimeValue>,
-  runtimeEnv: RuntimeEnv,
+  runtimeEnv: Runtime.Env,
 ): RuntimeValue => {
   let result: RuntimeValue = runtimeEnv.get("Nil");
   for (let i = arr.length - 1; i >= 0; i--) {
@@ -165,7 +126,7 @@ const arrayToList = (
 const literalReg = /[.*+?^${}()|[\]\\]/g;
 const literal = (s: string) => s.replace(literalReg, "\\$&");
 
-const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
+const evaluate = (expr: Expression, runtimeEnv: Runtime.Env): RuntimeValue => {
   switch (expr.type) {
     case "App": {
       const operator = evaluate(expr.e1, runtimeEnv);
@@ -237,7 +198,7 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
       };
     case "Let":
     case "LetRec":
-      return executeDeclaration(expr, runtimeEnv, false)[0];
+      return executeValueDeclaration(expr, runtimeEnv, false)[0];
     case "LBool":
     case "LInt":
     case "LString":
@@ -303,8 +264,8 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
 const matchPattern = (
   pattern: Pattern,
   value: RuntimeValue,
-  runtimeEnv: RuntimeEnv,
-): RuntimeEnv | null => {
+  runtimeEnv: Runtime.Env,
+): Runtime.Env | null => {
   switch (pattern.type) {
     case "PChar":
       return pattern.value === (value as VChar).value ? runtimeEnv : null;
@@ -314,7 +275,7 @@ const matchPattern = (
       return newEnv;
     }
     case "PCons": {
-      let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
+      let newRuntimeEnv: Runtime.Env | null = runtimeEnv;
 
       if (value[0] !== pattern.name.name) {
         return null;
@@ -332,7 +293,7 @@ const matchPattern = (
       return newRuntimeEnv;
     }
     case "PRecord": {
-      let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
+      let newRuntimeEnv: Runtime.Env | null = runtimeEnv;
       for (const [name, p] of pattern.fields) {
         newRuntimeEnv = matchPattern(p, value[name], newRuntimeEnv);
         if (newRuntimeEnv === null) {
@@ -342,7 +303,7 @@ const matchPattern = (
       return newRuntimeEnv;
     }
     case "PTuple": {
-      let newRuntimeEnv: RuntimeEnv | null = runtimeEnv;
+      let newRuntimeEnv: Runtime.Env | null = runtimeEnv;
       for (let i = 0; i < pattern.values.length; i++) {
         newRuntimeEnv = matchPattern(
           pattern.values[i],
@@ -364,11 +325,11 @@ const matchPattern = (
   }
 };
 
-const executeDeclaration = (
+const executeValueDeclaration = (
   expr: LetExpression | LetRecExpression,
-  runtimeEnv: RuntimeEnv,
+  runtimeEnv: Runtime.Env,
   toplevel: boolean,
-): [RuntimeValue, RuntimeEnv] => {
+): [RuntimeValue, Runtime.Env] => {
   const newRuntimeEnv = runtimeEnv.clone();
   const values: Array<RuntimeValue> = [];
 
@@ -393,10 +354,10 @@ const executeDeclaration = (
 
 const executeExpression = (
   expr: Expression,
-  runtimeEnv: RuntimeEnv,
-): [RuntimeValue, RuntimeEnv] =>
+  runtimeEnv: Runtime.Env,
+): [RuntimeValue, Runtime.Env] =>
   (expr.type === "Let" || expr.type === "LetRec")
-    ? executeDeclaration(expr, runtimeEnv, true)
+    ? executeValueDeclaration(expr, runtimeEnv, true)
     : [evaluate(expr, runtimeEnv), runtimeEnv];
 
 const mkConstructorFunction = (name: string, arity: number): RuntimeValue => {
@@ -435,12 +396,12 @@ const mkConstructorFunction = (name: string, arity: number): RuntimeValue => {
 };
 
 const executeDataDeclaration = (
-  dd: DataDeclaration,
+  ast: DataDeclaration,
   env: Env,
 ): [Array<DataDefinition>, Env] => {
   const adts: Array<DataDefinition> = [];
 
-  dd.declarations.forEach((d) => {
+  ast.declarations.forEach((d) => {
     if (env.type.data(d.name.name) !== undefined) {
       throw new DuplicateDataDeclarationException(
         env.src,
@@ -454,7 +415,7 @@ const executeDataDeclaration = (
     env = { ...env, type: env.type.addData(adt) };
   });
 
-  dd.declarations.forEach((d) => {
+  ast.declarations.forEach((d) => {
     const adt = env.type.data(d.name.name)!;
 
     const parameters = new Set(d.parameters);
@@ -495,28 +456,30 @@ const executeDataDeclaration = (
   return [adts, env];
 };
 
-const startsWithUppercase = (str: string) =>
-  str.length > 0 && str.charCodeAt(0) >= 65 && str.charCodeAt(0) <= 90;
-
-const executeElement = (
-  e: Element,
+const executeTypeAliasDeclaration = (
+  ast: TypeAliasDeclaration,
   env: Env,
-): [RuntimeValue, Type | undefined, Env] => {
-  if (e.type === "DataDeclaration") {
-    const [adts, newEnv] = executeDataDeclaration(e, env);
-    return [adts, undefined, newEnv];
-  } else if (e.type === "TypeAliasDeclaration") {
-    const typ = translateType(e.typ, env, new Set(e.parameters));
-    env = {
-      ...env,
-      type: env.type.addAlias(e.name, new Scheme(e.parameters, typ)),
-    };
-    return [null, undefined, env];
-  } else if (e.type === "ImportStatement") {
-    const imports = importPackage(e.from, env);
+): Env => {
+  const typ = translateType(ast.typ, env, new Set(ast.parameters));
 
-    if (e.items.type === "ImportAll") {
-      if (e.items.as === undefined) {
+  return {
+    ...env,
+    type: env.type.addAlias(
+      ast.name,
+      new Scheme(ast.parameters, typ),
+    ),
+  };
+};
+
+const executeImportStatement = (
+  ast: ImportStatement,
+  env: Env,
+): Env => {
+  const imports = importPackage(ast.from, env);
+
+  switch (ast.items.type) {
+    case "ImportAll": {
+      if (ast.items.as === undefined) {
         const runtime = env.runtime.clone();
         let type = env.type;
         imports.values.forEach(([v, t], n) => {
@@ -524,7 +487,7 @@ const executeElement = (
             throw new ImportNameAlreadyDeclaredException(
               env.src,
               n,
-              e.from.location,
+              ast.from.location,
             );
           }
 
@@ -543,34 +506,34 @@ const executeElement = (
             throw new ImportNameAlreadyDeclaredException(
               env.src,
               name,
-              e.from.location,
+              ast.from.location,
             );
           }
         });
 
-        return [null, undefined, { ...env, runtime, type }];
+        return { ...env, runtime, type };
       } else {
-        if (env.runtime.has(e.items.as.name)) {
+        if (env.runtime.has(ast.items.as.name)) {
           throw new ImportNameAlreadyDeclaredException(
             env.src,
-            e.items.as.name,
-            e.items.as.location,
+            ast.items.as.name,
+            ast.items.as.location,
           );
         }
         const runtime = env.runtime.clone();
         let type = env.type;
 
-        runtime.bind(e.items.as.name, imports.values);
-        type = type.addImport(e.items.as.name, imports.types);
+        runtime.bind(ast.items.as.name, imports.values);
+        type = type.addImport(ast.items.as.name, imports.types);
 
-        return [null, undefined, { ...env, runtime, type }];
+        return { ...env, runtime, type };
       }
     }
-    if (e.items.type === "ImportNames") {
+    case "ImportNames": {
       const runtime = env.runtime.clone();
       let type = env.type;
 
-      e.items.items.forEach(({ name, as }) => {
+      ast.items.items.forEach(({ name, as }) => {
         if (startsWithUppercase(name.name[0])) {
           const adt = imports.types.data(name.name);
 
@@ -612,10 +575,7 @@ const executeElement = (
                 );
               }
               const v = imports.values.get(c.name)!;
-              runtime.bind(
-                c.name,
-                v[0],
-              );
+              runtime.bind(c.name, v[0]);
               type = type.extend(c.name, v[1].toScheme());
             });
           }
@@ -645,28 +605,49 @@ const executeElement = (
         }
       });
 
-      return [null, undefined, { ...env, runtime, type }];
+      return { ...env, runtime, type };
     }
+    default:
+      throw new Error("TODO: Interpreter: Import statement not yet supported");
+  }
+};
 
-    throw new Error("TODO: Interpreter: Import statement not yet supported");
-  } else {
-    const pump = createFresh();
-    const [constraints, type, newTypeEnv] = inferExpression(
-      e,
-      env,
-      new Constraints(),
-      pump,
-    );
-    const subst = constraints.solve(pump);
-    const newType = type.apply(subst);
+const executeElement = (
+  e: Element,
+  env: Env,
+): [RuntimeValue, Type | undefined, Env] => {
+  switch (e.type) {
+    case "DataDeclaration": {
+      const [adts, newEnv] = executeDataDeclaration(e, env);
+      return [adts, undefined, newEnv];
+    }
+    case "TypeAliasDeclaration": {
+      const newEnv = executeTypeAliasDeclaration(e, env);
+      return [null, undefined, newEnv];
+    }
+    case "ImportStatement": {
+      const newEnv = executeImportStatement(e, env);
+      return [null, undefined, newEnv];
+    }
+    default: {
+      const pump = createFresh();
+      const [constraints, type, newTypeEnv] = inferExpression(
+        e,
+        env,
+        new Constraints(),
+        pump,
+      );
+      const subst = constraints.solve(pump);
+      const newType = type.apply(subst);
 
-    const [value, newRuntime] = executeExpression(e, env.runtime);
+      const [value, newRuntime] = executeExpression(e, env.runtime);
 
-    return [value, newType, {
-      ...env,
-      runtime: newRuntime,
-      type: newTypeEnv.type,
-    }];
+      return [value, newType, {
+        ...env,
+        runtime: newRuntime,
+        type: newTypeEnv.type,
+      }];
+    }
   }
 };
 
@@ -865,3 +846,6 @@ export const importPackage = (
     return env;
   }
 };
+
+const startsWithUppercase = (str: string) =>
+  str.length > 0 && str.charCodeAt(0) >= 65 && str.charCodeAt(0) <= 90;
