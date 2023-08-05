@@ -11,7 +11,7 @@ The tasks are built out according to the packages listed in [README](README.md)
 - [x] Add `[]` as a pattern synonym for List.Nil
 - [x] Add `[,]` as a form of constructing literal lists
 - [x] Add `[,]` as a pattern destructor for lists
-- [ ] Update toString to print lists using the [,] notation
+- [x] Update toString to print lists using the [,] notation
 - [ ] Add `<|`
 
 

@@ -738,31 +738,17 @@ export const executeImport = (
   importFileName: NameLocation,
   referencedFrom: Env,
 ): ImportPackage => {
-  // import * as L from "../../stdlib/Data/List.tfun" ;;
-  // console.log({
-  //   importFile: importFileName.name,
-  //   fromSrc: referencedFrom.src.urn(),
-  // });
-  // if (importFileName.name === "./Maybe.tfun")  {
-  //   try {throw new Error("oop");
-  // } catch (e) {
-  //   console.log(e.stack);
-  // }
-  // }
   const src = referencedFrom.src.newSrc(importFileName.name);
   const urn = src.urn();
   const importEnv = referencedFrom.imports;
 
   const env = importEnv[urn];
   if (env === undefined) {
-    // console.log("%cLoading import " + urn, "color: #999;");
-
     importEnv[urn] = loadingImport;
 
     const importValues: ImportValues = new Map();
     let env = emptyTypeEnv;
 
-    // console.log({ urn, from, referencedFrom });
     const program = readTextFile(
       referencedFrom.src,
       urn,
@@ -823,7 +809,6 @@ export const executeImport = (
           }
         });
       } else if (e.type === "ImportStatement") {
-        // const imports = executeImport(e.from, referencedFrom);
         const imports = executeImport(e.from, initialImportEnv);
 
         if (e.items.type === "ImportNames") {
