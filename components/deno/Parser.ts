@@ -35,6 +35,7 @@ export type Expression =
   | LetExpression
   | LetRecExpression
   | LBoolExpression
+  | LCharExpression
   | LIntExpression
   | LRecordExpression
   | LStringExpression
@@ -102,6 +103,12 @@ export type LamExpression = {
 export type LBoolExpression = {
   type: "LBool";
   value: boolean;
+  location: Location;
+};
+
+export type LCharExpression = {
+  type: "LChar";
+  value: number;
   location: Location;
 };
 
@@ -389,6 +396,16 @@ const stringToOps = new Map<string, Op>([
 export const transformLiteralString = (s: string): string =>
   s.substring(1, s.length - 1).replaceAll('\\"', '"').replaceAll("\\n", "\n");
 
+export const transformLiteralChar = (s: string): number => {
+  if (s.length === 3) {
+    return s[1].charCodeAt(0);
+  }
+  if (s[2] === "n") {
+    return 10;
+  }
+  return s[2].charCodeAt(0);
+};
+
 export const parse = (src: Src, input: string): Program =>
   parseProgram(input, visitor).either((l: SyntaxError): Program => {
     throw new SyntaxErrorException(src, l.found, l.expected);
@@ -562,18 +579,24 @@ const visitor: Visitor<
   }),
 
   visitFactor4: (a: Token): Expression => ({
-    type: "LBool",
-    value: true,
+    type: "LChar",
+    value: transformLiteralChar(a[2]),
     location: a[1],
   }),
 
   visitFactor5: (a: Token): Expression => ({
     type: "LBool",
+    value: true,
+    location: a[1],
+  }),
+
+  visitFactor6: (a: Token): Expression => ({
+    type: "LBool",
     value: false,
     location: a[1],
   }),
 
-  visitFactor6: (
+  visitFactor7: (
     _a1: Token,
     a2: Parameter,
     a3: Array<Parameter>,
@@ -583,7 +606,7 @@ const visitor: Visitor<
   ): Expression =>
     composeLambda([a2].concat(a3), a6, a4 === undefined ? undefined : a4[1]),
 
-  visitFactor7: (
+  visitFactor8: (
     a1: Token,
     a2: Token | undefined,
     a3: Declaration,
@@ -608,7 +631,7 @@ const visitor: Visitor<
     };
   },
 
-  visitFactor8: (
+  visitFactor9: (
     a1: Token,
     _a2: Token,
     a3: Expression,
@@ -624,7 +647,7 @@ const visitor: Visitor<
     location: combine(a1[1], a7.location),
   }),
 
-  visitFactor9: (
+  visitFactor10: (
     a1: Token,
     a2: [Token, NameLocation] | undefined,
   ): Expression => {
@@ -640,14 +663,14 @@ const visitor: Visitor<
     };
   },
 
-  visitFactor10: (a1: Token): Expression => ({
+  visitFactor11: (a1: Token): Expression => ({
     type: "Var",
     qualifier: undefined,
     name: { name: a1[2], location: a1[1] },
     location: a1[1],
   }),
 
-  visitFactor11: (
+  visitFactor12: (
     a1: Token,
     a2: Expression,
     _a3: Token,
@@ -671,7 +694,7 @@ const visitor: Visitor<
     };
   },
 
-  visitFactor12: (
+  visitFactor13: (
     a1: Token,
     a2: [
       Token,
@@ -710,7 +733,7 @@ const visitor: Visitor<
     );
   },
 
-  visitFactor13: (a1: Token, a2: Token): Expression => ({
+  visitFactor14: (a1: Token, a2: Token): Expression => ({
     type: "Builtin",
     name: transformLiteralString(a2[2]),
     location: combine(a1[1], a2[1]),

@@ -16,6 +16,7 @@ import {
   TVar,
   Type,
   typeBool,
+  typeChar,
   TypeEnv,
   typeError,
   typeInt,
@@ -242,6 +243,8 @@ export const inferExpression = (
       }
       case "LBool":
         return [position(typeBool), env];
+      case "LChar":
+        return [position(typeChar), env];
       case "LInt":
         return [position(typeInt), env];
       case "LString":

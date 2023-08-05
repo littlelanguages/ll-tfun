@@ -558,6 +558,7 @@ export class TypeEnv {
 
 export const emptyTypeEnv = new TypeEnv(new Map(), [], new Map(), new Map())
   .addData(new DataDefinition(home, "Bool", [], []))
+  .addData(new DataDefinition(home, "Char", [], []))
   .addData(new DataDefinition(home, "Error", [], []))
   .addData(new DataDefinition(home, "Int", [], []))
   .addData(new DataDefinition(home, "String", [], []))
@@ -595,6 +596,7 @@ export const renameTypeVariables = (types: Array<Type>): Array<Type> => {
 };
 
 export const typeBool = emptyTypeEnv.data("Bool")!.instantiate();
+export const typeChar = emptyTypeEnv.data("Char")!.instantiate();
 export const typeError = emptyTypeEnv.data("Error")!.instantiate();
 export const typeInt = emptyTypeEnv.data("Int")!.instantiate();
 export const typeString = emptyTypeEnv.data("String")!.instantiate();

@@ -62,6 +62,7 @@ Factor
     : "(" [Expression {"," Expression}] ")"
     | LiteralInt
     | LiteralString
+    | LiteralChar
     | "True"
     | "False"
     | "\" Parameter {Parameter} [":" TypeType] "=" Expression

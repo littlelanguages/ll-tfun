@@ -395,6 +395,7 @@ const ttokens = new Map<TToken, string>([
   [TToken.Semicolon, "';'"],
   [TToken.UpperIdentifier, "Upper Identifier"],
   [TToken.LowerIdentifier, "Lower Identifier"],
+  [TToken.LiteralChar, "literal Char"],
   [TToken.LiteralInt, "literal Int"],
   [TToken.LiteralString, "literal String"],
   [TToken.EOS, "end-of-input"],

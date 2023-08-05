@@ -79,7 +79,8 @@ export interface Visitor<
   visitFactor3(a: Token): T_Factor;
   visitFactor4(a: Token): T_Factor;
   visitFactor5(a: Token): T_Factor;
-  visitFactor6(
+  visitFactor6(a: Token): T_Factor;
+  visitFactor7(
     a1: Token,
     a2: T_Parameter,
     a3: Array<T_Parameter>,
@@ -87,14 +88,14 @@ export interface Visitor<
     a5: Token,
     a6: T_Expression,
   ): T_Factor;
-  visitFactor7(
+  visitFactor8(
     a1: Token,
     a2: Token | undefined,
     a3: T_ValueDeclaration,
     a4: Array<[Token, T_ValueDeclaration]>,
     a5: [Token, T_Expression] | undefined,
   ): T_Factor;
-  visitFactor8(
+  visitFactor9(
     a1: Token,
     a2: Token,
     a3: T_Expression,
@@ -103,9 +104,9 @@ export interface Visitor<
     a6: Token,
     a7: T_Expression,
   ): T_Factor;
-  visitFactor9(a1: Token, a2: [Token, T_Identifier] | undefined): T_Factor;
-  visitFactor10(a: Token): T_Factor;
-  visitFactor11(
+  visitFactor10(a1: Token, a2: [Token, T_Identifier] | undefined): T_Factor;
+  visitFactor11(a: Token): T_Factor;
+  visitFactor12(
     a1: Token,
     a2: T_Expression,
     a3: Token,
@@ -113,7 +114,7 @@ export interface Visitor<
     a5: T_Case,
     a6: Array<[Token, T_Case]>,
   ): T_Factor;
-  visitFactor12(
+  visitFactor13(
     a1: Token,
     a2: [
       Token,
@@ -124,7 +125,7 @@ export interface Visitor<
     ] | undefined,
     a3: Token,
   ): T_Factor;
-  visitFactor13(a1: Token, a2: Token): T_Factor;
+  visitFactor14(a1: Token, a2: Token): T_Factor;
   visitIdentifier1(a: Token): T_Identifier;
   visitIdentifier2(a: Token): T_Identifier;
   visitValueDeclaration(
@@ -419,6 +420,7 @@ export const mkParser = <
           TToken.LParen,
           TToken.LiteralInt,
           TToken.LiteralString,
+          TToken.LiteralChar,
           TToken.True,
           TToken.False,
           TToken.Backslash,
@@ -446,6 +448,7 @@ export const mkParser = <
             TToken.LParen,
             TToken.LiteralInt,
             TToken.LiteralString,
+            TToken.LiteralChar,
             TToken.True,
             TToken.False,
             TToken.Backslash,
@@ -533,6 +536,7 @@ export const mkParser = <
           TToken.LParen,
           TToken.LiteralInt,
           TToken.LiteralString,
+          TToken.LiteralChar,
           TToken.True,
           TToken.False,
           TToken.Backslash,
@@ -635,6 +639,7 @@ export const mkParser = <
             TToken.LParen,
             TToken.LiteralInt,
             TToken.LiteralString,
+            TToken.LiteralChar,
             TToken.True,
             TToken.False,
             TToken.Backslash,
@@ -668,10 +673,12 @@ export const mkParser = <
         return visitor.visitFactor2(matchToken(TToken.LiteralInt));
       } else if (isToken(TToken.LiteralString)) {
         return visitor.visitFactor3(matchToken(TToken.LiteralString));
+      } else if (isToken(TToken.LiteralChar)) {
+        return visitor.visitFactor4(matchToken(TToken.LiteralChar));
       } else if (isToken(TToken.True)) {
-        return visitor.visitFactor4(matchToken(TToken.True));
+        return visitor.visitFactor5(matchToken(TToken.True));
       } else if (isToken(TToken.False)) {
-        return visitor.visitFactor5(matchToken(TToken.False));
+        return visitor.visitFactor6(matchToken(TToken.False));
       } else if (isToken(TToken.Backslash)) {
         const a1: Token = matchToken(TToken.Backslash);
         const a2: T_Parameter = this.parameter();
@@ -691,7 +698,7 @@ export const mkParser = <
         }
         const a5: Token = matchToken(TToken.Equal);
         const a6: T_Expression = this.expression();
-        return visitor.visitFactor6(a1, a2, a3, a4, a5, a6);
+        return visitor.visitFactor7(a1, a2, a3, a4, a5, a6);
       } else if (isToken(TToken.Let)) {
         const a1: Token = matchToken(TToken.Let);
         let a2: Token | undefined = undefined;
@@ -717,7 +724,7 @@ export const mkParser = <
           const a5t: [Token, T_Expression] = [a5t1, a5t2];
           a5 = a5t;
         }
-        return visitor.visitFactor7(a1, a2, a3, a4, a5);
+        return visitor.visitFactor8(a1, a2, a3, a4, a5);
       } else if (isToken(TToken.If)) {
         const a1: Token = matchToken(TToken.If);
         const a2: Token = matchToken(TToken.LParen);
@@ -726,7 +733,7 @@ export const mkParser = <
         const a5: T_Expression = this.expression();
         const a6: Token = matchToken(TToken.Else);
         const a7: T_Expression = this.expression();
-        return visitor.visitFactor8(a1, a2, a3, a4, a5, a6, a7);
+        return visitor.visitFactor9(a1, a2, a3, a4, a5, a6, a7);
       } else if (isToken(TToken.UpperIdentifier)) {
         const a1: Token = matchToken(TToken.UpperIdentifier);
         let a2: [Token, T_Identifier] | undefined = undefined;
@@ -737,9 +744,9 @@ export const mkParser = <
           const a2t: [Token, T_Identifier] = [a2t1, a2t2];
           a2 = a2t;
         }
-        return visitor.visitFactor9(a1, a2);
+        return visitor.visitFactor10(a1, a2);
       } else if (isToken(TToken.LowerIdentifier)) {
-        return visitor.visitFactor10(matchToken(TToken.LowerIdentifier));
+        return visitor.visitFactor11(matchToken(TToken.LowerIdentifier));
       } else if (isToken(TToken.Match)) {
         const a1: Token = matchToken(TToken.Match);
         const a2: T_Expression = this.expression();
@@ -759,7 +766,7 @@ export const mkParser = <
           const a6t: [Token, T_Case] = [a6t1, a6t2];
           a6.push(a6t);
         }
-        return visitor.visitFactor11(a1, a2, a3, a4, a5, a6);
+        return visitor.visitFactor12(a1, a2, a3, a4, a5, a6);
       } else if (isToken(TToken.LCurly)) {
         const a1: Token = matchToken(TToken.LCurly);
         let a2: [
@@ -807,11 +814,11 @@ export const mkParser = <
           a2 = a2t;
         }
         const a3: Token = matchToken(TToken.RCurly);
-        return visitor.visitFactor12(a1, a2, a3);
+        return visitor.visitFactor13(a1, a2, a3);
       } else if (isToken(TToken.Builtin)) {
         const a1: Token = matchToken(TToken.Builtin);
         const a2: Token = matchToken(TToken.LiteralString);
-        return visitor.visitFactor13(a1, a2);
+        return visitor.visitFactor14(a1, a2);
       } else {
         throw {
           tag: "SyntaxError",
@@ -820,6 +827,7 @@ export const mkParser = <
             TToken.LParen,
             TToken.LiteralInt,
             TToken.LiteralString,
+            TToken.LiteralChar,
             TToken.True,
             TToken.False,
             TToken.Backslash,

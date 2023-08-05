@@ -41,6 +41,7 @@ import {
   ImportEnv,
   ImportPackage,
   ImportValues,
+  mkChar,
   mkTuple,
   RuntimeValue,
   tupleComponent,
@@ -255,6 +256,8 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
     case "LInt":
     case "LString":
       return expr.value;
+    case "LChar":
+      return mkChar(expr.value);
     case "LTuple":
       return mkTuple(expr.values.map((v) => evaluate(v, runtimeEnv)));
     case "LUnit":

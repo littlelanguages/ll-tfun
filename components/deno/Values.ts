@@ -14,6 +14,23 @@ export type ImportEnv = { [key: string]: ImportPackage };
 
 export const emptyImportEnv = (): ImportEnv => ({});
 
+class VChar {
+  value: number;
+
+  constructor(value: number) {
+    this.value = value;
+  }
+}
+
+export const mkChar = (value: number | string): RuntimeValue => {
+  if (typeof value === "string") {
+    return new VChar(value.charCodeAt(0));
+  }
+  return new VChar(value);
+};
+
+export const isChar = (value: RuntimeValue): boolean => value instanceof VChar;
+
 class VTuple {
   values: Array<RuntimeValue>;
 
@@ -104,6 +121,15 @@ export const valueToString = (v: RuntimeValue): string => {
   }
   if (typeof v === "function") {
     return "function";
+  }
+  if (isChar(v)) {
+    if (v.value === 10) {
+      return "'\\n'";
+    }
+    if (v.value < 32) {
+      return `'\\u{${v.value.toString(16)}}'`;
+    }
+    return `'${String.fromCharCode(v.value)}'`;
   }
   if (isTuple(v)) {
     return `(${
