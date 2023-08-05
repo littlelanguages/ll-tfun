@@ -10,13 +10,13 @@ These errors relate to lexical or syntactic errors.
 
 ```fsharp xt id=SyntaxErrorEmptyFile
 ---
-Syntax Error: Expected '(', literal Int, literal String, literal Char, True, False, '\', let, if, Upper Identifier, Lower Identifier, match, '{', builtin, data, type or import but found end-of-input at ../../scenarios/ErrorReporting.md 1:1
+Syntax Error: Expected '(', literal Int, literal String, literal Char, True, False, '\', let, if, Upper Identifier, Lower Identifier, match, '[', '{', builtin, data, type or import but found end-of-input at ../../scenarios/ErrorReporting.md 1:1
 ```
 
 ```fsharp xt id=SyntaxErrorPrematureEnd
 let x = 1 +
 ---
-Syntax Error: Expected '(', literal Int, literal String, literal Char, True, False, '\', let, if, Upper Identifier, Lower Identifier, match, '{' or builtin but found end-of-input at ../../scenarios/ErrorReporting.md 1:12
+Syntax Error: Expected '(', literal Int, literal String, literal Char, True, False, '\', let, if, Upper Identifier, Lower Identifier, match, '[', '{' or builtin but found end-of-input at ../../scenarios/ErrorReporting.md 1:12
 ```
 
 ```fsharp xt id=SyntaxErrorEmptyLet

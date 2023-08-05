@@ -61,3 +61,9 @@ Append two strings.
 ```fsharp xassert id=append; use=Import
 append "Star" "Wars" == "StarWars"
 ```
+
+The infix `++` operator is a synonym for `append`.
+
+```fsharp xassert id=append; use=Import
+"Star" ++ " " ++ "Wars" == "Star Wars"
+```

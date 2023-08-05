@@ -159,17 +159,18 @@ const binaryOps = new Map<
   number,
   (v1: RuntimeValue, v2: RuntimeValue) => RuntimeValue
 >([
-  [Op.PipeRight, (a, b) => b(a)],
-  [Op.Equals, (a, b) => equals(a, b)],
-  [Op.NotEquals, (a, b) => !equals(a, b)],
-  [Op.LessThan, (a, b) => a < b],
-  [Op.LessEquals, (a, b) => a <= b],
-  [Op.GreaterThan, (a, b) => a > b],
-  [Op.GreaterEquals, (a, b) => a >= b],
-  [Op.Plus, (a, b) => (a + b) | 0],
-  [Op.Minus, (a, b) => (a - b) | 0],
-  [Op.Times, (a, b) => (a * b) | 0],
+  [Op.Append, (a, b) => a + b],
   [Op.Divide, (a, b) => (a / b) | 0],
+  [Op.Equals, (a, b) => equals(a, b)],
+  [Op.GreaterEquals, (a, b) => a >= b],
+  [Op.GreaterThan, (a, b) => a > b],
+  [Op.LessEquals, (a, b) => a <= b],
+  [Op.LessThan, (a, b) => a < b],
+  [Op.Minus, (a, b) => (a - b) | 0],
+  [Op.NotEquals, (a, b) => !equals(a, b)],
+  [Op.PipeRight, (a, b) => b(a)],
+  [Op.Plus, (a, b) => (a + b) | 0],
+  [Op.Times, (a, b) => (a * b) | 0],
 ]);
 
 const arrayToList = (
@@ -285,6 +286,11 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
         case Op.And:
           return evaluate(expr.left, runtimeEnv) &&
             evaluate(expr.right, runtimeEnv);
+        case Op.Cons: {
+          const left = evaluate(expr.left, runtimeEnv);
+          const right = evaluate(expr.right, runtimeEnv);
+          return runtimeEnv.get("Cons")(left)(right);
+        }
         case Op.Or:
           return evaluate(expr.left, runtimeEnv) ||
             evaluate(expr.right, runtimeEnv);

@@ -1,4 +1,4 @@
-# Char
+# core:Data/Char
 
 Functions for working with characters. Character literals are enclosed in a pair of single quotes.
 

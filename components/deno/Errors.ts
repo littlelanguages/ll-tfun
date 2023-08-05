@@ -362,6 +362,8 @@ const ttokens = new Map<TToken, string>([
   [TToken.Data, "data"],
   [TToken.DashGreaterThan, "'->'"],
   [TToken.Builtin, "builtin"],
+  [TToken.RBracket, "']'"],
+  [TToken.LBracket, "'['"],
   [TToken.RCurly, "'}'"],
   [TToken.LCurly, "'{'"],
   [TToken.Bar, "'|'"],

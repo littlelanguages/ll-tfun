@@ -177,19 +177,21 @@ export type RecordSelectExpression = {
 };
 
 export enum Op {
-  PipeRight,
   And,
-  Or,
-  Equals,
-  NotEquals,
-  LessThan,
-  LessEquals,
-  GreaterThan,
-  GreaterEquals,
-  Plus,
-  Minus,
-  Times,
+  Append,
+  Cons,
   Divide,
+  Equals,
+  GreaterEquals,
+  GreaterThan,
+  LessEquals,
+  LessThan,
+  Minus,
+  NotEquals,
+  Or,
+  PipeRight,
+  Plus,
+  Times,
 }
 
 export type TypingExpression = {
@@ -428,6 +430,8 @@ const visitor: Visitor<
   Expression, // T_BooleanAnd
   Expression, // T_Equality
   string, // T_EqualityOps
+  Expression, // T_AppendCons
+  string, // T_AppendConsOps
   Expression, // T_Additive
   string, // T_AdditiveOps
   Expression, // T_Multiplicative
@@ -441,6 +445,7 @@ const visitor: Visitor<
   Parameter, // T_Parameter
   MatchCase, // T_Case
   Pattern, // T_Pattern
+  Pattern, // T_PatternTerm
   DataDeclaration, // T_DataDeclaration
   TypeDeclaration, // T_TypeDeclaration
   ConstructorDeclaration, // T_ConstructorDeclaration
@@ -528,6 +533,64 @@ const visitor: Visitor<
   visitEqualityOps4: (a: Token): string => a[2],
   visitEqualityOps5: (a: Token): string => a[2],
   visitEqualityOps6: (a: Token): string => a[2],
+
+  visitAppendCons: (
+    a1: Expression,
+    a2: Array<[string, Expression]>,
+  ): Expression => {
+    if (a2.length === 0) {
+      return a1;
+    }
+
+    const mkNode = (
+      op: string,
+      left: Expression,
+      right: Expression,
+    ): Expression => {
+      if (op === "::") {
+        return {
+          type: "App",
+          e1: {
+            type: "App",
+            e1: {
+              type: "Var",
+              qualifier: undefined,
+              name: {
+                name: "Cons",
+                location: combine(left.location, right.location),
+              },
+              location: combine(left.location, right.location),
+            },
+            e2: left,
+            location: combine(left.location, right.location),
+          },
+          e2: right,
+          location: combine(left.location, right.location),
+        };
+      } else {
+        return {
+          type: "Op",
+          left,
+          right,
+          op: Op.Append,
+          location: combine(left.location, right.location),
+        };
+      }
+    };
+
+    let index = a2.length - 1;
+    let acc = a2[index][1];
+
+    while (index > 0) {
+      index -= 1;
+      acc = mkNode(a2[index][0], a2[index][1], acc);
+    }
+
+    return mkNode(a2[0][0], a1, acc);
+  },
+
+  visitAppendConsOps1: (a: Token): string => a[2],
+  visitAppendConsOps2: (a: Token): string => a[2],
 
   visitMultiplicative: (
     a1: Expression,
@@ -731,6 +794,49 @@ const visitor: Visitor<
 
   visitFactor13: (
     a1: Token,
+    a2: [Expression, Array<[Token, Expression]>] | undefined,
+    a3: Token,
+  ): Expression => {
+    const nilValue: Expression = {
+      type: "Var",
+      qualifier: undefined,
+      name: { name: "Nil", location: combine(a1[1], a3[1]) },
+      location: combine(a1[1], a3[1]),
+    };
+
+    if (a2 === undefined) {
+      return nilValue;
+    }
+
+    const items = [a2[0]].concat(a2[1].map(([, e]) => e));
+
+    return items.reduceRight(
+      (acc, e) => {
+        const location = combine(acc.location, e.location);
+
+        return {
+          type: "App",
+          e1: {
+            type: "App",
+            e1: {
+              type: "Var",
+              qualifier: undefined,
+              name: { name: "Cons", location },
+              location,
+            },
+            e2: e,
+            location,
+          },
+          e2: acc,
+          location,
+        };
+      },
+      nilValue,
+    );
+  },
+
+  visitFactor14: (
+    a1: Token,
     a2: [
       Token,
       Token,
@@ -768,7 +874,7 @@ const visitor: Visitor<
     );
   },
 
-  visitFactor14: (a1: Token, a2: Token): Expression => ({
+  visitFactor15: (a1: Token, a2: Token): Expression => ({
     type: "Builtin",
     name: transformLiteralString(a2[2]),
     location: combine(a1[1], a2[1]),
@@ -816,7 +922,44 @@ const visitor: Visitor<
     location: combine(a1.location, a3.location),
   }),
 
-  visitPattern1: (
+  visitPattern: (
+    a1: Pattern,
+    a2: Array<[Token, Pattern]>,
+  ): Pattern => {
+    if (a2.length === 0) {
+      return a1;
+    }
+
+    let index = a2.length - 1;
+    let acc = a2[index][1];
+
+    while (index > 0) {
+      index -= 1;
+      acc = {
+        type: "PCons",
+        qualifier: undefined,
+        name: {
+          name: "Cons",
+          location: combine(a2[index][0][1], a2[index][1].location),
+        },
+        args: [a2[index][1], acc],
+        location: combine(a2[index][0][1], acc.location),
+      };
+    }
+
+    return {
+      type: "PCons",
+      qualifier: undefined,
+      name: {
+        name: "Cons",
+        location: combine(a1.location, a2[index][1].location),
+      },
+      args: [a1, acc],
+      location: combine(a1.location, acc.location),
+    };
+  },
+
+  visitPatternTerm1: (
     a1: Token,
     a2: [Pattern, Array<[Token, Pattern]>] | undefined,
     a3: Token,
@@ -836,37 +979,37 @@ const visitor: Visitor<
     };
   },
 
-  visitPattern2: (a: Token): Pattern => ({
+  visitPatternTerm2: (a: Token): Pattern => ({
     type: "PInt",
     value: parseInt(a[2]),
     location: a[1],
   }),
 
-  visitPattern3: (a: Token): Pattern => ({
+  visitPatternTerm3: (a: Token): Pattern => ({
     type: "PString",
     value: transformLiteralString(a[2]),
     location: a[1],
   }),
 
-  visitPattern4: (a: Token): Pattern => ({
+  visitPatternTerm4: (a: Token): Pattern => ({
     type: "PChar",
     value: transformLiteralChar(a[2]),
     location: a[1],
   }),
 
-  visitPattern5: (a: Token): Pattern => ({
+  visitPatternTerm5: (a: Token): Pattern => ({
     type: "PBool",
     value: true,
     location: a[1],
   }),
 
-  visitPattern6: (a: Token): Pattern => ({
+  visitPatternTerm6: (a: Token): Pattern => ({
     type: "PBool",
     value: false,
     location: a[1],
   }),
 
-  visitPattern7: (a: Token): Pattern => {
+  visitPatternTerm7: (a: Token): Pattern => {
     if (a[2] === "_") {
       return { type: "PWildcard", location: a[1] };
     }
@@ -878,7 +1021,7 @@ const visitor: Visitor<
     };
   },
 
-  visitPattern8: (
+  visitPatternTerm8: (
     a1: Token,
     a2: [Token, Token] | undefined,
     a3: Array<Pattern>,
@@ -905,7 +1048,40 @@ const visitor: Visitor<
       location: combine(a1[1], endLocation),
     };
   },
-  visitPattern9: (
+
+  visitPatternTerm9: (
+    a1: Token,
+    a2: [Pattern, Array<[Token, Pattern]>] | undefined,
+    a3: Token,
+  ): Pattern => {
+    const nilPattern: Pattern = {
+      type: "PVar",
+      name: "Nil",
+      location: combine(a1[1], a3[1]),
+    };
+    if (a2 === undefined) {
+      return nilPattern;
+    }
+
+    const items = [a2[0]].concat(a2[1].map(([, e]) => e));
+
+    return items.reduceRight(
+      (acc, e) => {
+        const location = combine(acc.location, e.location);
+
+        return {
+          type: "PCons",
+          qualifier: undefined,
+          name: { name: "Cons", location },
+          args: [e, acc],
+          location,
+        };
+      },
+      nilPattern,
+    );
+  },
+
+  visitPatternTerm10: (
     a1: Token,
     a2: [
       Token,
@@ -1194,21 +1370,22 @@ const composeFunctionType = (types: Array<Type>): Type =>
 // console.log(JSON.stringify(parse("let recs a = { x: 1, y: a } ; let y = recs 10 ; y ; y.x.z"), null, 2));
 // console.log(JSON.stringify(parse("\\(v: Int) . v"), null, 2));
 
-// const trimLocation = (a: any): any => {
-//   if (typeof a === "object") {
-//     if (Array.isArray(a)) {
-//       return a.map(trimLocation);
-//     }
+// deno-lint-ignore no-explicit-any
+const trimLocation = (a: any): any => {
+  if (typeof a === "object") {
+    if (Array.isArray(a)) {
+      return a.map(trimLocation);
+    }
 
-//     const b = { ...a };
+    const b = { ...a };
 
-//     delete b.location;
+    delete b.location;
 
-//     return Object.fromEntries(
-//       Object.entries(b).map(([k, v]) => [k, trimLocation(v)]),
-//     );
-//   } else return a;
-// }
+    return Object.fromEntries(
+      Object.entries(b).map(([k, v]) => [k, trimLocation(v)]),
+    );
+  } else return a;
+};
 
 // console.log(JSON.stringify(trimLocation(parse(home, ["let range* n =",
 //   "  let rec helper m =",
