@@ -81,7 +81,7 @@ run)
     ;;
 
 run-watch)
-    ls -1 *.ts ../../scenarios/*.md | entr -c -s "$0 run"
+    ls -1 *.ts ../../scenarios/*.md | entr -c -s "deno fmt && deno lint && $0 run"
     ;;
 
 markdown)
