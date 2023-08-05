@@ -178,6 +178,8 @@ export type RecordSelectExpression = {
 
 export enum Op {
   PipeRight,
+  And,
+  Or,
   Equals,
   NotEquals,
   LessThan,
@@ -422,8 +424,10 @@ const visitor: Visitor<
   Array<Element>, // T_Program
   Element, // T_Element
   Expression, // T_Expression
-  Expression, // T_Relational
-  string, // T_RelationalOps
+  Expression, // T_BooleanOr
+  Expression, // T_BooleanAnd
+  Expression, // T_Equality
+  string, // T_EqualityOps
   Expression, // T_Apply
   Expression, // T_Additive
   string, // T_AdditiveOps
@@ -482,7 +486,31 @@ const visitor: Visitor<
       location: combine(acc.location, e.location),
     }), a1),
 
-  visitRelational: (
+  visitBooleanOr: (
+    a1: Expression,
+    a2: Array<[Token, Expression]>,
+  ): Expression =>
+    a2.reduce((acc: Expression, e: [Token, Expression]): Expression => ({
+      type: "Op",
+      left: acc,
+      right: e[1],
+      op: Op.Or,
+      location: combine(acc.location, e[1].location),
+    }), a1),
+
+  visitBooleanAnd: (
+    a1: Expression,
+    a2: Array<[Token, Expression]>,
+  ): Expression =>
+    a2.reduce((acc: Expression, e: [Token, Expression]): Expression => ({
+      type: "Op",
+      left: acc,
+      right: e[1],
+      op: Op.And,
+      location: combine(acc.location, e[1].location),
+    }), a1),
+
+  visitEquality: (
     a1: Expression,
     a2: [string, Expression] | undefined,
   ): Expression =>
@@ -494,12 +522,12 @@ const visitor: Visitor<
       location: combine(a1.location, a2[1].location),
     },
 
-  visitRelationalOps1: (a: Token): string => a[2],
-  visitRelationalOps2: (a: Token): string => a[2],
-  visitRelationalOps3: (a: Token): string => a[2],
-  visitRelationalOps4: (a: Token): string => a[2],
-  visitRelationalOps5: (a: Token): string => a[2],
-  visitRelationalOps6: (a: Token): string => a[2],
+  visitEqualityOps1: (a: Token): string => a[2],
+  visitEqualityOps2: (a: Token): string => a[2],
+  visitEqualityOps3: (a: Token): string => a[2],
+  visitEqualityOps4: (a: Token): string => a[2],
+  visitEqualityOps5: (a: Token): string => a[2],
+  visitEqualityOps6: (a: Token): string => a[2],
 
   visitMultiplicative: (
     a1: Expression,

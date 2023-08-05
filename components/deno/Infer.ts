@@ -48,6 +48,8 @@ export const emptyEnv = (src: Src): Env => ({
 });
 
 const ops = new Map([
+  [AST.Op.And, new TArr(typeBool, new TArr(typeBool, typeBool))],
+  [AST.Op.Or, new TArr(typeBool, new TArr(typeBool, typeBool))],
   [AST.Op.LessThan, new TArr(typeInt, new TArr(typeInt, typeBool))],
   [AST.Op.LessEquals, new TArr(typeInt, new TArr(typeInt, typeBool))],
   [AST.Op.GreaterThan, new TArr(typeInt, new TArr(typeInt, typeBool))],

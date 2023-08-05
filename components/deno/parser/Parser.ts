@@ -9,8 +9,10 @@ export interface Visitor<
   T_Program,
   T_Element,
   T_Expression,
-  T_Relational,
-  T_RelationalOps,
+  T_BooleanOr,
+  T_BooleanAnd,
+  T_Equality,
+  T_EqualityOps,
   T_Apply,
   T_Additive,
   T_AdditiveOps,
@@ -42,19 +44,24 @@ export interface Visitor<
   visitElement3(a: T_TypeAliasDeclarations): T_Element;
   visitElement4(a: T_ImportStatement): T_Element;
   visitExpression(
-    a1: T_Relational,
-    a2: Array<[Token, T_Relational]>,
+    a1: T_BooleanOr,
+    a2: Array<[Token, T_BooleanOr]>,
   ): T_Expression;
-  visitRelational(
+  visitBooleanOr(
+    a1: T_BooleanAnd,
+    a2: Array<[Token, T_BooleanAnd]>,
+  ): T_BooleanOr;
+  visitBooleanAnd(a1: T_Equality, a2: Array<[Token, T_Equality]>): T_BooleanAnd;
+  visitEquality(
     a1: T_Apply,
-    a2: [T_RelationalOps, T_Apply] | undefined,
-  ): T_Relational;
-  visitRelationalOps1(a: Token): T_RelationalOps;
-  visitRelationalOps2(a: Token): T_RelationalOps;
-  visitRelationalOps3(a: Token): T_RelationalOps;
-  visitRelationalOps4(a: Token): T_RelationalOps;
-  visitRelationalOps5(a: Token): T_RelationalOps;
-  visitRelationalOps6(a: Token): T_RelationalOps;
+    a2: [T_EqualityOps, T_Apply] | undefined,
+  ): T_Equality;
+  visitEqualityOps1(a: Token): T_EqualityOps;
+  visitEqualityOps2(a: Token): T_EqualityOps;
+  visitEqualityOps3(a: Token): T_EqualityOps;
+  visitEqualityOps4(a: Token): T_EqualityOps;
+  visitEqualityOps5(a: Token): T_EqualityOps;
+  visitEqualityOps6(a: Token): T_EqualityOps;
   visitApply(a1: T_Additive, a2: Array<T_Additive>): T_Apply;
   visitAdditive(
     a1: T_Multiplicative,
@@ -246,8 +253,10 @@ export const parseProgram = <
   T_Program,
   T_Element,
   T_Expression,
-  T_Relational,
-  T_RelationalOps,
+  T_BooleanOr,
+  T_BooleanAnd,
+  T_Equality,
+  T_EqualityOps,
   T_Apply,
   T_Additive,
   T_AdditiveOps,
@@ -278,8 +287,10 @@ export const parseProgram = <
     T_Program,
     T_Element,
     T_Expression,
-    T_Relational,
-    T_RelationalOps,
+    T_BooleanOr,
+    T_BooleanAnd,
+    T_Equality,
+    T_EqualityOps,
     T_Apply,
     T_Additive,
     T_AdditiveOps,
@@ -317,8 +328,10 @@ export const mkParser = <
   T_Program,
   T_Element,
   T_Expression,
-  T_Relational,
-  T_RelationalOps,
+  T_BooleanOr,
+  T_BooleanAnd,
+  T_Equality,
+  T_EqualityOps,
   T_Apply,
   T_Additive,
   T_AdditiveOps,
@@ -349,8 +362,10 @@ export const mkParser = <
     T_Program,
     T_Element,
     T_Expression,
-    T_Relational,
-    T_RelationalOps,
+    T_BooleanOr,
+    T_BooleanAnd,
+    T_Equality,
+    T_EqualityOps,
     T_Apply,
     T_Additive,
     T_AdditiveOps,
@@ -468,20 +483,44 @@ export const mkParser = <
       }
     },
     expression: function (): T_Expression {
-      const a1: T_Relational = this.relational();
-      const a2: Array<[Token, T_Relational]> = [];
+      const a1: T_BooleanOr = this.booleanOr();
+      const a2: Array<[Token, T_BooleanOr]> = [];
 
       while (isToken(TToken.BarGreaterThan)) {
         const a2t1: Token = matchToken(TToken.BarGreaterThan);
-        const a2t2: T_Relational = this.relational();
-        const a2t: [Token, T_Relational] = [a2t1, a2t2];
+        const a2t2: T_BooleanOr = this.booleanOr();
+        const a2t: [Token, T_BooleanOr] = [a2t1, a2t2];
         a2.push(a2t);
       }
       return visitor.visitExpression(a1, a2);
     },
-    relational: function (): T_Relational {
+    booleanOr: function (): T_BooleanOr {
+      const a1: T_BooleanAnd = this.booleanAnd();
+      const a2: Array<[Token, T_BooleanAnd]> = [];
+
+      while (isToken(TToken.BarBar)) {
+        const a2t1: Token = matchToken(TToken.BarBar);
+        const a2t2: T_BooleanAnd = this.booleanAnd();
+        const a2t: [Token, T_BooleanAnd] = [a2t1, a2t2];
+        a2.push(a2t);
+      }
+      return visitor.visitBooleanOr(a1, a2);
+    },
+    booleanAnd: function (): T_BooleanAnd {
+      const a1: T_Equality = this.equality();
+      const a2: Array<[Token, T_Equality]> = [];
+
+      while (isToken(TToken.AmpersandAmpersand)) {
+        const a2t1: Token = matchToken(TToken.AmpersandAmpersand);
+        const a2t2: T_Equality = this.equality();
+        const a2t: [Token, T_Equality] = [a2t1, a2t2];
+        a2.push(a2t);
+      }
+      return visitor.visitBooleanAnd(a1, a2);
+    },
+    equality: function (): T_Equality {
       const a1: T_Apply = this.apply();
-      let a2: [T_RelationalOps, T_Apply] | undefined = undefined;
+      let a2: [T_EqualityOps, T_Apply] | undefined = undefined;
 
       if (
         isTokens([
@@ -493,26 +532,26 @@ export const mkParser = <
           TToken.GreaterThanEqual,
         ])
       ) {
-        const a2t1: T_RelationalOps = this.relationalOps();
+        const a2t1: T_EqualityOps = this.equalityOps();
         const a2t2: T_Apply = this.apply();
-        const a2t: [T_RelationalOps, T_Apply] = [a2t1, a2t2];
+        const a2t: [T_EqualityOps, T_Apply] = [a2t1, a2t2];
         a2 = a2t;
       }
-      return visitor.visitRelational(a1, a2);
+      return visitor.visitEquality(a1, a2);
     },
-    relationalOps: function (): T_RelationalOps {
+    equalityOps: function (): T_EqualityOps {
       if (isToken(TToken.EqualEqual)) {
-        return visitor.visitRelationalOps1(matchToken(TToken.EqualEqual));
+        return visitor.visitEqualityOps1(matchToken(TToken.EqualEqual));
       } else if (isToken(TToken.SlashEqual)) {
-        return visitor.visitRelationalOps2(matchToken(TToken.SlashEqual));
+        return visitor.visitEqualityOps2(matchToken(TToken.SlashEqual));
       } else if (isToken(TToken.LessThan)) {
-        return visitor.visitRelationalOps3(matchToken(TToken.LessThan));
+        return visitor.visitEqualityOps3(matchToken(TToken.LessThan));
       } else if (isToken(TToken.LessThanEqual)) {
-        return visitor.visitRelationalOps4(matchToken(TToken.LessThanEqual));
+        return visitor.visitEqualityOps4(matchToken(TToken.LessThanEqual));
       } else if (isToken(TToken.GreaterThan)) {
-        return visitor.visitRelationalOps5(matchToken(TToken.GreaterThan));
+        return visitor.visitEqualityOps5(matchToken(TToken.GreaterThan));
       } else if (isToken(TToken.GreaterThanEqual)) {
-        return visitor.visitRelationalOps6(matchToken(TToken.GreaterThanEqual));
+        return visitor.visitEqualityOps6(matchToken(TToken.GreaterThanEqual));
       } else {
         throw {
           tag: "SyntaxError",

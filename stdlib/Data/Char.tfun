@@ -6,28 +6,25 @@ let fromInt* (i: Int): Char =
 let toInt* (c: Char): Int =
   builtin "Data.Char.toInt" c ;
 
-let anda a b = if (a) b else False ;
-let ora a b = if (a) True else b ;
-
 let isAlpha* c =
   let v = toInt c in
-  ora (anda (v >= 97) (v <= 122)) (anda (v >= 65) (v <= 90)) ;
+  v >= 97 && v <= 122 || v >= 65 && v <= 90 ;
 
 let isDigit* c =
   let v = toInt c in
-  anda (v >= 48) (v <= 57) ;
+  v >= 48 && v <= 57 ;
 
 let isAlphaDigit* c =
-    let v = toInt c in
-    ora (anda (v >= 97) (v <= 122)) (ora (anda (v >= 65) (v <= 90)) (anda (v >= 48) (v <= 57))) ;
+  let v = toInt c in
+  v >= 97 && v <= 122 || v >= 65 && v <= 90 || v >= 48 && v <= 57 ;
 
 let isLower* c =
   let v = toInt c in
-  anda (v >= 97) (v <= 122) ;
+  v >= 97 && v <= 122 ;
 
 let isUpper* c =
   let v = toInt c in
-  anda (v >= 65) (v <= 90) ;
+  v >= 65 && v <= 90 ;
 
 let toLower* (c: Char): Char =
   if (isUpper c)

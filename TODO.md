@@ -1,8 +1,8 @@
 The tasks are built out according to the packages listed in [README](README.md)
 
-- [ ] Add boolean and
-- [ ] Add boolean or
-- [ ] Add a Char data type
+- [x] Add boolean and
+- [x] Add boolean or
+- [x] Add a Char data type
   - [x] Add literal char into parser
   - [x] Add literal char for pattern matching
   - [x] Add Data.Char into standard library

@@ -280,11 +280,20 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
       }
       throw new Error("Match failed");
     }
-    case "Op": {
-      const left = evaluate(expr.left, runtimeEnv);
-      const right = evaluate(expr.right, runtimeEnv);
-      return binaryOps.get(expr.op)!(left, right);
-    }
+    case "Op":
+      switch (expr.op) {
+        case Op.And:
+          return evaluate(expr.left, runtimeEnv) &&
+            evaluate(expr.right, runtimeEnv);
+        case Op.Or:
+          return evaluate(expr.left, runtimeEnv) ||
+            evaluate(expr.right, runtimeEnv);
+        default: {
+          const left = evaluate(expr.left, runtimeEnv);
+          const right = evaluate(expr.right, runtimeEnv);
+          return binaryOps.get(expr.op)!(left, right);
+        }
+      }
     case "RecordEmpty":
       return {};
     case "RecordExtend": {

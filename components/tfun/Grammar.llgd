@@ -12,14 +12,22 @@ Element
     ;
 
 Expression
-    : Relational {"|>" Relational}
+    : BooleanOr {"|>" BooleanOr}
     ;
 
-Relational
-    : Apply [RelationalOps Apply]
+BooleanOr
+    : BooleanAnd {"||" BooleanAnd}
     ;
 
-RelationalOps
+BooleanAnd
+    : Equality {"&&" Equality}
+    ;
+
+Equality
+    : Apply [EqualityOps Apply]
+    ;
+
+EqualityOps
     : "=="
     | "/="
     | "<"
