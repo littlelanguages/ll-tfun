@@ -14,7 +14,7 @@ export type ImportEnv = { [key: string]: ImportPackage };
 
 export const emptyImportEnv = (): ImportEnv => ({});
 
-class VChar {
+export class VChar {
   value: number;
 
   constructor(value: number) {

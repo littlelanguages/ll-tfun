@@ -45,6 +45,7 @@ import {
   mkTuple,
   RuntimeValue,
   tupleComponent,
+  VChar,
 } from "./Values.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 
@@ -306,6 +307,8 @@ const matchPattern = (
   runtimeEnv: RuntimeEnv,
 ): RuntimeEnv | null => {
   switch (pattern.type) {
+    case "PChar":
+      return pattern.value === (value as VChar).value ? runtimeEnv : null;
     case "PVar": {
       const newEnv = runtimeEnv.clone();
       newEnv.bind(pattern.name, value);

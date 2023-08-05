@@ -13,3 +13,13 @@ A `Char` is a single ASCII character (8 bits). Unicode characters are not suppor
 ---
 'a': Char
 ```
+
+Chars can also be used as literal values during pattern matching.
+
+```fsharp xt id=literal
+match 'a' with 'a' -> True | _ -> False ;
+match 'b' with 'a' -> True | _ -> False
+---
+True: Bool
+False: Bool
+```

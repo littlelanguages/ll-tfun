@@ -2,7 +2,7 @@ The tasks are built out according to the packages listed in [README](README.md)
 
 - [ ] Add a Char data type
   - [x] Add literal char into parser
-  - [ ] Add literal char for patter matching
+  - [x] Add literal char for pattern matching
   - [ ] Add Data.Char into standard library
 - [ ] Add `::` as a synonym for List.Cons
 - [ ] Add `[]` as a synonym for List.Nil

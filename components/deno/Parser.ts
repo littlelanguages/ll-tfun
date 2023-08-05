@@ -218,6 +218,7 @@ export type Parameter = {
 export type Pattern =
   | ConsPattern
   | LBoolPattern
+  | LCharPattern
   | LIntPattern
   | LStringPattern
   | LTuplePattern
@@ -237,6 +238,12 @@ export type ConsPattern = {
 export type LBoolPattern = {
   type: "PBool";
   value: boolean;
+  location: Location;
+};
+
+export type LCharPattern = {
+  type: "PChar";
+  value: number;
   location: Location;
 };
 
@@ -814,18 +821,24 @@ const visitor: Visitor<
   }),
 
   visitPattern4: (a: Token): Pattern => ({
-    type: "PBool",
-    value: true,
+    type: "PChar",
+    value: transformLiteralChar(a[2]),
     location: a[1],
   }),
 
   visitPattern5: (a: Token): Pattern => ({
     type: "PBool",
+    value: true,
+    location: a[1],
+  }),
+
+  visitPattern6: (a: Token): Pattern => ({
+    type: "PBool",
     value: false,
     location: a[1],
   }),
 
-  visitPattern6: (a: Token): Pattern => {
+  visitPattern7: (a: Token): Pattern => {
     if (a[2] === "_") {
       return { type: "PWildcard", location: a[1] };
     }
@@ -837,7 +850,7 @@ const visitor: Visitor<
     };
   },
 
-  visitPattern7: (
+  visitPattern8: (
     a1: Token,
     a2: [Token, Token] | undefined,
     a3: Array<Pattern>,
@@ -864,7 +877,7 @@ const visitor: Visitor<
       location: combine(a1[1], endLocation),
     };
   },
-  visitPattern8: (
+  visitPattern9: (
     a1: Token,
     a2: [
       Token,

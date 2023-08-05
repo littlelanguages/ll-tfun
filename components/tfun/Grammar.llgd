@@ -97,6 +97,7 @@ Pattern
     : "(" [Pattern {"," Pattern}] ")"
     | LiteralInt
     | LiteralString
+    | LiteralChar
     | "True"
     | "False"
     | LowerIdentifier

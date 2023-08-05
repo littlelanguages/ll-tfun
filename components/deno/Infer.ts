@@ -350,6 +350,8 @@ export const inferPattern = (
   switch (pattern.type) {
     case "PBool":
       return [position(typeBool), env];
+    case "PChar":
+      return [position(typeChar), env];
     case "PCons": {
       const [constructor, adt] = pattern.qualifier === undefined
         ? env.type.getConstructor(env.src, pattern.name)

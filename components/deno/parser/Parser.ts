@@ -155,12 +155,13 @@ export interface Visitor<
   visitPattern4(a: Token): T_Pattern;
   visitPattern5(a: Token): T_Pattern;
   visitPattern6(a: Token): T_Pattern;
-  visitPattern7(
+  visitPattern7(a: Token): T_Pattern;
+  visitPattern8(
     a1: Token,
     a2: [Token, Token] | undefined,
     a3: Array<T_Pattern>,
   ): T_Pattern;
-  visitPattern8(
+  visitPattern9(
     a1: Token,
     a2: [
       Token,
@@ -915,6 +916,7 @@ export const mkParser = <
             TToken.LParen,
             TToken.LiteralInt,
             TToken.LiteralString,
+            TToken.LiteralChar,
             TToken.True,
             TToken.False,
             TToken.LowerIdentifier,
@@ -940,12 +942,14 @@ export const mkParser = <
         return visitor.visitPattern2(matchToken(TToken.LiteralInt));
       } else if (isToken(TToken.LiteralString)) {
         return visitor.visitPattern3(matchToken(TToken.LiteralString));
+      } else if (isToken(TToken.LiteralChar)) {
+        return visitor.visitPattern4(matchToken(TToken.LiteralChar));
       } else if (isToken(TToken.True)) {
-        return visitor.visitPattern4(matchToken(TToken.True));
+        return visitor.visitPattern5(matchToken(TToken.True));
       } else if (isToken(TToken.False)) {
-        return visitor.visitPattern5(matchToken(TToken.False));
+        return visitor.visitPattern6(matchToken(TToken.False));
       } else if (isToken(TToken.LowerIdentifier)) {
-        return visitor.visitPattern6(matchToken(TToken.LowerIdentifier));
+        return visitor.visitPattern7(matchToken(TToken.LowerIdentifier));
       } else if (isToken(TToken.UpperIdentifier)) {
         const a1: Token = matchToken(TToken.UpperIdentifier);
         let a2: [Token, Token] | undefined = undefined;
@@ -963,6 +967,7 @@ export const mkParser = <
             TToken.LParen,
             TToken.LiteralInt,
             TToken.LiteralString,
+            TToken.LiteralChar,
             TToken.True,
             TToken.False,
             TToken.LowerIdentifier,
@@ -973,7 +978,7 @@ export const mkParser = <
           const a3t: T_Pattern = this.pattern();
           a3.push(a3t);
         }
-        return visitor.visitPattern7(a1, a2, a3);
+        return visitor.visitPattern8(a1, a2, a3);
       } else if (isToken(TToken.LCurly)) {
         const a1: Token = matchToken(TToken.LCurly);
         let a2: [
@@ -1031,7 +1036,7 @@ export const mkParser = <
           a2 = a2t;
         }
         const a3: Token = matchToken(TToken.RCurly);
-        return visitor.visitPattern8(a1, a2, a3);
+        return visitor.visitPattern9(a1, a2, a3);
       } else {
         throw {
           tag: "SyntaxError",
@@ -1040,6 +1045,7 @@ export const mkParser = <
             TToken.LParen,
             TToken.LiteralInt,
             TToken.LiteralString,
+            TToken.LiteralChar,
             TToken.True,
             TToken.False,
             TToken.LowerIdentifier,
