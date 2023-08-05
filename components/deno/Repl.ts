@@ -9,20 +9,21 @@ import {
 } from "./Values.ts";
 
 const readline = (): string | null => {
-  let result = "";
+  const result: Array<string> = [];
 
   while (true) {
-    const line = prompt(result === "" ? ">" : ".");
+    const line = prompt(result.length === 0 ? ">" : ".");
 
     if (line === null) {
       return null;
     }
 
-    result = (result + "\n" + line).trim();
-
-    if (result.endsWith(";;")) {
-      return result.substring(0, result.length - 2);
+    if (line.trimEnd().endsWith(";;")) {
+      result.push(line.trimEnd().substring(0, line.length - 2));
+      return result.join("\n");
     }
+
+    result.push(line);
   }
 };
 
