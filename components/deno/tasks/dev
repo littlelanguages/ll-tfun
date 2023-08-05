@@ -67,8 +67,6 @@ case "$1" in
     echo "    Run all tasks"
     echo "  run-watch"
     echo "    Run all tasks and watch for changes"
-    echo "  scenario"
-    echo "    Run all scenario tests"
     echo "  unit"
     echo "    Run all unit tests"
     ;;
@@ -76,7 +74,6 @@ case "$1" in
 run)
     build_parser
     unit_tests
-    scenario_tests
     markdown_tests
     ;;
 
@@ -90,10 +87,6 @@ markdown)
 
 parser)
     build_parser
-    ;;
-
-scenario)
-    scenario_tests
     ;;
 
 unit)

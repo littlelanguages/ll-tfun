@@ -35,11 +35,11 @@ let add input =
                       |> List.map RE.literal 
                       |> List.join "|" 
                       |> RE.parse
-                , input: String.dropLeft i + 1 input
+                , input: String.dropLeft (i + 1) input
                 }
               else
                 { separator: separator |> RE.literal |> RE.parse
-                , input: String.dropLeft i + 1 input
+                , input: String.dropLeft (i + 1) input
                 }
     else
       { separator: RE.parse ",|\\n" 

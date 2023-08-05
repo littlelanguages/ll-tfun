@@ -4,7 +4,7 @@ data List* a = Nil | Cons a (List a) ;
 
 let range* n = 
   let rec helper m =
-     if (n == m) Nil else Cons m (helper m + 1)
+     if (n == m) Nil else Cons m (helper (m + 1))
    in helper 0 ;
 
 let rec foldRight* f z lst =

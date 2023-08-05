@@ -24,7 +24,7 @@ BooleanAnd
     ;
 
 Equality
-    : Apply [EqualityOps Apply]
+    : Additive [EqualityOps Additive]
     ;
 
 EqualityOps
@@ -34,10 +34,6 @@ EqualityOps
     | "<="
     | ">"
     | ">="
-    ;
-
-Apply
-    : Additive {Additive}
     ;
 
 Additive
@@ -50,12 +46,16 @@ AdditiveOps
     ;
 
 Multiplicative
-    : Typing {MultiplicativeOps Typing}
+    : Apply {MultiplicativeOps Apply}
     ;
 
 MultiplicativeOps
     : "*"
     | "/"
+    ;
+
+Apply
+    : Typing {Typing}
     ;
 
 Typing

@@ -428,11 +428,11 @@ const visitor: Visitor<
   Expression, // T_BooleanAnd
   Expression, // T_Equality
   string, // T_EqualityOps
-  Expression, // T_Apply
   Expression, // T_Additive
   string, // T_AdditiveOps
   Expression, // T_Multiplicative
   string, // T_MultiplicativeOps
+  Expression, // T_Apply
   Expression, // T_Typing
   Expression, // T_Projection
   Expression, // T_Factor
@@ -1193,3 +1193,24 @@ const composeFunctionType = (types: Array<Type>): Type =>
 // console.log(JSON.stringify(parse("data List n = Nil | Cons n (List n) ; let compose f g x = f(g x) ; compose"), null, 2));
 // console.log(JSON.stringify(parse("let recs a = { x: 1, y: a } ; let y = recs 10 ; y ; y.x.z"), null, 2));
 // console.log(JSON.stringify(parse("\\(v: Int) . v"), null, 2));
+
+// const trimLocation = (a: any): any => {
+//   if (typeof a === "object") {
+//     if (Array.isArray(a)) {
+//       return a.map(trimLocation);
+//     }
+
+//     const b = { ...a };
+
+//     delete b.location;
+
+//     return Object.fromEntries(
+//       Object.entries(b).map(([k, v]) => [k, trimLocation(v)]),
+//     );
+//   } else return a;
+// }
+
+// console.log(JSON.stringify(trimLocation(parse(home, ["let range* n =",
+//   "  let rec helper m =",
+//   "     if (n == m) Nil else Cons m (helper m + 1)",
+//   "   in helper 0"].join("\n"))), null, 2));

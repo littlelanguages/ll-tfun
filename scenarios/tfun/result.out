@@ -1,3 +1,0 @@
-Option a = None | Some a
-find = function: (a -> Bool) -> List a -> Result String a
-Okay 2: Result String Int

@@ -13,11 +13,11 @@ export interface Visitor<
   T_BooleanAnd,
   T_Equality,
   T_EqualityOps,
-  T_Apply,
   T_Additive,
   T_AdditiveOps,
   T_Multiplicative,
   T_MultiplicativeOps,
+  T_Apply,
   T_Typing,
   T_Projection,
   T_Factor,
@@ -53,8 +53,8 @@ export interface Visitor<
   ): T_BooleanOr;
   visitBooleanAnd(a1: T_Equality, a2: Array<[Token, T_Equality]>): T_BooleanAnd;
   visitEquality(
-    a1: T_Apply,
-    a2: [T_EqualityOps, T_Apply] | undefined,
+    a1: T_Additive,
+    a2: [T_EqualityOps, T_Additive] | undefined,
   ): T_Equality;
   visitEqualityOps1(a: Token): T_EqualityOps;
   visitEqualityOps2(a: Token): T_EqualityOps;
@@ -62,7 +62,6 @@ export interface Visitor<
   visitEqualityOps4(a: Token): T_EqualityOps;
   visitEqualityOps5(a: Token): T_EqualityOps;
   visitEqualityOps6(a: Token): T_EqualityOps;
-  visitApply(a1: T_Additive, a2: Array<T_Additive>): T_Apply;
   visitAdditive(
     a1: T_Multiplicative,
     a2: Array<[T_AdditiveOps, T_Multiplicative]>,
@@ -70,11 +69,12 @@ export interface Visitor<
   visitAdditiveOps1(a: Token): T_AdditiveOps;
   visitAdditiveOps2(a: Token): T_AdditiveOps;
   visitMultiplicative(
-    a1: T_Typing,
-    a2: Array<[T_MultiplicativeOps, T_Typing]>,
+    a1: T_Apply,
+    a2: Array<[T_MultiplicativeOps, T_Apply]>,
   ): T_Multiplicative;
   visitMultiplicativeOps1(a: Token): T_MultiplicativeOps;
   visitMultiplicativeOps2(a: Token): T_MultiplicativeOps;
+  visitApply(a1: T_Typing, a2: Array<T_Typing>): T_Apply;
   visitTyping(a1: T_Projection, a2: [Token, T_TypeType] | undefined): T_Typing;
   visitProjection(a1: T_Factor, a2: Array<[Token, Token]>): T_Projection;
   visitFactor1(
@@ -257,11 +257,11 @@ export const parseProgram = <
   T_BooleanAnd,
   T_Equality,
   T_EqualityOps,
-  T_Apply,
   T_Additive,
   T_AdditiveOps,
   T_Multiplicative,
   T_MultiplicativeOps,
+  T_Apply,
   T_Typing,
   T_Projection,
   T_Factor,
@@ -291,11 +291,11 @@ export const parseProgram = <
     T_BooleanAnd,
     T_Equality,
     T_EqualityOps,
-    T_Apply,
     T_Additive,
     T_AdditiveOps,
     T_Multiplicative,
     T_MultiplicativeOps,
+    T_Apply,
     T_Typing,
     T_Projection,
     T_Factor,
@@ -332,11 +332,11 @@ export const mkParser = <
   T_BooleanAnd,
   T_Equality,
   T_EqualityOps,
-  T_Apply,
   T_Additive,
   T_AdditiveOps,
   T_Multiplicative,
   T_MultiplicativeOps,
+  T_Apply,
   T_Typing,
   T_Projection,
   T_Factor,
@@ -366,11 +366,11 @@ export const mkParser = <
     T_BooleanAnd,
     T_Equality,
     T_EqualityOps,
-    T_Apply,
     T_Additive,
     T_AdditiveOps,
     T_Multiplicative,
     T_MultiplicativeOps,
+    T_Apply,
     T_Typing,
     T_Projection,
     T_Factor,
@@ -519,8 +519,8 @@ export const mkParser = <
       return visitor.visitBooleanAnd(a1, a2);
     },
     equality: function (): T_Equality {
-      const a1: T_Apply = this.apply();
-      let a2: [T_EqualityOps, T_Apply] | undefined = undefined;
+      const a1: T_Additive = this.additive();
+      let a2: [T_EqualityOps, T_Additive] | undefined = undefined;
 
       if (
         isTokens([
@@ -533,8 +533,8 @@ export const mkParser = <
         ])
       ) {
         const a2t1: T_EqualityOps = this.equalityOps();
-        const a2t2: T_Apply = this.apply();
-        const a2t: [T_EqualityOps, T_Apply] = [a2t1, a2t2];
+        const a2t2: T_Additive = this.additive();
+        const a2t: [T_EqualityOps, T_Additive] = [a2t1, a2t2];
         a2 = a2t;
       }
       return visitor.visitEquality(a1, a2);
@@ -567,33 +567,6 @@ export const mkParser = <
         };
       }
     },
-    apply: function (): T_Apply {
-      const a1: T_Additive = this.additive();
-      const a2: Array<T_Additive> = [];
-
-      while (
-        isTokens([
-          TToken.LParen,
-          TToken.LiteralInt,
-          TToken.LiteralString,
-          TToken.LiteralChar,
-          TToken.True,
-          TToken.False,
-          TToken.Backslash,
-          TToken.Let,
-          TToken.If,
-          TToken.UpperIdentifier,
-          TToken.LowerIdentifier,
-          TToken.Match,
-          TToken.LCurly,
-          TToken.Builtin,
-        ])
-      ) {
-        const a2t: T_Additive = this.additive();
-        a2.push(a2t);
-      }
-      return visitor.visitApply(a1, a2);
-    },
     additive: function (): T_Additive {
       const a1: T_Multiplicative = this.multiplicative();
       const a2: Array<[T_AdditiveOps, T_Multiplicative]> = [];
@@ -620,13 +593,13 @@ export const mkParser = <
       }
     },
     multiplicative: function (): T_Multiplicative {
-      const a1: T_Typing = this.typing();
-      const a2: Array<[T_MultiplicativeOps, T_Typing]> = [];
+      const a1: T_Apply = this.apply();
+      const a2: Array<[T_MultiplicativeOps, T_Apply]> = [];
 
       while (isTokens([TToken.Star, TToken.Slash])) {
         const a2t1: T_MultiplicativeOps = this.multiplicativeOps();
-        const a2t2: T_Typing = this.typing();
-        const a2t: [T_MultiplicativeOps, T_Typing] = [a2t1, a2t2];
+        const a2t2: T_Apply = this.apply();
+        const a2t: [T_MultiplicativeOps, T_Apply] = [a2t1, a2t2];
         a2.push(a2t);
       }
       return visitor.visitMultiplicative(a1, a2);
@@ -643,6 +616,33 @@ export const mkParser = <
           expected: [TToken.Star, TToken.Slash],
         };
       }
+    },
+    apply: function (): T_Apply {
+      const a1: T_Typing = this.typing();
+      const a2: Array<T_Typing> = [];
+
+      while (
+        isTokens([
+          TToken.LParen,
+          TToken.LiteralInt,
+          TToken.LiteralString,
+          TToken.LiteralChar,
+          TToken.True,
+          TToken.False,
+          TToken.Backslash,
+          TToken.Let,
+          TToken.If,
+          TToken.UpperIdentifier,
+          TToken.LowerIdentifier,
+          TToken.Match,
+          TToken.LCurly,
+          TToken.Builtin,
+        ])
+      ) {
+        const a2t: T_Typing = this.typing();
+        a2.push(a2t);
+      }
+      return visitor.visitApply(a1, a2);
     },
     typing: function (): T_Typing {
       const a1: T_Projection = this.projection();

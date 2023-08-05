@@ -6,7 +6,7 @@ The tasks are built out according to the packages listed in [README](README.md)
   - [x] Add literal char into parser
   - [x] Add literal char for pattern matching
   - [x] Add Data.Char into standard library
-- [ ] Add `::` as a synonym for List.Cons
+- [ ] Add `::` and `++` as a synonym for List.Cons and String.append
 - [ ] Add `[]` as a synonym for List.Nil
 - [ ] Add `[]` as a pattern synonym for List.Nil
 - [ ] Add `[,]` as a form of constructing literal lists

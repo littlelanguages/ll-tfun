@@ -2,10 +2,11 @@ data List* a = Nil | Cons a (List a) ;
 
 data Maybe- a = Nothing | Just a ;
 
+
 let range* n = 
-  let rec helper m =
-     if (n == m) Nil else Cons m (helper m + 1)
-   in helper 0 ;
+  let rec helper n m =
+      if (n == m) Nil else Cons m (helper n (m + 1))
+   in helper n 0 ;
 
 let rec foldRight* f z lst =
   match lst with
@@ -24,7 +25,7 @@ let map* f =
 let rec find* p lst =
   match lst with
   | Nil -> Nothing
-  | Cons x xs -> if (p x) Just x else find p xs ;
+  | Cons x xs -> if (p x) Just x else (find p xs) ;
 
 let withDefault* d opt =
   match opt with
