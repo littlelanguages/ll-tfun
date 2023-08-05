@@ -1,10 +1,5 @@
 import { Program } from "../deno/Parser.ts";
-import {
-  defaultEnv,
-  emptyImportEnv,
-  Env,
-  parseExecute,
-} from "../deno/Interpreter.ts";
+import { defaultEnv, Env, parseExecute } from "../deno/Interpreter.ts";
 import { home, Src } from "../deno/Src.ts";
 import {
   expressionToNestedString,
@@ -133,7 +128,6 @@ export class XTHandler implements Handler {
     try {
       let env = defaultEnv(
         home,
-        emptyImportEnv(),
         home.newSrc("../../stdlib/Prelude.tfun"),
       );
       env.src = src;

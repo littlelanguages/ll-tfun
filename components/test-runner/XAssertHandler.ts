@@ -1,10 +1,5 @@
 import { Program } from "../deno/Parser.ts";
-import {
-  defaultEnv,
-  emptyImportEnv,
-  Env,
-  parseExecute,
-} from "../deno/Interpreter.ts";
+import { defaultEnv, Env, parseExecute } from "../deno/Interpreter.ts";
 import { home, Src } from "../deno/Src.ts";
 import { RuntimeValue } from "../deno/Values.ts";
 import { Handler, TestResult } from "./Runner.ts";
@@ -72,11 +67,7 @@ export class XAssertHandler implements Handler {
     code: string,
   ): TestResult {
     try {
-      let env = defaultEnv(
-        home,
-        emptyImportEnv(),
-        home.newSrc("../../stdlib/Prelude.tfun"),
-      );
+      let env = defaultEnv(home, home.newSrc("../../stdlib/Prelude.tfun"));
       env.src = src;
 
       if (options.has("use")) {

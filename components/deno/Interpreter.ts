@@ -101,22 +101,20 @@ export type Env = {
   preludeSrc: Src | undefined;
 };
 
-export const emptyRuntimeEnv = () => new RuntimeEnv();
-
-export const emptyImportEnv = (): ImportEnv => ({});
+const emptyRuntimeEnv = () => new RuntimeEnv();
 
 export const emptyEnv = (src: Src, preludeSrc: Src | undefined): Env => ({
   runtime: emptyRuntimeEnv(),
   type: emptyTypeEnv,
   src,
-  imports: emptyImportEnv(),
+  imports: {},
   preludeSrc,
 });
 
 export const defaultEnv = (
   src: Src,
-  imports: ImportEnv,
-  preludeSrc: Src | undefined,
+  preludeSrc: Src | undefined = undefined,
+  imports: ImportEnv = {},
 ): Env => {
   const initialEnv = {
     runtime: emptyRuntimeEnv(),
@@ -515,7 +513,7 @@ const executeElement = (
     };
     return [null, undefined, env];
   } else if (e.type === "ImportStatement") {
-    const imports = executeImport(e.from, env);
+    const imports = importPackage(e.from, env);
 
     if (e.items.type === "ImportAll") {
       if (e.items.as === undefined) {
@@ -725,7 +723,7 @@ export const parseExecute = (
   return [ast, result, resultEnv];
 };
 
-export const executeImport = (
+export const importPackage = (
   importFileName: NameLocation,
   referencedFrom: Env,
 ): ImportPackage => {
@@ -747,8 +745,8 @@ export const executeImport = (
     );
     const initialImportEnv = defaultEnv(
       src,
-      referencedFrom.imports,
       referencedFrom.preludeSrc,
+      referencedFrom.imports,
     );
 
     const [ast, result, resultEnv] = parseExecute(
@@ -800,7 +798,7 @@ export const executeImport = (
           }
         });
       } else if (e.type === "ImportStatement") {
-        const imports = executeImport(e.from, initialImportEnv);
+        const imports = importPackage(e.from, initialImportEnv);
 
         if (e.items.type === "ImportNames") {
           e.items.items.forEach(({ name, as, visibility }) => {

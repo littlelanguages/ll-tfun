@@ -1,9 +1,4 @@
-import {
-  defaultEnv,
-  emptyImportEnv,
-  Env,
-  parseExecute,
-} from "./Interpreter.ts";
+import { defaultEnv, Env, parseExecute } from "./Interpreter.ts";
 import { home } from "./Src.ts";
 import { renameTypeVariables } from "./Typing.ts";
 import {
@@ -55,11 +50,7 @@ const execute = (line: string, env: Env): Env => {
 
 const mkDefaultEnv = () => {
   try {
-    return defaultEnv(
-      home,
-      emptyImportEnv(),
-      home.newSrc("../../stdlib/Prelude.tfun"),
-    );
+    return defaultEnv(home, home.newSrc("../../stdlib/Prelude.tfun"));
   } catch (e) {
     console.error(e.toString());
     Deno.exit(1);

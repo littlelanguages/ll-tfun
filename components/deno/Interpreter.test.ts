@@ -6,14 +6,10 @@ import {
 import {
   defaultEnv,
   emptyEnv,
-  executeImport,
+  importPackage,
   parseExecute,
 } from "./Interpreter.ts";
-import {
-  emptyImportEnv,
-  expressionToNestedString,
-  NestedString,
-} from "./Values.ts";
+import { expressionToNestedString, NestedString } from "./Values.ts";
 import { home } from "./Src.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 import { UnificationMismatchException } from "./Errors.ts";
@@ -285,7 +281,7 @@ Deno.test("Error - add visibility ot non-toplevel declaration", () => {
 });
 
 Deno.test("Import - raw mechanism using simple.tfun", () => {
-  const ip = executeImport(
+  const ip = importPackage(
     { name: "./tests/simple.tfun", location: arbLocation },
     emptyEnv(home, undefined),
   )
@@ -303,7 +299,7 @@ Deno.test("Import - raw mechanism using simple.tfun", () => {
 });
 
 Deno.test("Import - raw mechanism using adt.tfun", () => {
-  const ip = executeImport(
+  const ip = importPackage(
     { name: "./tests/adt.tfun", location: arbLocation },
     emptyEnv(home, undefined),
   )
@@ -632,11 +628,7 @@ Deno.test("Import - aliases", () => {
 });
 
 const assertExecute = (expression: string, expected: NestedString) => {
-  const [ast, result, newEnv] = parseExecute(
-    urn,
-    expression,
-    defaultEnv(home, emptyImportEnv(), undefined),
-  );
+  const [ast, result, newEnv] = parseExecute(urn, expression, defaultEnv(home));
 
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
@@ -659,7 +651,7 @@ type MyError = any;
 
 const assertError = (expression: string, error: MyError) => {
   try {
-    parseExecute(urn, expression, defaultEnv(urn, emptyImportEnv(), undefined));
+    parseExecute(urn, expression, defaultEnv(urn));
     assert(false);
   } catch (e) {
     if (e instanceof Error) {
@@ -675,11 +667,7 @@ const assertCatchError = (
   error: (error: MyError) => void,
 ) => {
   try {
-    parseExecute(
-      urn,
-      expression,
-      defaultEnv(home, emptyImportEnv(), undefined),
-    );
+    parseExecute(urn, expression, defaultEnv(home));
     assert(false);
   } catch (e) {
     assertEquals(error(e), true);
