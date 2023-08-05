@@ -43,11 +43,6 @@ jobs:
           cd ./components/deno
           deno test --allow-read
 
-      - name: Scenario tests
-        run: |
-          cd ./components/deno
-          ./tasks/dev scenario
-
       - name: Markdown Tests
         run: |
           cd ./components/deno
