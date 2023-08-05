@@ -26,8 +26,8 @@ let startsWith* (needle: String) (haystack: String): Bool =
 let indexOf* (needle: String) (haystack: String): Maybe Int =
   builtin "Data.String.indexOf" needle haystack ;
 
-let concat* (s1: String) (s2: String): String =
-  builtin "Data.String.concat" s1 s2 ;
+let append* (s1: String) (s2: String): String =
+  builtin "Data.String.append" s1 s2 ;
 
 let reverse* (s: String): String =
   builtin "Data.String.reverse" s ;
@@ -36,7 +36,7 @@ let rec repeat* (n: Int) (s: String): String =
   if (n <= 0)
     ""
   else
-    concat s (repeat (n - 1) s) ;
+    append s (repeat (n - 1) s) ;
 
 let replace* (needle: String) (replacement: String) (haystack: String): String =
   builtin "Data.String.replace" needle replacement haystack

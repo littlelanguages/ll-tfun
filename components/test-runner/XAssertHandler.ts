@@ -67,11 +67,16 @@ export class XAssertHandler implements Handler {
     code: string,
   ): TestResult {
     try {
-      let { env } = executeCodeBlock(
+      const preludeResult = executeCodeBlock(
         'import * from "../../stdlib/Prelude.tfun"',
         defaultEnv(home),
       );
 
+      if (preludeResult.type === "Error") {
+        return  { type: "Failure", expected: preludeResult.expected, actual: preludeResult.error };
+      }
+
+      let env = preludeResult.env;
       env.src = src;
 
       if (options.has("use")) {

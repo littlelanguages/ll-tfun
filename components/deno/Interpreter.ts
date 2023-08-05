@@ -206,6 +206,8 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
             r[1] = v;
             return result;
           };
+        case "Data.String.append":
+          return (a: string) => (b: string) => a + b;
         case "Data.String.indexOf":
           return (n: string) => (s: string) => {
             const i = s.indexOf(n);
@@ -214,15 +216,13 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
               ? runtimeEnv.get("Nothing")
               : runtimeEnv.get("Just")(i);
           };
-        case "Data.String.concat":
-          return (a: string) => (b: string) => a + b;
         case "Data.String.length":
           return (s: string) => s.length;
         case "Data.String.replace":
           return (searchValue: string) =>
-          (replaceValue: string) =>
-          (s: string) =>
-            s.replace(new RegExp(literal(searchValue), "g"), replaceValue);
+            (replaceValue: string) =>
+              (s: string) =>
+                s.replace(new RegExp(literal(searchValue), "g"), replaceValue);
         case "Data.String.reverse":
           return (s: string) => s.split("").reverse().join("");
         case "Data.String.slice":
@@ -414,16 +414,16 @@ const mkConstructorFunction = (name: string, arity: number): RuntimeValue => {
   }
   if (arity === 4) {
     return (x1: RuntimeValue) =>
-    (x2: RuntimeValue) =>
-    (x3: RuntimeValue) =>
-    (x4: RuntimeValue) => [name, x1, x2, x3, x4];
+      (x2: RuntimeValue) =>
+        (x3: RuntimeValue) =>
+          (x4: RuntimeValue) => [name, x1, x2, x3, x4];
   }
   if (arity === 5) {
     return (x1: RuntimeValue) =>
-    (x2: RuntimeValue) =>
-    (x3: RuntimeValue) =>
-    (x4: RuntimeValue) =>
-    (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
+      (x2: RuntimeValue) =>
+        (x3: RuntimeValue) =>
+          (x4: RuntimeValue) =>
+            (x5: RuntimeValue) => [name, x1, x2, x3, x4, x5];
   }
 
   throw { type: "TooManyConstructorArgumentsErrors", name, arity };

@@ -51,3 +51,13 @@ replace " " "-" "Bye bye love" == "Bye-bye-love"
 replace "," "/" "a,b,c,d,e" == "a/b/c/d/e"
 replace "*" "" "a*b*c*d*e" == "abcde"
 ```
+
+## Building and Splitting
+
+# append: String -> String -> String
+
+Append two strings.
+
+```fsharp xassert id=append; use=Import
+append "Star" "Wars" == "StarWars"
+```

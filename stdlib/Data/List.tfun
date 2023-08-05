@@ -41,4 +41,4 @@ let rec join* (sep: String) (lst: List String): String =
   match lst with
   | Nil -> ""
   | (Cons x Nil) -> x
-  | (Cons x xs) -> (String.concat (String.concat x sep) (join sep xs))
+  | (Cons x xs) -> (String.append (String.append x sep) (join sep xs))
