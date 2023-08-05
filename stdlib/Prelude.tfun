@@ -1,3 +1,3 @@
-import List* from "./Data/List.tfun" ;
-import Maybe* from "./Data/Maybe.tfun" ;
-import Result* from "./Data/Result.tfun"
+data List* a = Nil | Cons a (List a) ;
+data Maybe* a = Just a | Nothing ;
+data Result* err ok = Error err | Okay ok

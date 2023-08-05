@@ -24,8 +24,8 @@ let add input =
       }
     else if (String.startsWith "//" input)
       match String.indexOf "\n" input with
-      | Maybe.Nothing -> { separator: RE.parse ",", input: "0" }
-      | Maybe.Just i ->
+      | Nothing -> { separator: RE.parse ",", input: "0" }
+      | Just i ->
           let separator: String = String.slice 2 i input
            in if (String.startsWith "[" separator)
                 { separator: separator
@@ -54,12 +54,12 @@ let add input =
    in if (List.any negative numbers)
         numbers
           |> List.filter negative
-          |> Result.Error
+          |> Error
       else
         numbers
           |> List.filter (\n = n < 1001)
           |> List.sum
-          |> Result.Okay
+          |> Okay
 ---
 add = function: String -> Result (List Int) Int
 ```
@@ -124,9 +124,9 @@ add "1,4,-3,-2" ;
 add "1,4\n-3,-2" ;
 add "//*\n1*4*-3*-2"
 ---
-Error (Cons -3 (Cons -2 Nil)): Result (List Int) Int
-Error (Cons -3 (Cons -2 Nil)): Result (List Int) Int
-Error (Cons -3 (Cons -2 Nil)): Result (List Int) Int
+Error [-3, -2]: Result (List Int) Int
+Error [-3, -2]: Result (List Int) Int
+Error [-3, -2]: Result (List Int) Int
 ```
 
 Test Ignore Large Numbers: The function should ignore numbers greater than 1000 in the sum.

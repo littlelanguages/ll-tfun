@@ -1,7 +1,8 @@
 import * from "./Maybe.tfun" ;
 import * as String from "./String.tfun" ;
 
-data List* a = Nil | Cons a (List a) ;
+-- This declaration is in the prelude - adding it here will result in a re-declaration error
+-- data List* a = Nil | Cons a (List a) ;
 
 let range* n = 
   let rec helper m =

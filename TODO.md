@@ -11,9 +11,10 @@ The tasks are built out according to the packages listed in [README](README.md)
 - [x] Add `[]` as a pattern synonym for List.Nil
 - [x] Add `[,]` as a form of constructing literal lists
 - [x] Add `[,]` as a pattern destructor for lists
+- [ ] Update toString to print lists using the [,] notation
 - [ ] Add `<|`
 
 
 ## Fix
 
-- [ ] funny issue where `join` can't be moved from List into String
+- [x] funny issue where `join` can't be moved from List into String

@@ -1,4 +1,9 @@
-import { defaultEnv, Env, executeProgram } from "./Interpreter.ts";
+import {
+  defaultEnv,
+  emptyImportEnv,
+  Env,
+  executeProgram,
+} from "./Interpreter.ts";
 import { parse } from "./Parser.ts";
 import { from, home } from "./Src.ts";
 import { renameTypeVariables } from "./Typing.ts";
@@ -63,7 +68,11 @@ if (Deno.args.length === 0) {
   let env: Env;
 
   try {
-    env = loadPrelude(defaultEnv(home));
+    env = defaultEnv(
+      home,
+      emptyImportEnv(),
+      home.newSrc("../../stdlib/Prelude.tfun"),
+    );
   } catch (e) {
     console.error(e.toString());
     Deno.exit(1);
@@ -100,6 +109,10 @@ if (Deno.args.length === 0) {
         }
         console.log("Data Declarations");
         console.log(env.type.datas().map((a) => `  ${a}`).join("\n"));
+        console.log("Type Aliases");
+        console.log(env.type.aliases().map((a) => `  ${a}`).join("\n"));
+        console.log("Imports");
+        console.log(Object.keys(env.imports));
         break;
       default:
         try {
@@ -113,7 +126,7 @@ if (Deno.args.length === 0) {
   try {
     execute(
       Deno.readTextFileSync(Deno.args[0]),
-      loadPrelude(defaultEnv(from(Deno.args[0]))),
+      loadPrelude(defaultEnv(from(Deno.args[0]), emptyImportEnv(), undefined)),
     );
   } catch (e) {
     console.log(e.toString());

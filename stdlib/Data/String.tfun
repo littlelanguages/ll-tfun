@@ -1,5 +1,3 @@
-import Maybe from "./Maybe.tfun" ;
-
 let length* (s: String): Int =
   builtin "Data.String.length" s ;
 

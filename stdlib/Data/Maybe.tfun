@@ -1,4 +1,5 @@
-data Maybe* a = Just a | Nothing ;
+-- This declaration is in the prelude - adding it here will result in a re-declaration error
+-- data Maybe* a = Just a | Nothing ;
 
 let withDefault* default maybe =
   match maybe with

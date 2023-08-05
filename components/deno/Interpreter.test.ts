@@ -3,9 +3,18 @@ import {
   assertEquals,
 } from "https://deno.land/std@0.137.0/testing/asserts.ts";
 
-import { defaultEnv, executeImport, executeProgram } from "./Interpreter.ts";
+import {
+  defaultEnv,
+  emptyEnv,
+  executeImport,
+  executeProgram,
+} from "./Interpreter.ts";
 import { parse } from "./Parser.ts";
-import { expressionToNestedString, NestedString } from "./Values.ts";
+import {
+  emptyImportEnv,
+  expressionToNestedString,
+  NestedString,
+} from "./Values.ts";
 import { home } from "./Src.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 import { UnificationMismatchException } from "./Errors.ts";
@@ -248,10 +257,10 @@ Deno.test("Data Declaration - execute", () => {
     "data List a = Cons a (List a) | Nil; Nil; Cons; Cons 10; Cons 10 (Cons 20 (Cons 30 Nil))",
     [
       "List a = Cons a (List a) | Nil",
-      "Nil: List V1",
+      "[]: List V1",
       "function: V1 -> List V1 -> List V1",
       "function: List Int -> List Int",
-      "Cons 10 (Cons 20 (Cons 30 Nil)): List Int",
+      "[10, 20, 30]: List Int",
     ],
   );
 });
@@ -277,9 +286,11 @@ Deno.test("Error - add visibility ot non-toplevel declaration", () => {
 });
 
 Deno.test("Import - raw mechanism using simple.tfun", () => {
-  const ip =
-    executeImport({ name: "./tests/simple.tfun", location: arbLocation }, home)
-      .values;
+  const ip = executeImport(
+    { name: "./tests/simple.tfun", location: arbLocation },
+    emptyEnv(home, undefined),
+  )
+    .values;
 
   assertEquals(ip.size, 4);
 
@@ -293,9 +304,11 @@ Deno.test("Import - raw mechanism using simple.tfun", () => {
 });
 
 Deno.test("Import - raw mechanism using adt.tfun", () => {
-  const ip =
-    executeImport({ name: "./tests/adt.tfun", location: arbLocation }, home)
-      .values;
+  const ip = executeImport(
+    { name: "./tests/adt.tfun", location: arbLocation },
+    emptyEnv(home, undefined),
+  )
+    .values;
 
   assertEquals(ip.size, 9);
 });
@@ -344,9 +357,9 @@ Deno.test("Import - simple types", () => {
     'import * from "./tests/adt.tfun"; Nil ; Cons ; Cons 1 Nil',
     [
       "import",
-      "Nil: List V1",
+      "[]: List V1",
       "function: V1 -> List V1 -> List V1",
-      "Cons 1 Nil: List Int",
+      "[1]: List Int",
     ],
   );
 
@@ -354,9 +367,9 @@ Deno.test("Import - simple types", () => {
     'import * as T from "./tests/adt.tfun" ; T.Nil ; T.Cons ; T.Cons 1 T.Nil',
     [
       "import",
-      "Nil: List V1",
+      "[]: List V1",
       "function: V1 -> List V1 -> List V1",
-      "Cons 1 Nil: List Int",
+      "[1]: List Int",
     ],
   );
 
@@ -413,7 +426,7 @@ Deno.test("Import - qualified simple type in data declaration", () => {
     [
       "import",
       "Fred a = None | Other (List a)",
-      "Other (Cons 1 Nil): Fred Int",
+      "Other [1]: Fred Int",
     ],
   );
 });
@@ -458,7 +471,7 @@ Deno.test("Import - nested types", () => {
       "Just 10: Maybe Int",
       "True: Bool",
       "False: Bool",
-      "Cons 0 (Cons 1 (Cons 2 Nil)): List Int",
+      "[0, 1, 2]: List Int",
       "45: Int",
     ],
   );
@@ -471,7 +484,7 @@ Deno.test("Import - nested types", () => {
       "Just 10: Maybe Int",
       "True: Bool",
       "False: Bool",
-      "Cons 0 (Cons 1 (Cons 2 Nil)): List Int",
+      "[0, 1, 2]: List Int",
       "45: Int",
     ],
   );
@@ -621,7 +634,10 @@ Deno.test("Import - aliases", () => {
 
 const assertExecute = (expression: string, expected: NestedString) => {
   const ast = parse(urn, expression);
-  const [result, newEnv] = executeProgram(ast, defaultEnv(home));
+  const [result, newEnv] = executeProgram(
+    ast,
+    defaultEnv(home, emptyImportEnv(), undefined),
+  );
 
   ast.forEach((e, i) => {
     if (e.type === "DataDeclaration") {
@@ -645,7 +661,7 @@ type MyError = any;
 const assertError = (expression: string, error: MyError) => {
   const ast = parse(urn, expression);
   try {
-    executeProgram(ast, defaultEnv(urn));
+    executeProgram(ast, defaultEnv(urn, emptyImportEnv(), undefined));
     assert(false);
   } catch (e) {
     if (e instanceof Error) {
@@ -662,7 +678,7 @@ const assertCatchError = (
 ) => {
   const ast = parse(urn, expression);
   try {
-    executeProgram(ast, defaultEnv(home));
+    executeProgram(ast, defaultEnv(home, emptyImportEnv(), undefined));
     assert(false);
   } catch (e) {
     assertEquals(error(e), true);

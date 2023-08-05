@@ -1,4 +1,5 @@
-data Result* err ok = Error err | Okay ok ;
+-- This declaration is in the prelude - adding it here will result in a re-declaration error
+-- data Result* err ok = Error err | Okay ok ;
 
 let map* (f: b -> c) (r: Result a b) : Result a c = 
   match r with 

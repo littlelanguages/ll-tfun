@@ -31,10 +31,8 @@ import {
   TTuple,
   TVar,
   Type,
-  typeBool,
   TypeEnv,
   typeInt,
-  typeString,
 } from "./Typing.ts";
 import {
   equals,
@@ -100,60 +98,40 @@ export type Env = {
   type: TypeEnv;
   src: Src;
   imports: ImportEnv;
+  preludeSrc: Src | undefined;
 };
 
 export const emptyRuntimeEnv = () => new RuntimeEnv();
 
 export const emptyImportEnv = (): ImportEnv => ({});
 
-export const emptyEnv = (src: Src): Env => ({
+export const emptyEnv = (src: Src, preludeSrc: Src | undefined): Env => ({
   runtime: emptyRuntimeEnv(),
   type: emptyTypeEnv,
   src,
   imports: emptyImportEnv(),
+  preludeSrc,
 });
 
 export const defaultEnv = (
   src: Src,
-  imports: ImportEnv = emptyImportEnv(),
-): Env => ({
-  runtime: emptyRuntimeEnv()
-    .bind("string_length", (s: string) => s.length)
-    .bind("string_concat", (s1: string) => (s2: string) => s1 + s2)
-    .bind(
-      "string_substring",
-      (s: string) => (start: number) => (end: number) => s.slice(start, end),
-    )
-    .bind("string_equal", (s1: string) => (s2: string) => s1 === s2)
-    .bind(
-      "string_compare",
-      (s1: string) => (s2: string) => s1 < s2 ? -1 : s1 === s2 ? 0 : 1,
-    ),
-  type: emptyTypeEnv
-    .extend(
-      "string_length",
-      (new TArr(typeString, typeInt)).toScheme(),
-    )
-    .extend(
-      "string_concat",
-      (new TArr(typeString, new TArr(typeString, typeString))).toScheme(),
-    )
-    .extend(
-      "string_substring",
-      (new TArr(typeString, new TArr(typeInt, new TArr(typeInt, typeString))))
-        .toScheme(),
-    )
-    .extend(
-      "string_equal",
-      (new TArr(typeString, new TArr(typeString, typeBool))).toScheme(),
-    )
-    .extend(
-      "string_compare",
-      (new TArr(typeString, new TArr(typeString, typeInt))).toScheme(),
-    ),
-  src,
-  imports,
-});
+  imports: ImportEnv,
+  preludeSrc: Src | undefined,
+): Env => {
+  const initialEnv = {
+    runtime: emptyRuntimeEnv(),
+    type: emptyTypeEnv,
+    src,
+    imports,
+    preludeSrc,
+  };
+
+  if (preludeSrc !== undefined && src.urn() !== preludeSrc.urn()) {
+    return loadPrelude(initialEnv);
+  } else {
+    return initialEnv;
+  }
+};
 
 const binaryOps = new Map<
   number,
@@ -535,7 +513,7 @@ const executeElement = (
     };
     return [null, undefined, env];
   } else if (e.type === "ImportStatement") {
-    const imports = executeImport(e.from, env.src, env.imports);
+    const imports = executeImport(e.from, env);
 
     if (e.items.type === "ImportAll") {
       if (e.items.as === undefined) {
@@ -692,10 +670,12 @@ const executeElement = (
   }
 };
 
+export type ExecuteResult = [Array<[RuntimeValue, Type | undefined]>, Env];
+
 export const executeProgram = (
   program: Program,
   env: Env,
-): [Array<[RuntimeValue, Type | undefined]>, Env] => {
+): ExecuteResult => {
   const results: Array<[RuntimeValue, Type | undefined]> = [];
 
   for (const element of program) {
@@ -706,8 +686,6 @@ export const executeProgram = (
 
   return [results, env];
 };
-
-export type ExecuteResult = [Array<[RuntimeValue, Type | undefined]>, Env];
 
 export const execute = (
   input: string,
@@ -731,23 +709,76 @@ const loadingImport: ImportPackage = {
   types: emptyTypeEnv.extend("_Loading", new Scheme([], typeInt)),
 };
 
+const parseExecute = (
+  src: Src,
+  program: string,
+  initialEnv: Env,
+): [Program, Array<[RuntimeValue, Type | undefined]>, Env] => {
+  const ast = parse(
+    src,
+    program,
+  );
+
+  const [result, resultEnv] = executeProgram(ast, initialEnv);
+  return [ast, result, resultEnv];
+};
+
+const loadPrelude = (env: Env): Env => {
+  const execute = (line: string, env: Env): Env => {
+    const ast = parse(env.src, line);
+    const [_, newEnv] = executeProgram(ast, env);
+
+    return newEnv;
+  };
+
+  return execute(`import * from "${env.preludeSrc?.urn()}"`, env);
+};
+
 export const executeImport = (
-  from: NameLocation,
-  referencedFrom: Src,
-  importEnv: ImportEnv = {},
+  importFileName: NameLocation,
+  referencedFrom: Env,
 ): ImportPackage => {
-  const src = referencedFrom.newSrc(from.name);
+  // import * as L from "../../stdlib/Data/List.tfun" ;;
+  // console.log({
+  //   importFile: importFileName.name,
+  //   fromSrc: referencedFrom.src.urn(),
+  // });
+  // if (importFileName.name === "./Maybe.tfun")  {
+  //   try {throw new Error("oop");
+  // } catch (e) {
+  //   console.log(e.stack);
+  // }
+  // }
+  const src = referencedFrom.src.newSrc(importFileName.name);
   const urn = src.urn();
+  const importEnv = referencedFrom.imports;
 
   const env = importEnv[urn];
   if (env === undefined) {
+    // console.log("%cLoading import " + urn, "color: #999;");
+
     importEnv[urn] = loadingImport;
 
     const importValues: ImportValues = new Map();
     let env = emptyTypeEnv;
 
-    const ast = parse(src, readTextFile(referencedFrom, urn, from.location));
-    const [result, resultEnv] = executeProgram(ast, defaultEnv(src, importEnv));
+    // console.log({ urn, from, referencedFrom });
+    const program = readTextFile(
+      referencedFrom.src,
+      urn,
+      importFileName.location,
+    );
+    const initialImportEnv = defaultEnv(
+      src,
+      referencedFrom.imports,
+      referencedFrom.preludeSrc,
+    );
+
+    const [ast, result, resultEnv] = parseExecute(
+      src,
+      program,
+      initialImportEnv,
+    );
 
     ast.forEach((e, i) => {
       if (e.type === "Let" || e.type === "LetRec") {
@@ -792,7 +823,8 @@ export const executeImport = (
           }
         });
       } else if (e.type === "ImportStatement") {
-        const imports = executeImport(e.from, src, importEnv);
+        // const imports = executeImport(e.from, referencedFrom);
+        const imports = executeImport(e.from, initialImportEnv);
 
         if (e.items.type === "ImportNames") {
           e.items.items.forEach(({ name, as, visibility }) => {
@@ -850,7 +882,11 @@ export const executeImport = (
     importEnv[urn] = r;
     return r;
   } else if (env === loadingImport) {
-    throw new CyclicImportException(referencedFrom, from.name, from.location);
+    throw new CyclicImportException(
+      referencedFrom.src,
+      importFileName.name,
+      importFileName.location,
+    );
   } else {
     return env;
   }

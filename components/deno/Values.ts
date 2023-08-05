@@ -140,11 +140,26 @@ export const valueToString = (v: RuntimeValue): string => {
     })`;
   }
   if (Array.isArray(v)) {
+    if (v[0] === "Nil") {
+      return "[]";
+    }
+    if (v[0] === "Cons") {
+      const result = [];
+      let current = v;
+      while (current[0] === "Cons") {
+        result.push(current[1]);
+        current = current[2];
+      }
+
+      return `[${
+        result.map((v: RuntimeValue) => valueToString(v)).join(", ")
+      }]`;
+    }
     if (v.length === 1) {
       return v[0];
     } else {
       const param = (p: RuntimeValue): string =>
-        (Array.isArray(p) && p.length > 1)
+        (Array.isArray(p) && p.length > 1 && p[0] !== "Nil" && p[0] !== "Cons")
           ? `(${valueToString(p)})`
           : valueToString(p);
 

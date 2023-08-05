@@ -1,5 +1,3 @@
-import List from "../Data/List.tfun" ;
-
 data Regex- = Regex ;
 
 let parse* (s: String) : Regex =

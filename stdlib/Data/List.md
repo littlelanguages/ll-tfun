@@ -2,7 +2,7 @@
 
 A list is a collection of values of the same type. Lists are immutable and can be constructed using the `::` operator, using the `[1, 2, 3]` syntax, or using the `Cons` and `Nil` constructors.
 
-```fsharp -xassert id=Import; style=exec
+```fsharp xassert id=Import; style=exec
 import * from "./List.tfun"
 ```
 

@@ -1,4 +1,2 @@
-import Maybe from "./Maybe.tfun" ;
-
 let parse* (s: String): Maybe Int =
   builtin "Data.Integer.parse" s
