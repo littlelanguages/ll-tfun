@@ -60,14 +60,14 @@ if (Deno.args.length === 0) {
   console.log("Enter a multi-line expression with ;; as a terminator.");
 
   let env: Env;
-  
+
   try {
     env = loadPrelude(defaultEnv(home));
   } catch (e) {
     console.error(e.toString());
     Deno.exit(1);
   }
-  
+
   env.src = home.newSrc("repl");
 
   while (true) {

@@ -73,7 +73,11 @@ export class XAssertHandler implements Handler {
       );
 
       if (preludeResult.type === "Error") {
-        return  { type: "Failure", expected: preludeResult.expected, actual: preludeResult.error };
+        return {
+          type: "Failure",
+          expected: preludeResult.expected,
+          actual: preludeResult.error,
+        };
       }
 
       let env = preludeResult.env;
