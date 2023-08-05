@@ -126,10 +126,12 @@ export const defaultEnv = (
     preludeSrc,
   };
 
-  if (preludeSrc !== undefined && src.urn() !== preludeSrc.urn()) {
-    return loadPrelude(initialEnv);
-  } else {
+  if (preludeSrc === undefined || src.urn() === preludeSrc.urn()) {
     return initialEnv;
+  } else {
+    const line = `import * from "${preludeSrc.urn()}"`;
+
+    return parseExecute(src, line, initialEnv)[2];
   }
 };
 
@@ -670,9 +672,9 @@ const executeElement = (
   }
 };
 
-export type ExecuteResult = [Array<[RuntimeValue, Type | undefined]>, Env];
+type ExecuteResult = [Array<[RuntimeValue, Type | undefined]>, Env];
 
-export const executeProgram = (
+const executeProgram = (
   program: Program,
   env: Env,
 ): ExecuteResult => {
@@ -721,13 +723,6 @@ export const parseExecute = (
 
   const [result, resultEnv] = executeProgram(ast, initialEnv);
   return [ast, result, resultEnv];
-};
-
-const loadPrelude = (env: Env): Env => {
-  const execute = (line: string, env: Env): Env =>
-    parseExecute(env.src, line, env)[2];
-
-  return execute(`import * from "${env.preludeSrc?.urn()}"`, env);
 };
 
 export const executeImport = (
