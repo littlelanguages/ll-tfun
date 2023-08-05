@@ -126,6 +126,9 @@ export const valueToString = (v: RuntimeValue): string => {
     if (v.value === 10) {
       return "'\\n'";
     }
+    if (v.value === 39 || v.value === 92) {
+      return `'\\${String.fromCharCode(v.value)}'`;
+    }
     if (v.value < 32) {
       return `'\\u{${v.value.toString(16)}}'`;
     }

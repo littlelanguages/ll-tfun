@@ -1,9 +1,11 @@
 The tasks are built out according to the packages listed in [README](README.md)
 
+- [ ] Add boolean and
+- [ ] Add boolean or
 - [ ] Add a Char data type
   - [x] Add literal char into parser
   - [x] Add literal char for pattern matching
-  - [ ] Add Data.Char into standard library
+  - [x] Add Data.Char into standard library
 - [ ] Add `::` as a synonym for List.Cons
 - [ ] Add `[]` as a synonym for List.Nil
 - [ ] Add `[]` as a pattern synonym for List.Nil

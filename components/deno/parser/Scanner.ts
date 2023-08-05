@@ -967,7 +967,7 @@ export class Scanner extends AbstractScanner.Scanner<TToken> {
           }
           case 61: {
             if (
-              this.nextCh === 10 || this.nextCh === 39 || this.nextCh === 92
+              this.nextCh === 39 || this.nextCh === 92 || this.nextCh === 110
             ) {
               this.nextChar();
               state = 60;

@@ -81,7 +81,7 @@ run)
     ;;
 
 run-watch)
-    ls -1 *.ts `find ../../scenarios -name "*.md"`  `find ../../stdlib -name "*.md"` | entr -c -s "deno fmt && deno lint && $0 run"
+    ls -1 *.ts `find ../../scenarios -name "*.md"` `find ../../stdlib -name "*.md"` `find ../../stdlib -name "*.tfun"` | entr -c -s "deno fmt && deno lint && $0 run"
     ;;
 
 markdown)

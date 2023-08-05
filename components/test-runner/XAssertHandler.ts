@@ -28,20 +28,22 @@ const executeAssertBlock = (
   const expressions = codeBlock.split("\n").map((v) => v.trim());
 
   for (const expression of expressions) {
-    let ast: Program | undefined;
-    try {
-      ast = parse(env.src, expression);
-    } catch (e) {
-      return { type: "Error", expression, ast, error: e, env };
-    }
-    try {
-      const [[[result]], _newEnv] = executeProgram(ast, env);
-
-      if (typeof result !== "boolean" || !result) {
-        return { type: "Error", expression, ast, error: result, env };
+    if (expression !== "") {
+      let ast: Program | undefined;
+      try {
+        ast = parse(env.src, expression);
+      } catch (e) {
+        return { type: "Error", expression, ast, error: e, env };
       }
-    } catch (e) {
-      return { type: "Error", expression, ast, error: e, env };
+      try {
+        const [[[result]], _newEnv] = executeProgram(ast, env);
+
+        if (typeof result !== "boolean" || !result) {
+          return { type: "Error", expression, ast, error: result, env };
+        }
+      } catch (e) {
+        return { type: "Error", expression, ast, error: e, env };
+      }
     }
   }
 
@@ -96,7 +98,14 @@ export class XAssertHandler implements Handler {
       }
 
       if (options.get("style") === "exec") {
-        executeCodeBlock(code, env);
+        const executeResult = executeCodeBlock(code, env);
+        if (executeResult.type === "Error") {
+          return {
+            type: "Failure",
+            expected: executeResult.expected,
+            actual: executeResult.error,
+          };
+        }
         return { type: "Success" };
       }
 

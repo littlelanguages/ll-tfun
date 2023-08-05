@@ -67,7 +67,7 @@ class RuntimeEnv {
   }
 
   has(name: string): boolean {
-    return this.bindings[name] !== undefined;
+    return Object.hasOwn(this.bindings, name);
   }
 
   get(name: string): RuntimeValue {
@@ -195,6 +195,12 @@ const evaluate = (expr: Expression, runtimeEnv: RuntimeEnv): RuntimeValue => {
     }
     case "Builtin":
       switch (expr.name) {
+        case "Data.Char.fromInt":
+          return (n: number) => mkChar(n < 256 ? n : 32);
+        case "Data.Char.toInt":
+          return (c: VChar) => c.value;
+        case "Data.Char.toString":
+          return (c: VChar) => String.fromCharCode(c.value);
         case "Data.Integer.parse":
           return (s: string) => {
             const n = parseInt(s, 10);
@@ -520,7 +526,6 @@ const executeElement = (
       if (e.items.as === undefined) {
         const runtime = env.runtime.clone();
         let type = env.type;
-
         imports.values.forEach(([v, t], n) => {
           if (runtime.has(n)) {
             throw new ImportNameAlreadyDeclaredException(

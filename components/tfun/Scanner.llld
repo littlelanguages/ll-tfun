@@ -1,7 +1,7 @@
 tokens
     UpperIdentifier = upperID {digit | id};
     LowerIdentifier = lowerID {digit | id};
-    LiteralChar = "'" (char | chr(92) (cr + chr(39) + chr(92))) "'";
+    LiteralChar = "'" (char | chr(92) ('n' + chr(39) + chr(92))) "'";
     LiteralInt = ['-'] digits;
     LiteralString = '"' {!('"' + cr) | "\" '"'}  '"';
 
