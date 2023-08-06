@@ -48,7 +48,7 @@ let add input =
   and numbers = 
         content.input
           |> RE.split content.separator
-          |> List.map Integer.parse
+          |> List.map Integer.fromString
           |> List.map (Maybe.withDefault 0)
   and negative n = n < 0
    in if (List.any negative numbers)

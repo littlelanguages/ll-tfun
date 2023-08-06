@@ -1,2 +1,5 @@
-let parse* (s: String): Maybe Int =
-  builtin "Data.Integer.parse" s
+let fromString* (s: String): Maybe Int =
+  builtin "Data.Integer.fromString" s ;
+
+let toString* (n: Int): String =
+  builtin "Data.Integer.toString" n

@@ -24,7 +24,7 @@ build_parser() {
 markdown_tests() {
     echo "---| markdown tests"
 
-    deno run --allow-read ../test-runner/TestRunner.ts `find ../../stdlib -name "*.md"` `find ../../scenarios -name "*.md"`
+    deno run --allow-read ../test-runner/TestRunner.ts `find ../../scenarios -name "*.md"` `find ../../stdlib -name "*.md"`
 }
 
 scenario_tests() {

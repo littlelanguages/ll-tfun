@@ -46,51 +46,29 @@ export interface Visitor<
   visitElement2(a: T_DataDeclaration): T_Element;
   visitElement3(a: T_TypeAliasDeclarations): T_Element;
   visitElement4(a: T_ImportStatement): T_Element;
-  visitExpression(
-    a1: T_BooleanOr,
-    a2: Array<[Token, T_BooleanOr]>,
-  ): T_Expression;
-  visitBooleanOr(
-    a1: T_BooleanAnd,
-    a2: Array<[Token, T_BooleanAnd]>,
-  ): T_BooleanOr;
+  visitExpression(a1: T_BooleanOr, a2: Array<[Token, T_BooleanOr]>): T_Expression;
+  visitBooleanOr(a1: T_BooleanAnd, a2: Array<[Token, T_BooleanAnd]>): T_BooleanOr;
   visitBooleanAnd(a1: T_Equality, a2: Array<[Token, T_Equality]>): T_BooleanAnd;
-  visitEquality(
-    a1: T_AppendCons,
-    a2: [T_EqualityOps, T_AppendCons] | undefined,
-  ): T_Equality;
+  visitEquality(a1: T_AppendCons, a2: [T_EqualityOps, T_AppendCons] | undefined): T_Equality;
   visitEqualityOps1(a: Token): T_EqualityOps;
   visitEqualityOps2(a: Token): T_EqualityOps;
   visitEqualityOps3(a: Token): T_EqualityOps;
   visitEqualityOps4(a: Token): T_EqualityOps;
   visitEqualityOps5(a: Token): T_EqualityOps;
   visitEqualityOps6(a: Token): T_EqualityOps;
-  visitAppendCons(
-    a1: T_Additive,
-    a2: Array<[T_AppendConsOps, T_Additive]>,
-  ): T_AppendCons;
+  visitAppendCons(a1: T_Additive, a2: Array<[T_AppendConsOps, T_Additive]>): T_AppendCons;
   visitAppendConsOps1(a: Token): T_AppendConsOps;
   visitAppendConsOps2(a: Token): T_AppendConsOps;
-  visitAdditive(
-    a1: T_Multiplicative,
-    a2: Array<[T_AdditiveOps, T_Multiplicative]>,
-  ): T_Additive;
+  visitAdditive(a1: T_Multiplicative, a2: Array<[T_AdditiveOps, T_Multiplicative]>): T_Additive;
   visitAdditiveOps1(a: Token): T_AdditiveOps;
   visitAdditiveOps2(a: Token): T_AdditiveOps;
-  visitMultiplicative(
-    a1: T_Apply,
-    a2: Array<[T_MultiplicativeOps, T_Apply]>,
-  ): T_Multiplicative;
+  visitMultiplicative(a1: T_Apply, a2: Array<[T_MultiplicativeOps, T_Apply]>): T_Multiplicative;
   visitMultiplicativeOps1(a: Token): T_MultiplicativeOps;
   visitMultiplicativeOps2(a: Token): T_MultiplicativeOps;
   visitApply(a1: T_Typing, a2: Array<T_Typing>): T_Apply;
   visitTyping(a1: T_Projection, a2: [Token, T_TypeType] | undefined): T_Typing;
   visitProjection(a1: T_Factor, a2: Array<[Token, Token]>): T_Projection;
-  visitFactor1(
-    a1: Token,
-    a2: [T_Expression, Array<[Token, T_Expression]>] | undefined,
-    a3: Token,
-  ): T_Factor;
+  visitFactor1(a1: Token, a2: [T_Expression, Array<[Token, T_Expression]>] | undefined, a3: Token): T_Factor;
   visitFactor2(a: Token): T_Factor;
   visitFactor3(a: Token): T_Factor;
   visitFactor4(a: Token): T_Factor;
@@ -130,20 +108,12 @@ export interface Visitor<
     a5: T_Case,
     a6: Array<[Token, T_Case]>,
   ): T_Factor;
-  visitFactor13(
-    a1: Token,
-    a2: [T_Expression, Array<[Token, T_Expression]>] | undefined,
-    a3: Token,
-  ): T_Factor;
+  visitFactor13(a1: Token, a2: [T_Expression, Array<[Token, T_Expression]>] | undefined, a3: Token): T_Factor;
   visitFactor14(
     a1: Token,
-    a2: [
-      Token,
-      Token,
-      T_Expression,
-      Array<[Token, Token, Token, T_Expression]>,
-      [Token, T_Expression] | undefined,
-    ] | undefined,
+    a2:
+      | [Token, Token, T_Expression, Array<[Token, Token, Token, T_Expression]>, [Token, T_Expression] | undefined]
+      | undefined,
     a3: Token,
   ): T_Factor;
   visitFactor15(a1: Token, a2: Token): T_Factor;
@@ -158,36 +128,18 @@ export interface Visitor<
     a6: T_Expression,
   ): T_ValueDeclaration;
   visitParameter1(a: Token): T_Parameter;
-  visitParameter2(
-    a1: Token,
-    a2: Token,
-    a3: Token,
-    a4: T_TypeType,
-    a5: Token,
-  ): T_Parameter;
+  visitParameter2(a1: Token, a2: Token, a3: Token, a4: T_TypeType, a5: Token): T_Parameter;
   visitCase(a1: T_Pattern, a2: Token, a3: T_Expression): T_Case;
   visitPattern(a1: T_PatternTerm, a2: Array<[Token, T_PatternTerm]>): T_Pattern;
-  visitPatternTerm1(
-    a1: Token,
-    a2: [T_Pattern, Array<[Token, T_Pattern]>] | undefined,
-    a3: Token,
-  ): T_PatternTerm;
+  visitPatternTerm1(a1: Token, a2: [T_Pattern, Array<[Token, T_Pattern]>] | undefined, a3: Token): T_PatternTerm;
   visitPatternTerm2(a: Token): T_PatternTerm;
   visitPatternTerm3(a: Token): T_PatternTerm;
   visitPatternTerm4(a: Token): T_PatternTerm;
   visitPatternTerm5(a: Token): T_PatternTerm;
   visitPatternTerm6(a: Token): T_PatternTerm;
   visitPatternTerm7(a: Token): T_PatternTerm;
-  visitPatternTerm8(
-    a1: Token,
-    a2: [Token, Token] | undefined,
-    a3: Array<T_Pattern>,
-  ): T_PatternTerm;
-  visitPatternTerm9(
-    a1: Token,
-    a2: [T_Pattern, Array<[Token, T_Pattern]>] | undefined,
-    a3: Token,
-  ): T_PatternTerm;
+  visitPatternTerm8(a1: Token, a2: [Token, Token] | undefined, a3: Array<T_Pattern>): T_PatternTerm;
+  visitPatternTerm9(a1: Token, a2: [T_Pattern, Array<[Token, T_Pattern]>] | undefined, a3: Token): T_PatternTerm;
   visitPatternTerm10(
     a1: Token,
     a2: [
@@ -198,11 +150,7 @@ export interface Visitor<
     ] | undefined,
     a3: Token,
   ): T_PatternTerm;
-  visitDataDeclaration(
-    a1: Token,
-    a2: T_TypeDeclaration,
-    a3: Array<[Token, T_TypeDeclaration]>,
-  ): T_DataDeclaration;
+  visitDataDeclaration(a1: Token, a2: T_TypeDeclaration, a3: Array<[Token, T_TypeDeclaration]>): T_DataDeclaration;
   visitTypeDeclaration(
     a1: Token,
     a2: (Token | Token) | undefined,
@@ -211,10 +159,7 @@ export interface Visitor<
     a5: T_ConstructorDeclaration,
     a6: Array<[Token, T_ConstructorDeclaration]>,
   ): T_TypeDeclaration;
-  visitConstructorDeclaration(
-    a1: Token,
-    a2: Array<T_TypeType>,
-  ): T_ConstructorDeclaration;
+  visitConstructorDeclaration(a1: Token, a2: Array<T_TypeType>): T_ConstructorDeclaration;
   visitTypeType(a1: T_ADTType, a2: Array<[Token, T_ADTType]>): T_TypeType;
   visitADTType1(
     a1: Token,
@@ -223,26 +168,15 @@ export interface Visitor<
   ): T_ADTType;
   visitADTType2(a: T_TermType): T_ADTType;
   visitTermType1(a: Token): T_TermType;
-  visitTermType2(
-    a1: Token,
-    a2: [T_TypeType, Array<[Token, T_TypeType]>] | undefined,
-    a3: Token,
-  ): T_TermType;
+  visitTermType2(a1: Token, a2: [T_TypeType, Array<[Token, T_TypeType]>] | undefined, a3: Token): T_TermType;
   visitTermType3(
     a1: Token,
-    a2: [
-      Token,
-      Token,
-      T_TypeType,
-      Array<[Token, Token, Token, T_TypeType]>,
-      [Token, T_TypeType] | undefined,
-    ] | undefined,
+    a2:
+      | [Token, Token, T_TypeType, Array<[Token, Token, Token, T_TypeType]>, [Token, T_TypeType] | undefined]
+      | undefined,
     a3: Token,
   ): T_TermType;
-  visitTypeAliasDeclarations(
-    a1: Token,
-    a2: T_TypeAliasDeclaration,
-  ): T_TypeAliasDeclarations;
+  visitTypeAliasDeclarations(a1: Token, a2: T_TypeAliasDeclaration): T_TypeAliasDeclarations;
   visitTypeAliasDeclaration(
     a1: Token,
     a2: (Token | Token) | undefined,
@@ -250,23 +184,11 @@ export interface Visitor<
     a4: Token,
     a5: T_TypeType,
   ): T_TypeAliasDeclaration;
-  visitImportStatement(
-    a1: Token,
-    a2: T_ImportItems,
-    a3: Token,
-    a4: Token,
-  ): T_ImportStatement;
+  visitImportStatement(a1: Token, a2: T_ImportItems, a3: Token, a4: Token): T_ImportStatement;
   visitImportItems1(a1: Token, a2: [Token, Token] | undefined): T_ImportItems;
-  visitImportItems2(
-    a1: T_ImportItem,
-    a2: Array<[Token, T_ImportItem]>,
-  ): T_ImportItems;
+  visitImportItems2(a1: T_ImportItem, a2: Array<[Token, T_ImportItem]>): T_ImportItems;
   visitImportItem1(a1: Token, a2: (Token | Token) | undefined): T_ImportItem;
-  visitImportItem2(
-    a1: Token,
-    a2: [Token, Token] | undefined,
-    a3: Token | undefined,
-  ): T_ImportItem;
+  visitImportItem2(a1: Token, a2: [Token, Token] | undefined, a3: Token | undefined): T_ImportItem;
 }
 
 export const parseProgram = <
@@ -428,11 +350,7 @@ export const mkParser = <
     if (isToken(ttoken)) {
       return nextToken();
     } else {
-      throw {
-        tag: "SyntaxError",
-        found: scanner.current(),
-        expected: [ttoken],
-      };
+      throw { tag: "SyntaxError", found: scanner.current(), expected: [ttoken] };
     }
   };
 
@@ -618,11 +536,7 @@ export const mkParser = <
       } else if (isToken(TToken.PlusPlus)) {
         return visitor.visitAppendConsOps2(matchToken(TToken.PlusPlus));
       } else {
-        throw {
-          tag: "SyntaxError",
-          found: scanner.current(),
-          expected: [TToken.ColonColon, TToken.PlusPlus],
-        };
+        throw { tag: "SyntaxError", found: scanner.current(), expected: [TToken.ColonColon, TToken.PlusPlus] };
       }
     },
     additive: function (): T_Additive {
@@ -643,11 +557,7 @@ export const mkParser = <
       } else if (isToken(TToken.Dash)) {
         return visitor.visitAdditiveOps2(matchToken(TToken.Dash));
       } else {
-        throw {
-          tag: "SyntaxError",
-          found: scanner.current(),
-          expected: [TToken.Plus, TToken.Dash],
-        };
+        throw { tag: "SyntaxError", found: scanner.current(), expected: [TToken.Plus, TToken.Dash] };
       }
     },
     multiplicative: function (): T_Multiplicative {
@@ -668,11 +578,7 @@ export const mkParser = <
       } else if (isToken(TToken.Slash)) {
         return visitor.visitMultiplicativeOps2(matchToken(TToken.Slash));
       } else {
-        throw {
-          tag: "SyntaxError",
-          found: scanner.current(),
-          expected: [TToken.Star, TToken.Slash],
-        };
+        throw { tag: "SyntaxError", found: scanner.current(), expected: [TToken.Star, TToken.Slash] };
       }
     },
     apply: function (): T_Apply {
@@ -760,10 +666,7 @@ export const mkParser = <
             const a2t2t: [Token, T_Expression] = [a2t2t1, a2t2t2];
             a2t2.push(a2t2t);
           }
-          const a2t: [T_Expression, Array<[Token, T_Expression]>] = [
-            a2t1,
-            a2t2,
-          ];
+          const a2t: [T_Expression, Array<[Token, T_Expression]>] = [a2t1, a2t2];
           a2 = a2t;
         }
         const a3: Token = matchToken(TToken.RParen);
@@ -898,10 +801,7 @@ export const mkParser = <
             const a2t2t: [Token, T_Expression] = [a2t2t1, a2t2t2];
             a2t2.push(a2t2t);
           }
-          const a2t: [T_Expression, Array<[Token, T_Expression]>] = [
-            a2t1,
-            a2t2,
-          ];
+          const a2t: [T_Expression, Array<[Token, T_Expression]>] = [a2t1, a2t2];
           a2 = a2t;
         }
         const a3: Token = matchToken(TToken.RBracket);
@@ -927,12 +827,7 @@ export const mkParser = <
             const a2t4t2: Token = matchToken(TToken.LowerIdentifier);
             const a2t4t3: Token = matchToken(TToken.Colon);
             const a2t4t4: T_Expression = this.expression();
-            const a2t4t: [Token, Token, Token, T_Expression] = [
-              a2t4t1,
-              a2t4t2,
-              a2t4t3,
-              a2t4t4,
-            ];
+            const a2t4t: [Token, Token, Token, T_Expression] = [a2t4t1, a2t4t2, a2t4t3, a2t4t4];
             a2t4.push(a2t4t);
           }
           let a2t5: [Token, T_Expression] | undefined = undefined;
@@ -1032,11 +927,7 @@ export const mkParser = <
         const a5: Token = matchToken(TToken.RParen);
         return visitor.visitParameter2(a1, a2, a3, a4, a5);
       } else {
-        throw {
-          tag: "SyntaxError",
-          found: scanner.current(),
-          expected: [TToken.LowerIdentifier, TToken.LParen],
-        };
+        throw { tag: "SyntaxError", found: scanner.current(), expected: [TToken.LowerIdentifier, TToken.LParen] };
       }
     },
     case: function (): T_Case {
@@ -1196,11 +1087,7 @@ export const mkParser = <
               const a2t3t3t: [Token, T_Pattern] = [a2t3t3t1, a2t3t3t2];
               a2t3t3 = a2t3t3t;
             }
-            const a2t3t: [Token, Token, [Token, T_Pattern] | undefined] = [
-              a2t3t1,
-              a2t3t2,
-              a2t3t3,
-            ];
+            const a2t3t: [Token, Token, [Token, T_Pattern] | undefined] = [a2t3t1, a2t3t2, a2t3t3];
             a2t3.push(a2t3t);
           }
           let a2t4: [Token, T_Pattern] | undefined = undefined;
@@ -1265,11 +1152,7 @@ export const mkParser = <
           const a2t: Token = matchToken(TToken.Dash);
           a2 = a2t;
         } else {
-          throw {
-            tag: "SyntaxError",
-            found: scanner.current(),
-            expected: [TToken.Star, TToken.Dash],
-          };
+          throw { tag: "SyntaxError", found: scanner.current(), expected: [TToken.Star, TToken.Dash] };
         }
       }
       const a3: Array<Token> = [];
@@ -1294,14 +1177,7 @@ export const mkParser = <
       const a1: Token = matchToken(TToken.UpperIdentifier);
       const a2: Array<T_TypeType> = [];
 
-      while (
-        isTokens([
-          TToken.UpperIdentifier,
-          TToken.LowerIdentifier,
-          TToken.LParen,
-          TToken.LCurly,
-        ])
-      ) {
+      while (isTokens([TToken.UpperIdentifier, TToken.LowerIdentifier, TToken.LParen, TToken.LCurly])) {
         const a2t: T_TypeType = this.typeType();
         a2.push(a2t);
       }
@@ -1332,17 +1208,8 @@ export const mkParser = <
         }
         const a3: Array<(T_TermType | [Token, [Token, Token] | undefined])> = [];
 
-        while (
-          isTokens([
-            TToken.LowerIdentifier,
-            TToken.LParen,
-            TToken.LCurly,
-            TToken.UpperIdentifier,
-          ])
-        ) {
-          if (
-            isTokens([TToken.LowerIdentifier, TToken.LParen, TToken.LCurly])
-          ) {
+        while (isTokens([TToken.LowerIdentifier, TToken.LParen, TToken.LCurly, TToken.UpperIdentifier])) {
+          if (isTokens([TToken.LowerIdentifier, TToken.LParen, TToken.LCurly])) {
             const a3t: T_TermType = this.termType();
             a3.push(a3t);
           } else if (isToken(TToken.UpperIdentifier)) {
@@ -1361,30 +1228,18 @@ export const mkParser = <
             throw {
               tag: "SyntaxError",
               found: scanner.current(),
-              expected: [
-                TToken.LowerIdentifier,
-                TToken.LParen,
-                TToken.LCurly,
-                TToken.UpperIdentifier,
-              ],
+              expected: [TToken.LowerIdentifier, TToken.LParen, TToken.LCurly, TToken.UpperIdentifier],
             };
           }
         }
         return visitor.visitADTType1(a1, a2, a3);
-      } else if (
-        isTokens([TToken.LowerIdentifier, TToken.LParen, TToken.LCurly])
-      ) {
+      } else if (isTokens([TToken.LowerIdentifier, TToken.LParen, TToken.LCurly])) {
         return visitor.visitADTType2(this.termType());
       } else {
         throw {
           tag: "SyntaxError",
           found: scanner.current(),
-          expected: [
-            TToken.UpperIdentifier,
-            TToken.LowerIdentifier,
-            TToken.LParen,
-            TToken.LCurly,
-          ],
+          expected: [TToken.UpperIdentifier, TToken.LowerIdentifier, TToken.LParen, TToken.LCurly],
         };
       }
     },
@@ -1395,14 +1250,7 @@ export const mkParser = <
         const a1: Token = matchToken(TToken.LParen);
         let a2: [T_TypeType, Array<[Token, T_TypeType]>] | undefined = undefined;
 
-        if (
-          isTokens([
-            TToken.UpperIdentifier,
-            TToken.LowerIdentifier,
-            TToken.LParen,
-            TToken.LCurly,
-          ])
-        ) {
+        if (isTokens([TToken.UpperIdentifier, TToken.LowerIdentifier, TToken.LParen, TToken.LCurly])) {
           const a2t1: T_TypeType = this.typeType();
           const a2t2: Array<[Token, T_TypeType]> = [];
 
@@ -1419,13 +1267,9 @@ export const mkParser = <
         return visitor.visitTermType2(a1, a2, a3);
       } else if (isToken(TToken.LCurly)) {
         const a1: Token = matchToken(TToken.LCurly);
-        let a2: [
-          Token,
-          Token,
-          T_TypeType,
-          Array<[Token, Token, Token, T_TypeType]>,
-          [Token, T_TypeType] | undefined,
-        ] | undefined = undefined;
+        let a2:
+          | [Token, Token, T_TypeType, Array<[Token, Token, Token, T_TypeType]>, [Token, T_TypeType] | undefined]
+          | undefined = undefined;
 
         if (isToken(TToken.LowerIdentifier)) {
           const a2t1: Token = matchToken(TToken.LowerIdentifier);
@@ -1438,12 +1282,7 @@ export const mkParser = <
             const a2t4t2: Token = matchToken(TToken.LowerIdentifier);
             const a2t4t3: Token = matchToken(TToken.Colon);
             const a2t4t4: T_TypeType = this.typeType();
-            const a2t4t: [Token, Token, Token, T_TypeType] = [
-              a2t4t1,
-              a2t4t2,
-              a2t4t3,
-              a2t4t4,
-            ];
+            const a2t4t: [Token, Token, Token, T_TypeType] = [a2t4t1, a2t4t2, a2t4t3, a2t4t4];
             a2t4.push(a2t4t);
           }
           let a2t5: [Token, T_TypeType] | undefined = undefined;
@@ -1490,11 +1329,7 @@ export const mkParser = <
           const a2t: Token = matchToken(TToken.Dash);
           a2 = a2t;
         } else {
-          throw {
-            tag: "SyntaxError",
-            found: scanner.current(),
-            expected: [TToken.Star, TToken.Dash],
-          };
+          throw { tag: "SyntaxError", found: scanner.current(), expected: [TToken.Star, TToken.Dash] };
         }
       }
       const a3: Array<Token> = [];
@@ -1541,11 +1376,7 @@ export const mkParser = <
         throw {
           tag: "SyntaxError",
           found: scanner.current(),
-          expected: [
-            TToken.Star,
-            TToken.UpperIdentifier,
-            TToken.LowerIdentifier,
-          ],
+          expected: [TToken.Star, TToken.UpperIdentifier, TToken.LowerIdentifier],
         };
       }
     },
@@ -1562,11 +1393,7 @@ export const mkParser = <
             const a2t: Token = matchToken(TToken.Dash);
             a2 = a2t;
           } else {
-            throw {
-              tag: "SyntaxError",
-              found: scanner.current(),
-              expected: [TToken.Star, TToken.Dash],
-            };
+            throw { tag: "SyntaxError", found: scanner.current(), expected: [TToken.Star, TToken.Dash] };
           }
         }
         return visitor.visitImportItem1(a1, a2);

@@ -1,0 +1,47 @@
+import * as Int from "../../../Data/Integer.tfun" ;
+
+type PointRecord = { line: Int, column: Int, offset: Int } ;
+
+data Location* =
+    Range (PointRecord) (PointRecord)
+  | Point (PointRecord) ;
+
+let minPoint (p1: PointRecord) (p2: PointRecord): PointRecord =
+  if (p1.offset < p2.offset) p1 else p2 ;
+
+let maxPoint (p1: PointRecord) (p2: PointRecord): PointRecord =
+  if (p1.offset > p2.offset) p1 else p2 ;
+
+let lower (loc: Location): PointRecord =
+  match loc with
+  | Point p -> p
+  | Range p _ -> p ;
+
+let upper (loc: Location): PointRecord =
+  match loc with
+  | Point p -> p
+  | Range _ p -> p ;
+
+let combine* (loc1: Location) (loc2: Location) : Location =
+  if (loc1 == loc2)
+    loc1
+  else
+    let min = minPoint (lower loc1) (lower loc2)
+    and max = maxPoint (upper loc1) (upper loc2)
+    and possibleResult = Range min max
+    in
+      if (possibleResult == loc1)
+        loc1
+      else if (possibleResult == loc2)
+        loc2
+      else
+        possibleResult ;
+
+let toString* (loc: Location): String =
+  match loc with
+  | Point p -> (Int.toString p.line) ++ ":" ++ (Int.toString p.column)
+  | Range p1 p2 ->
+      if (p1.line == p2.line)
+        (Int.toString p1.line) ++ ":" ++ (Int.toString p1.column) ++ "-" ++ (Int.toString p2.column)
+      else
+        (Int.toString p1.line) ++ ":" ++ (Int.toString p1.column) ++ "-" ++ (Int.toString p2.line) ++ ":" ++ (Int.toString p2.column)

@@ -129,11 +129,13 @@ const evaluate = (expr: Expression, runtimeEnv: Runtime.Env): RuntimeValue => {
           return (c: VChar) => c.value;
         case "Data.Char.toString":
           return (c: VChar) => String.fromCharCode(c.value);
-        case "Data.Integer.parse":
+        case "Data.Integer.fromString":
           return (s: string) => {
             const n = parseInt(s, 10);
             return isNaN(n) ? runtimeEnv.get("Nothing") : runtimeEnv.get("Just")(n);
           };
+        case "Data.Integer.toString":
+          return (n: number) => `${n}`;
         case "Data.Ref.Assign":
           return (v: RuntimeValue) => (r: RuntimeValue) => {
             const result = r[1];
