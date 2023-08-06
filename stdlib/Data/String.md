@@ -54,7 +54,7 @@ replace "*" "" "a*b*c*d*e" == "abcde"
 
 ## Building and Splitting
 
-# append: String -> String -> String
+### append: String -> String -> String
 
 Append two strings.
 
