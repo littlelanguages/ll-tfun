@@ -484,12 +484,15 @@ const visitor: Visitor<
     ),
 
   visitApply: (a1: Expression, a2: Array<Expression>): Expression =>
-    a2.reduce((acc: Expression, e: Expression): Expression => ({
-      type: "App",
-      e1: acc,
-      e2: e,
-      location: combine(acc.location, e.location),
-    }), a1),
+    a2.reduce(
+      (acc: Expression, e: Expression): Expression => ({
+        type: "App",
+        e1: acc,
+        e2: e,
+        location: combine(acc.location, e.location),
+      }),
+      a1,
+    ),
 
   visitBooleanOr: (
     a1: Expression,
@@ -701,8 +704,7 @@ const visitor: Visitor<
     a4: [Token, Type] | undefined,
     _a5: Token,
     a6: Expression,
-  ): Expression =>
-    composeLambda([a2].concat(a3), a6, a4 === undefined ? undefined : a4[1]),
+  ): Expression => composeLambda([a2].concat(a3), a6, a4 === undefined ? undefined : a4[1]),
 
   visitFactor8: (
     a1: Token,
@@ -753,9 +755,7 @@ const visitor: Visitor<
 
     return {
       type: "Var",
-      qualifier: a2 === undefined
-        ? undefined
-        : { name: a1[2], location: a1[1] },
+      qualifier: a2 === undefined ? undefined : { name: a1[2], location: a1[1] },
       name: a2 === undefined ? { name: a1[2], location: a1[1] } : a2[1],
       location,
     };
@@ -868,9 +868,7 @@ const visitor: Visitor<
         rest: acc,
         location: acc.location,
       }),
-      a2[4] === undefined
-        ? { type: "RecordEmpty", location: combine(a1[1], a3[1]) }
-        : a2[4][1],
+      a2[4] === undefined ? { type: "RecordEmpty", location: combine(a1[1], a3[1]) } : a2[4][1],
     );
   },
 
@@ -1038,12 +1036,8 @@ const visitor: Visitor<
 
     return {
       type: "PCons",
-      qualifier: a2 === undefined
-        ? undefined
-        : { name: a1[2], location: a1[1] },
-      name: a2 === undefined
-        ? { name: a1[2], location: a1[1] }
-        : { name: a2[1][2], location: a2[1][1] },
+      qualifier: a2 === undefined ? undefined : { name: a1[2], location: a1[1] },
+      name: a2 === undefined ? { name: a1[2], location: a1[1] } : { name: a2[1][2], location: a2[1][1] },
       args: a3,
       location: combine(a1[1], endLocation),
     };
@@ -1102,9 +1096,7 @@ const visitor: Visitor<
 
     const field: [string, Pattern] = [
       a2[0][2],
-      a2[1] === undefined
-        ? { type: "PVar", name: a2[0][2], location: a2[0][1] }
-        : a2[1][1],
+      a2[1] === undefined ? { type: "PVar", name: a2[0][2], location: a2[0][1] } : a2[1][1],
     ];
     const fields = [field].concat(
       a2[2].map((
@@ -1143,11 +1135,7 @@ const visitor: Visitor<
   ): TypeDeclaration => ({
     type: "TypeDeclaration",
     name: { name: a1[2], location: a1[1] },
-    visibility: a2 === undefined
-      ? Visibility.Private
-      : a2[2] === "*"
-      ? Visibility.Public
-      : Visibility.Opaque,
+    visibility: a2 === undefined ? Visibility.Private : a2[2] === "*" ? Visibility.Public : Visibility.Opaque,
     parameters: a3.map((a) => a[2]),
     constructors: [a5].concat(a6.map((a) => a[1])),
   }),
@@ -1161,8 +1149,7 @@ const visitor: Visitor<
     parameters: a2,
   }),
 
-  visitTypeType: (a1: Type, a2: Array<[Token, Type]>): Type =>
-    composeFunctionType([a1].concat(a2.map((a) => a[1]))),
+  visitTypeType: (a1: Type, a2: Array<[Token, Type]>): Type => composeFunctionType([a1].concat(a2.map((a) => a[1]))),
 
   visitADTType1: (
     a1: Token,
@@ -1276,11 +1263,7 @@ const visitor: Visitor<
   ): TypeAliasDeclaration => ({
     type: "TypeAliasDeclaration",
     name: a1[2],
-    visibility: a2 === undefined
-      ? Visibility.Private
-      : a2[2] === "*"
-      ? Visibility.Public
-      : Visibility.Opaque,
+    visibility: a2 === undefined ? Visibility.Private : a2[2] === "*" ? Visibility.Public : Visibility.Opaque,
     parameters: a3.map((a) => a[2]),
     typ: a5,
   }),
@@ -1318,11 +1301,7 @@ const visitor: Visitor<
   ): ImportName => ({
     name: { name: a1[2], location: a1[1] },
     as: undefined,
-    visibility: a2 === undefined
-      ? Visibility.Private
-      : a2[2] === "*"
-      ? Visibility.Public
-      : Visibility.Opaque,
+    visibility: a2 === undefined ? Visibility.Private : a2[2] === "*" ? Visibility.Public : Visibility.Opaque,
   }),
   visitImportItem2: (
     a1: Token,

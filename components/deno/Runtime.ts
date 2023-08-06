@@ -5,9 +5,7 @@ type RuntimeEnvBindings = { [key: string]: RuntimeValue };
 export class Env {
   private bindings: RuntimeEnvBindings;
 
-  constructor(
-    bindings: RuntimeEnvBindings = {},
-  ) {
+  constructor(bindings: RuntimeEnvBindings = {}) {
     this.bindings = bindings;
   }
 

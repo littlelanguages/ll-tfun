@@ -1,14 +1,6 @@
-import {
-  assert,
-  assertEquals,
-} from "https://deno.land/std@0.137.0/testing/asserts.ts";
+import { assert, assertEquals } from "https://deno.land/std@0.137.0/testing/asserts.ts";
 
-import {
-  defaultEnv,
-  emptyEnv,
-  importPackage,
-  parseExecute,
-} from "./Interpreter.ts";
+import { defaultEnv, emptyEnv, importPackage, parseExecute } from "./Interpreter.ts";
 import { expressionToNestedString, NestedString } from "./Values.ts";
 import { home } from "./Src.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";

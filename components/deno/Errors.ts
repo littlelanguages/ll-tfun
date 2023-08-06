@@ -11,13 +11,7 @@ export class ArityMismatchException extends Error {
   expected: number;
   location: Location.Location;
 
-  constructor(
-    src: Src,
-    name: string,
-    supplied: number,
-    expected: number,
-    location: Location.Location,
-  ) {
+  constructor(src: Src, name: string, supplied: number, expected: number, location: Location.Location) {
     super();
     this.src = src;
     this.name = name;
@@ -29,9 +23,7 @@ export class ArityMismatchException extends Error {
   toString(): string {
     return `Arity Mismatch: ${this.name} supplied with ${this.supplied} argument${
       this.supplied === 1 ? "" : "s"
-    } but expected ${this.expected} at ${
-      locationToString(this.src, this.location)
-    }`;
+    } but expected ${this.expected} at ${locationToString(this.src, this.location)}`;
   }
 }
 
@@ -40,11 +32,7 @@ export class CyclicImportException extends Error {
   name: string;
   location: Location.Location;
 
-  constructor(
-    src: Src,
-    name: string,
-    location: Location.Location,
-  ) {
+  constructor(src: Src, name: string, location: Location.Location) {
     super();
     this.src = src;
     this.name = name;
@@ -52,9 +40,7 @@ export class CyclicImportException extends Error {
   }
 
   toString(): string {
-    return `Cyclic Import: ${this.name} at ${
-      locationToString(this.src, this.location)
-    }`;
+    return `Cyclic Import: ${this.name} at ${locationToString(this.src, this.location)}`;
   }
 }
 
@@ -71,9 +57,7 @@ export class DuplicateDataDeclarationException extends Error {
   }
 
   toString(): string {
-    return `Duplicate Data Declaration: ${this.name} at ${
-      locationToString(this.src, this.location)
-    }`;
+    return `Duplicate Data Declaration: ${this.name} at ${locationToString(this.src, this.location)}`;
   }
 }
 
@@ -90,9 +74,7 @@ export class ImportNameAlreadyDeclaredException extends Error {
   }
 
   toString(): string {
-    return `Import Name Already Declared: ${this.name} at ${
-      locationToString(this.src, this.location)
-    }`;
+    return `Import Name Already Declared: ${this.name} at ${locationToString(this.src, this.location)}`;
   }
 }
 
@@ -123,9 +105,7 @@ export class FileNotFoundException extends Error {
       r = "./" + path + "/";
     }
 
-    return `File Not Found: ${r + Path.basename(this.name)} at ${
-      locationToString(this.src, this.location)
-    }`;
+    return `File Not Found: ${r + Path.basename(this.name)} at ${locationToString(this.src, this.location)}`;
   }
 }
 
@@ -161,11 +141,9 @@ export class SyntaxErrorException extends Error {
   }
 
   toString(): string {
-    return `Syntax Error: Expected ${
-      commaSeparated(this.expected.map((t) => ttokens.get(t)))
-    } but found ${ttokens.get(this.found[0])} at ${
-      locationToString(this.src, this.found[1])
-    }`;
+    return `Syntax Error: Expected ${commaSeparated(this.expected.map((t) => ttokens.get(t)))} but found ${
+      ttokens.get(this.found[0])
+    } at ${locationToString(this.src, this.found[1])}`;
   }
 }
 
@@ -199,15 +177,11 @@ export class UnificationMismatchException extends Error {
       t1.position !== undefined && t2.position !== undefined &&
       t1.position[0] === t2.position[0]
     ) {
-      return `Unification Mismatch: ${t1.toString()} ${
-        Location.toString(t1.position[1])
-      } and ${t2.toString()} ${Location.toString(t2.position[1])} from ${
-        Path.relative(Deno.cwd(), t1.position[0].urn())
-      }`;
+      return `Unification Mismatch: ${t1.toString()} ${Location.toString(t1.position[1])} and ${t2.toString()} ${
+        Location.toString(t2.position[1])
+      } from ${Path.relative(Deno.cwd(), t1.position[0].urn())}`;
     } else {
-      return `Unification Mismatch: ${renderTypePosition(t1)} and ${
-        renderTypePosition(t2)
-      }`;
+      return `Unification Mismatch: ${renderTypePosition(t1)} and ${renderTypePosition(t2)}`;
     }
   }
 }
@@ -241,9 +215,7 @@ export class UnknownDataNameException extends Error {
   }
 
   toString(): string {
-    return `Unknown Data Name: ${this.name} at ${
-      locationToString(this.src, this.location)
-    }`;
+    return `Unknown Data Name: ${this.name} at ${locationToString(this.src, this.location)}`;
   }
 }
 
@@ -253,12 +225,7 @@ export class UnknownImportNameException extends Error {
   location: Location.Location;
   available: Array<string>;
 
-  constructor(
-    src: Src,
-    name: string,
-    location: Location.Location,
-    available: Array<string>,
-  ) {
+  constructor(src: Src, name: string, location: Location.Location, available: Array<string>) {
     super();
     this.src = src;
     this.name = name;
@@ -268,14 +235,12 @@ export class UnknownImportNameException extends Error {
 
   toString(): string {
     if (this.available.length === 0) {
-      return `Unknown Import Name: ${this.name} at ${
-        locationToString(this.src, this.location)
-      }`;
+      return `Unknown Import Name: ${this.name} at ${locationToString(this.src, this.location)}`;
     }
 
-    return `Unknown Import Name: ${this.name} not one of ${
-      commaSeparated(this.available)
-    } at ${locationToString(this.src, this.location)}`;
+    return `Unknown Import Name: ${this.name} not one of ${commaSeparated(this.available)} at ${
+      locationToString(this.src, this.location)
+    }`;
   }
 }
 
@@ -292,9 +257,7 @@ export class UnknownNameException extends Error {
   }
 
   toString(): string {
-    return `Unknown Name: ${this.name} at ${
-      locationToString(this.src, this.location)
-    }`;
+    return `Unknown Name: ${this.name} at ${locationToString(this.src, this.location)}`;
   }
 }
 
@@ -312,9 +275,7 @@ export class UnknownQualifierException extends Error {
   }
 
   toString(): string {
-    return `Unknown Qualifier: ${this.name} at ${
-      locationToString(this.src, this.location)
-    }`;
+    return `Unknown Qualifier: ${this.name} at ${locationToString(this.src, this.location)}`;
   }
 }
 
@@ -331,9 +292,7 @@ export class UnknownTypeNameException extends Error {
   }
 
   toString(): string {
-    return `Unknown Type Name: ${this.name} at ${
-      locationToString(this.src, this.location)
-    }`;
+    return `Unknown Type Name: ${this.name} at ${locationToString(this.src, this.location)}`;
   }
 }
 

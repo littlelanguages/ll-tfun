@@ -39,19 +39,13 @@ class VTuple {
   }
 }
 
-export const mkTuple = (values: Array<RuntimeValue>): RuntimeValue =>
-  new VTuple(values);
+export const mkTuple = (values: Array<RuntimeValue>): RuntimeValue => new VTuple(values);
 
-export const isTuple = (value: RuntimeValue): boolean =>
-  value instanceof VTuple;
+export const isTuple = (value: RuntimeValue): boolean => value instanceof VTuple;
 
-export const tupleComponent = (
-  value: RuntimeValue,
-  index: number,
-): RuntimeValue => value.values[index];
+export const tupleComponent = (value: RuntimeValue, index: number): RuntimeValue => value.values[index];
 
-export const tupleComponents = (value: RuntimeValue): Array<RuntimeValue> =>
-  value.values;
+export const tupleComponents = (value: RuntimeValue): Array<RuntimeValue> => value.values;
 
 export const equals = (v1: RuntimeValue, v2: RuntimeValue): boolean => {
   if (v1 === v2) {
@@ -135,9 +129,7 @@ export const valueToString = (v: RuntimeValue): string => {
     return `'${String.fromCharCode(v.value)}'`;
   }
   if (isTuple(v)) {
-    return `(${
-      tupleComponents(v).map((v: RuntimeValue) => valueToString(v)).join(", ")
-    })`;
+    return `(${tupleComponents(v).map((v: RuntimeValue) => valueToString(v)).join(", ")})`;
   }
   if (Array.isArray(v)) {
     if (v[0] === "Nil") {
@@ -151,9 +143,7 @@ export const valueToString = (v: RuntimeValue): string => {
         current = current[2];
       }
 
-      return `[${
-        result.map((v: RuntimeValue) => valueToString(v)).join(", ")
-      }]`;
+      return `[${result.map((v: RuntimeValue) => valueToString(v)).join(", ")}]`;
     }
     if (v.length === 1) {
       return v[0];
@@ -163,9 +153,7 @@ export const valueToString = (v: RuntimeValue): string => {
           ? `(${valueToString(p)})`
           : valueToString(p);
 
-      return `${v[0]} ${
-        v.slice(1).map((v: RuntimeValue) => param(v)).join(" ")
-      }`;
+      return `${v[0]} ${v.slice(1).map((v: RuntimeValue) => param(v)).join(" ")}`;
     }
   }
   if (v instanceof RegExp) {
@@ -200,15 +188,9 @@ export const valueToString = (v: RuntimeValue): string => {
 
 export type NestedString = string | Array<NestedString>;
 
-export const expressionToNestedString = (
-  value: RuntimeValue,
-  type: Type,
-  expr: Expression,
-): NestedString =>
+export const expressionToNestedString = (value: RuntimeValue, type: Type, expr: Expression): NestedString =>
   ((expr.type === "Let" || expr.type === "LetRec") && type instanceof TTuple)
-    ? expr.declarations.map((d, i) =>
-      `${d.name} = ${valueToString(value[i])}: ${type.types[i]}`
-    )
+    ? expr.declarations.map((d, i) => `${d.name} = ${valueToString(value[i])}: ${type.types[i]}`)
     : `${valueToString(value)}: ${type}`;
 
 export const nestedStringToString = (s: NestedString): string =>

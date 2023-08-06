@@ -53,8 +53,7 @@ Deno.test("srcs can be combined", () => {
 });
 
 Deno.test("special case that isn't working", () => {
-  const directory =
-    "/Users/graemelockley/Projects/little-languages-project/ll-tfun/components/deno/";
+  const directory = "/Users/graemelockley/Projects/little-languages-project/ll-tfun/components/deno/";
   const s1 = Src.from(directory);
   assertEquals(directory, s1.urn());
 

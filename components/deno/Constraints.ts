@@ -1,32 +1,12 @@
-import {
-  UnificationMismatchesException,
-  UnificationMismatchException,
-  UnknownLabelException,
-} from "./Errors.ts";
-import {
-  nullSubs,
-  Pump,
-  Subst,
-  TAlias,
-  TArr,
-  TCon,
-  TRowEmpty,
-  TRowExtend,
-  TTuple,
-  TVar,
-  Type,
-  Var,
-} from "./Typing.ts";
+import { UnificationMismatchesException, UnificationMismatchException, UnknownLabelException } from "./Errors.ts";
+import { nullSubs, Pump, Subst, TAlias, TArr, TCon, TRowEmpty, TRowExtend, TTuple, TVar, Type, Var } from "./Typing.ts";
 
 type Constraint = [Type, Type];
 type Unifier = [Subst, Array<Constraint>];
 
 const emptyUnifier: Unifier = [nullSubs, []];
 
-const bind = (
-  name: Var,
-  type: Type,
-): Unifier => [new Subst(new Map([[name, type]])), []];
+const bind = (name: Var, type: Type): Unifier => [new Subst(new Map([[name, type]])), []];
 
 const unifies = (t1: Type, t2: Type, pump: Pump): Unifier => {
   // console.log(`unify: ${JSON.stringify(t1, null, 2)} with ${JSON.stringify(t2, null, 2)}`);
@@ -104,8 +84,7 @@ const unifies = (t1: Type, t2: Type, pump: Pump): Unifier => {
   throw new UnificationMismatchException(t1, t2);
 };
 
-const applyTypes = (s: Subst, ts: Array<Type>): Array<Type> =>
-  ts.map((t) => t.apply(s));
+const applyTypes = (s: Subst, ts: Array<Type>): Array<Type> => ts.map((t) => t.apply(s));
 
 const unifyMany = (ta: Array<Type>, tb: Array<Type>, pump: Pump): Unifier => {
   // console.log("unifyMany", ta.map((t) => t.toString()), tb.map((t) => t.toString()));
@@ -119,11 +98,7 @@ const unifyMany = (ta: Array<Type>, tb: Array<Type>, pump: Pump): Unifier => {
   const [t2, ...ts2] = tb;
 
   const [su1, cs1] = unifies(t1, t2, pump);
-  const [su2, cs2] = unifyMany(
-    applyTypes(su1, ts1),
-    applyTypes(su1, ts2),
-    pump,
-  );
+  const [su2, cs2] = unifyMany(applyTypes(su1, ts1), applyTypes(su1, ts2), pump);
 
   return [su2.compose(su1), cs1.concat(cs2)];
 };
@@ -136,11 +111,7 @@ const solver = (constraints: Array<Constraint>, pump: Pump): Subst => {
     const [[t1, t2], ...cs0] = cs;
     const [su1, cs1] = unifies(t1, t2, pump);
     su = su1.compose(su);
-    cs = cs1.concat(
-      cs0.map((
-        constraint,
-      ) => [constraint[0].apply(su1), constraint[1].apply(su1)]),
-    );
+    cs = cs1.concat(cs0.map((constraint) => [constraint[0].apply(su1), constraint[1].apply(su1)]));
   }
 
   return su;
@@ -162,9 +133,7 @@ export class Constraints {
   }
 
   toString(): string {
-    return this.constraints.map((a) =>
-      `${a[0].toString()} ~ ${a[1].toString()}`
-    ).join(", ");
+    return this.constraints.map((a) => `${a[0].toString()} ~ ${a[1].toString()}`).join(", ");
   }
 
   clone(): Constraints {

@@ -2,10 +2,7 @@ import * as Sets from "./Set.ts";
 import * as Maps from "./Map.ts";
 import { home, Src } from "./Src.ts";
 import { NameLocation } from "./Parser.ts";
-import {
-  UnknownDataNameException,
-  UnknownQualifierException,
-} from "./Errors.ts";
+import { UnknownDataNameException, UnknownQualifierException } from "./Errors.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
 
 export type Var = string;
@@ -38,10 +35,7 @@ export abstract class Type {
     }
 
     if (this.position[0] === other.position[0]) {
-      return [
-        this.position[0],
-        Location.combine(this.position[1], other.position[1]),
-      ];
+      return [this.position[0], Location.combine(this.position[1], other.position[1])];
     }
 
     return this.position;
@@ -53,12 +47,7 @@ export class TAlias extends Type {
   args: Array<Type>;
   scheme: Scheme;
 
-  constructor(
-    name: string,
-    args: Array<Type>,
-    scheme: Scheme,
-    position: Position | undefined = undefined,
-  ) {
+  constructor(name: string, args: Array<Type>, scheme: Scheme, position: Position | undefined = undefined) {
     super(position);
 
     this.name = name;
@@ -82,17 +71,13 @@ export class TAlias extends Type {
   toString(): string {
     return `${this.name}${this.args.length > 0 ? " " : ""}${
       this.args.map((t) =>
-        (t instanceof TCon && t.args.length > 0 || t instanceof TArr)
-          ? `(${t.toString()})`
-          : t.toString()
+        (t instanceof TCon && t.args.length > 0 || t instanceof TArr) ? `(${t.toString()})` : t.toString()
       ).join(" ")
     }`;
   }
 
   resolve(): Type {
-    const bindings = new Map(
-      this.scheme.names.map((n, i) => [n, this.args[i]]),
-    );
+    const bindings = new Map(this.scheme.names.map((n, i) => [n, this.args[i]]));
 
     return this.scheme.type.apply(new Subst(bindings));
   }
@@ -106,11 +91,7 @@ export class TArr extends Type {
   domain: Type;
   range: Type;
 
-  constructor(
-    domain: Type,
-    range: Type,
-    position: Position | undefined = undefined,
-  ) {
+  constructor(domain: Type, range: Type, position: Position | undefined = undefined) {
     super(position);
     this.domain = domain;
     this.range = range;
@@ -141,11 +122,7 @@ export class TCon extends Type {
   adt: DataDefinition;
   args: Array<Type>;
 
-  constructor(
-    adt: DataDefinition,
-    args: Array<Type> = [],
-    position: Position | undefined = undefined,
-  ) {
+  constructor(adt: DataDefinition, args: Array<Type> = [], position: Position | undefined = undefined) {
     super(position);
     this.adt = adt;
     this.args = args;
@@ -166,9 +143,7 @@ export class TCon extends Type {
   toString(): string {
     return `${this.adt.name}${this.args.length > 0 ? " " : ""}${
       this.args.map((t) =>
-        (t instanceof TCon && t.args.length > 0 || t instanceof TArr)
-          ? `(${t.toString()})`
-          : t.toString()
+        (t instanceof TCon && t.args.length > 0 || t instanceof TArr) ? `(${t.toString()})` : t.toString()
       ).join(" ")
     }`;
   }
@@ -209,12 +184,7 @@ export class TRowExtend extends Type {
   type: Type;
   row: Type;
 
-  constructor(
-    name: string,
-    type: Type,
-    row: Type,
-    position: Position | undefined = undefined,
-  ) {
+  constructor(name: string, type: Type, row: Type, position: Position | undefined = undefined) {
     super(position);
     this.name = name;
     this.type = type;
@@ -374,14 +344,11 @@ export class Scheme {
   }
 
   toString(): string {
-    return `${
-      this.names.length == 0 ? "" : `∀ ${this.names.join(", ")}. `
-    }${this.type}`;
+    return `${this.names.length == 0 ? "" : `∀ ${this.names.join(", ")}. `}${this.type}`;
   }
 }
 
-export const applyArray = (s: Subst, ts: Array<Type>): Array<Type> =>
-  ts.map((t) => t.apply(s));
+export const applyArray = (s: Subst, ts: Array<Type>): Array<Type> => ts.map((t) => t.apply(s));
 
 interface DataConstructor {
   name: string;
@@ -394,12 +361,7 @@ export class DataDefinition {
   parameters: Array<string>;
   constructors: Array<DataConstructor>;
 
-  constructor(
-    src: Src,
-    name: string,
-    parameters: Array<string>,
-    constructors: Array<DataConstructor>,
-  ) {
+  constructor(src: Src, name: string, parameters: Array<string>, constructors: Array<DataConstructor>) {
     this.src = src;
     this.name = name;
     this.parameters = parameters;
@@ -413,14 +375,10 @@ export class DataDefinition {
   }
 
   toString(): string {
-    return `${this.name}${this.parameters.length > 0 ? " " : ""}${
-      this.parameters.join(" ")
-    } = ${
+    return `${this.name}${this.parameters.length > 0 ? " " : ""}${this.parameters.join(" ")} = ${
       this.constructors.map((c) =>
         [c.name].concat(c.args.map((a) =>
-          (a instanceof TCon && a.args.length > 0 || a instanceof TArr)
-            ? `(${a.toString()})`
-            : a.toString()
+          (a instanceof TCon && a.args.length > 0 || a instanceof TArr) ? `(${a.toString()})` : a.toString()
         )).join(" ")
       ).join(" | ")
     }`;
@@ -456,10 +414,7 @@ export class TypeEnv {
   combine(other: TypeEnv): TypeEnv {
     return new TypeEnv(
       Maps.union(this.values, other.values),
-      [
-        ...this.adts,
-        ...other.adts,
-      ],
+      [...this.adts, ...other.adts],
       Maps.union(this._aliases, other._aliases),
       Maps.union(this.imports, other.imports),
     );
@@ -513,12 +468,7 @@ export class TypeEnv {
   }
 
   apply(s: Subst): TypeEnv {
-    return new TypeEnv(
-      Maps.map(this.values, (scheme) => scheme.apply(s)),
-      this.adts,
-      this._aliases,
-      this.imports,
-    );
+    return new TypeEnv(Maps.map(this.values, (scheme) => scheme.apply(s)), this.adts, this._aliases, this.imports);
   }
 
   ftv(): Set<Var> {
@@ -571,8 +521,7 @@ export const createFresh = (): Pump => {
 
   return {
     next: (): TVar => new TVar("V" + ++count),
-    nextN: (n: number): Array<TVar> =>
-      Array(n).fill(0).map(() => new TVar("V" + ++count)),
+    nextN: (n: number): Array<TVar> => Array(n).fill(0).map(() => new TVar("V" + ++count)),
   };
 };
 

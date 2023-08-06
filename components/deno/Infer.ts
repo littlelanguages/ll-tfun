@@ -74,9 +74,7 @@ export const inferProgram = (
     }
 
     if (e.type === "TypeAliasDeclaration") {
-      throw new Error(
-        "inferProgram: Type alias declarations not supported yet",
-      );
+      throw new Error("inferProgram: Type alias declarations not supported yet");
     }
 
     if (e.type === "ImportStatement") {
@@ -98,11 +96,7 @@ export const inferExpression = (
   constraints: Constraints,
   pump: Pump,
 ): [Constraints, Type, Env] => {
-  const fix = (
-    env: Env,
-    expr: AST.Expression,
-    constraints: Constraints,
-  ): Type => {
+  const fix = (env: Env, expr: AST.Expression, constraints: Constraints): Type => {
     const [_, t1] = inferExpression(expr, env, constraints, pump);
     const tv = pump.next();
 
@@ -141,10 +135,7 @@ export const inferExpression = (
         const tv = expr.name.typ === undefined
           ? pump.next().atPosition([env.src, expr.name.name.location])
           : translateType(expr.name.typ, env);
-        const [t] = infer(
-          expr.expr,
-          extend(env, expr.name.name.name, new Scheme([], tv)),
-        );
+        const [t] = infer(expr.expr, extend(env, expr.name.name.name, new Scheme([], tv)));
 
         if (expr.returnType === undefined) {
           return [position(new TArr(tv, t)), env];
@@ -160,12 +151,7 @@ export const inferExpression = (
         const types: Array<Type> = [];
 
         for (const declaration of expr.declarations) {
-          const [nc, tb] = inferExpression(
-            declaration.expr,
-            newEnv,
-            constraints,
-            pump,
-          );
+          const [nc, tb] = inferExpression(declaration.expr, newEnv, constraints, pump);
 
           const subst = nc.solve(pump);
 
@@ -173,17 +159,11 @@ export const inferExpression = (
           const type = tb.apply(subst);
           types.push(type);
           const sc = newEnv.type.generalise(type);
-          newEnv = {
-            ...newEnv,
-            type: newEnv.type.extend(declaration.name, sc),
-          };
+          newEnv = { ...newEnv, type: newEnv.type.extend(declaration.name, sc) };
         }
 
         if (expr.expr === undefined) {
-          return [
-            new TTuple(types, positionAt),
-            newEnv,
-          ];
+          return [new TTuple(types, positionAt), newEnv];
         } else {
           return [infer(expr.expr, newEnv)[0], env];
         }
@@ -191,13 +171,7 @@ export const inferExpression = (
       case "LetRec": {
         const tvs = pump.nextN(expr.declarations.length);
         const newEnv = expr.declarations.reduce(
-          (acc, declaration, idx) => ({
-            ...acc,
-            type: acc.type.extend(
-              declaration.name,
-              new Scheme([], tvs[idx]),
-            ),
-          }),
+          (acc, declaration, idx) => ({ ...acc, type: acc.type.extend(declaration.name, new Scheme([], tvs[idx])) }),
           env,
         );
 
@@ -205,15 +179,8 @@ export const inferExpression = (
           newEnv,
           {
             type: "Lam",
-            name: {
-              name: { name: "_bob", location: arbLocation },
-              typ: undefined,
-            },
-            expr: {
-              type: "LTuple",
-              values: expr.declarations.map((d) => d.expr),
-              location: arbLocation,
-            },
+            name: { name: { name: "_bob", location: arbLocation }, typ: undefined },
+            expr: { type: "LTuple", values: expr.declarations.map((d) => d.expr), location: arbLocation },
             returnType: undefined,
             location: arbLocation,
           },
@@ -229,11 +196,7 @@ export const inferExpression = (
             const type: Type = tvs[idx].apply(subst);
             types.push(type);
 
-            return extend(
-              acc,
-              declaration.name,
-              solvedTypeEnv.type.generalise(type),
-            );
+            return extend(acc, declaration.name, solvedTypeEnv.type.generalise(type));
           },
           solvedTypeEnv,
         );
@@ -253,10 +216,7 @@ export const inferExpression = (
       case "LString":
         return [position(typeString), env];
       case "LTuple":
-        return [
-          new TTuple(expr.values.map((v) => infer(v, env)[0]), positionAt),
-          env,
-        ];
+        return [new TTuple(expr.values.map((v) => infer(v, env)[0]), positionAt), env];
       case "LUnit":
         return [position(typeUnit), env];
       case "Match": {
@@ -324,11 +284,7 @@ export const inferExpression = (
         const scheme = varEnv.scheme(expr.name.name);
 
         if (scheme === undefined) {
-          throw new UnknownNameException(
-            env.src,
-            expr.name.name,
-            expr.name.location,
-          );
+          throw new UnknownNameException(env.src, expr.name.name, expr.name.location);
         }
 
         return [position(scheme.instantiate(pump)), env];
@@ -358,10 +314,7 @@ export const inferPattern = (
     case "PCons": {
       const [constructor, adt] = pattern.qualifier === undefined
         ? env.type.getConstructor(env.src, pattern.name)
-        : env.type.getImport(env.src, pattern.qualifier).getConstructor(
-          env.src,
-          pattern.name,
-        );
+        : env.type.getImport(env.src, pattern.qualifier).getConstructor(env.src, pattern.name);
 
       if (constructor.args.length !== pattern.args.length) {
         throw new ArityMismatchException(
@@ -439,10 +392,7 @@ export const translateType = (
       case "TypeConstructor": {
         const qualifiedEnv = t.qualifier === undefined
           ? env.type
-          : env.type.getImport(env.src, {
-            name: t.qualifier,
-            location: t.qualifierLocation!,
-          });
+          : env.type.getImport(env.src, { name: t.qualifier, location: t.qualifierLocation! });
         const tc = qualifiedEnv.data(t.name);
         if (tc === undefined) {
           const aliasType = qualifiedEnv.findAlias(t.name);
@@ -457,22 +407,11 @@ export const translateType = (
               t.nameLocation,
             );
           } else {
-            return new TAlias(
-              t.name,
-              t.arguments.map(translate),
-              aliasType,
-              positionAt,
-            );
+            return new TAlias(t.name, t.arguments.map(translate), aliasType, positionAt);
           }
         }
         if (t.arguments.length !== tc.parameters.length) {
-          throw new ArityMismatchException(
-            env.src,
-            t.name,
-            t.arguments.length,
-            tc.parameters.length,
-            t.nameLocation,
-          );
+          throw new ArityMismatchException(env.src, t.name, t.arguments.length, tc.parameters.length, t.nameLocation);
         }
 
         return new TCon(tc, t.arguments.map(translate), positionAt);
@@ -482,14 +421,9 @@ export const translateType = (
       case "TypeRecord": {
         const f = (acc: Type, field: [string, AST.Type]) => {
           const field1 = translate(field[1]);
-          return new TRowExtend(field[0], field1, acc, [
-            env.src,
-            t.location,
-          ]);
+          return new TRowExtend(field[0], field1, acc, [env.src, t.location]);
         };
-        const initial: Type = t.extension === undefined
-          ? new TRowEmpty(positionAt)
-          : translate(t.extension);
+        const initial: Type = t.extension === undefined ? new TRowEmpty(positionAt) : translate(t.extension);
 
         return t.fields.reduceRight(f, initial);
       }
@@ -499,11 +433,7 @@ export const translateType = (
         return position(typeUnit);
       case "TypeVariable":
         if (parameters !== undefined && !parameters.has(t.name.name)) {
-          throw new UnknownTypeNameException(
-            env.src,
-            t.name.name,
-            t.name.location,
-          );
+          throw new UnknownTypeNameException(env.src, t.name.name, t.name.location);
         }
 
         return new TVar(t.name.name, positionAt);
@@ -513,15 +443,8 @@ export const translateType = (
   return translate(t);
 };
 
-const apply = (env: Env, s: Subst): Env => ({
-  ...env,
-  type: env.type.apply(s),
-});
+const apply = (env: Env, s: Subst): Env => ({ ...env, type: env.type.apply(s) });
 
-const extend = (env: Env, name: string, scheme: Scheme): Env => ({
-  ...env,
-  type: env.type.extend(name, scheme),
-});
+const extend = (env: Env, name: string, scheme: Scheme): Env => ({ ...env, type: env.type.extend(name, scheme) });
 
-const zip = <A, B>(a: Array<A>, b: Array<B>): Array<[A, B]> =>
-  a.map((k, i) => [k, b[i]]);
+const zip = <A, B>(a: Array<A>, b: Array<B>): Array<[A, B]> => a.map((k, i) => [k, b[i]]);

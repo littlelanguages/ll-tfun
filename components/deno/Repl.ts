@@ -1,11 +1,7 @@
 import { defaultEnv, Env, parseExecute } from "./Interpreter.ts";
 import { home } from "./Src.ts";
 import { renameTypeVariables } from "./Typing.ts";
-import {
-  expressionToNestedString,
-  nestedStringToString,
-  valueToString,
-} from "./Values.ts";
+import { expressionToNestedString, nestedStringToString, valueToString } from "./Values.ts";
 
 const readline = (): string | null => {
   const result: Array<string> = [];
@@ -37,11 +33,7 @@ const execute = (line: string, env: Env): Env => {
     } else if (e.type !== "ImportStatement") {
       const [value, type] = result[i];
 
-      console.log(
-        nestedStringToString(
-          expressionToNestedString(value, renameTypeVariables([type!])[0], e),
-        ),
-      );
+      console.log(nestedStringToString(expressionToNestedString(value, renameTypeVariables([type!])[0], e)));
     }
   });
 
@@ -84,15 +76,9 @@ if (Deno.args.length === 0) {
         console.log("Runtime Environment");
         for (const field of env.runtime.names()) {
           try {
-            console.log(
-              `  ${field} = ${valueToString(env.runtime.get(field))}: ${
-                env.type.scheme(field)
-              }`,
-            );
+            console.log(`  ${field} = ${valueToString(env.runtime.get(field))}: ${env.type.scheme(field)}`);
           } catch (_e) {
-            console.log(
-              `  ${field} = ...: ${env.type.scheme(field)}`,
-            );
+            console.log(`  ${field} = ...: ${env.type.scheme(field)}`);
           }
         }
         console.log("Data Declarations");

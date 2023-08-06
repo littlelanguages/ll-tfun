@@ -77,13 +77,7 @@ export const defaultEnv = (
   preludeSrc: Src | undefined = undefined,
   imports: ImportEnv = {},
 ): Env => {
-  const initialEnv = {
-    runtime: Runtime.emptyEnv(),
-    type: emptyTypeEnv,
-    src,
-    imports,
-    preludeSrc,
-  };
+  const initialEnv = { runtime: Runtime.emptyEnv(), type: emptyTypeEnv, src, imports, preludeSrc };
 
   if (preludeSrc === undefined || src.urn() === preludeSrc.urn()) {
     return initialEnv;
@@ -94,10 +88,7 @@ export const defaultEnv = (
   }
 };
 
-const binaryOps = new Map<
-  number,
-  (v1: RuntimeValue, v2: RuntimeValue) => RuntimeValue
->([
+const binaryOps = new Map<number, (v1: RuntimeValue, v2: RuntimeValue) => RuntimeValue>([
   [Op.Append, (a, b) => a + b],
   [Op.Divide, (a, b) => (a / b) | 0],
   [Op.Equals, (a, b) => equals(a, b)],
@@ -112,10 +103,7 @@ const binaryOps = new Map<
   [Op.Times, (a, b) => (a * b) | 0],
 ]);
 
-const arrayToList = (
-  arr: Array<RuntimeValue>,
-  runtimeEnv: Runtime.Env,
-): RuntimeValue => {
+const arrayToList = (arr: Array<RuntimeValue>, runtimeEnv: Runtime.Env): RuntimeValue => {
   let result: RuntimeValue = runtimeEnv.get("Nil");
   for (let i = arr.length - 1; i >= 0; i--) {
     result = runtimeEnv.get("Cons")(arr[i])(result);
@@ -144,9 +132,7 @@ const evaluate = (expr: Expression, runtimeEnv: Runtime.Env): RuntimeValue => {
         case "Data.Integer.parse":
           return (s: string) => {
             const n = parseInt(s, 10);
-            return isNaN(n)
-              ? runtimeEnv.get("Nothing")
-              : runtimeEnv.get("Just")(n);
+            return isNaN(n) ? runtimeEnv.get("Nothing") : runtimeEnv.get("Just")(n);
           };
         case "Data.Ref.Assign":
           return (v: RuntimeValue) => (r: RuntimeValue) => {
@@ -160,36 +146,28 @@ const evaluate = (expr: Expression, runtimeEnv: Runtime.Env): RuntimeValue => {
           return (n: string) => (s: string) => {
             const i = s.indexOf(n);
 
-            return (i == -1)
-              ? runtimeEnv.get("Nothing")
-              : runtimeEnv.get("Just")(i);
+            return (i == -1) ? runtimeEnv.get("Nothing") : runtimeEnv.get("Just")(i);
           };
         case "Data.String.length":
           return (s: string) => s.length;
         case "Data.String.replace":
-          return (searchValue: string) =>
-          (replaceValue: string) =>
-          (s: string) =>
+          return (searchValue: string) => (replaceValue: string) => (s: string) =>
             s.replace(new RegExp(literal(searchValue), "g"), replaceValue);
         case "Data.String.reverse":
           return (s: string) => s.split("").reverse().join("");
         case "Data.String.slice":
-          return (start: number) => (end: number) => (s: string) =>
-            s.slice(start, end);
+          return (start: number) => (end: number) => (s: string) => s.slice(start, end);
         case "Text.Regex.literal":
           return literal;
         case "Text.Regex.parse":
           return (s: string) => new RegExp(s);
         case "Text.Regex.split":
-          return (r: RegExp) => (s: string) =>
-            arrayToList(s.split(r), runtimeEnv);
+          return (r: RegExp) => (s: string) => arrayToList(s.split(r), runtimeEnv);
         default:
           throw new Error(`Unknown builtin ${expr.name}`);
       }
     case "If":
-      return evaluate(expr.guard, runtimeEnv)
-        ? evaluate(expr.then, runtimeEnv)
-        : evaluate(expr.else, runtimeEnv);
+      return evaluate(expr.guard, runtimeEnv) ? evaluate(expr.then, runtimeEnv) : evaluate(expr.else, runtimeEnv);
     case "Lam":
       return (x: RuntimeValue): RuntimeValue => {
         const newRuntimeEnv = runtimeEnv.clone();
@@ -261,11 +239,7 @@ const evaluate = (expr: Expression, runtimeEnv: Runtime.Env): RuntimeValue => {
   }
 };
 
-const matchPattern = (
-  pattern: Pattern,
-  value: RuntimeValue,
-  runtimeEnv: Runtime.Env,
-): Runtime.Env | null => {
+const matchPattern = (pattern: Pattern, value: RuntimeValue, runtimeEnv: Runtime.Env): Runtime.Env | null => {
   switch (pattern.type) {
     case "PChar":
       return pattern.value === (value as VChar).value ? runtimeEnv : null;
@@ -279,11 +253,7 @@ const matchPattern = (
         return null;
       }
       for (let i = 0; i < pattern.args.length; i++) {
-        newRuntimeEnv = matchPattern(
-          pattern.args[i],
-          value[i + 1],
-          newRuntimeEnv,
-        );
+        newRuntimeEnv = matchPattern(pattern.args[i], value[i + 1], newRuntimeEnv);
         if (newRuntimeEnv === null) {
           return null;
         }
@@ -303,11 +273,7 @@ const matchPattern = (
     case "PTuple": {
       let newRuntimeEnv: Runtime.Env | null = runtimeEnv;
       for (let i = 0; i < pattern.values.length; i++) {
-        newRuntimeEnv = matchPattern(
-          pattern.values[i],
-          tupleComponent(value, i),
-          newRuntimeEnv,
-        );
+        newRuntimeEnv = matchPattern(pattern.values[i], tupleComponent(value, i), newRuntimeEnv);
         if (newRuntimeEnv === null) {
           return null;
         }
@@ -345,15 +311,10 @@ const executeValueDeclaration = (
     values.push(value);
   });
 
-  return (expr.expr === undefined)
-    ? [values, newRuntimeEnv]
-    : [evaluate(expr.expr, newRuntimeEnv), runtimeEnv];
+  return (expr.expr === undefined) ? [values, newRuntimeEnv] : [evaluate(expr.expr, newRuntimeEnv), runtimeEnv];
 };
 
-const executeExpression = (
-  expr: Expression,
-  runtimeEnv: Runtime.Env,
-): [RuntimeValue, Runtime.Env] =>
+const executeExpression = (expr: Expression, runtimeEnv: Runtime.Env): [RuntimeValue, Runtime.Env] =>
   (expr.type === "Let" || expr.type === "LetRec")
     ? executeValueDeclaration(expr, runtimeEnv, true)
     : [evaluate(expr, runtimeEnv), runtimeEnv];
@@ -369,18 +330,16 @@ const mkConstructorFunction = (name: string, arity: number): RuntimeValue => {
     return (x1: RuntimeValue) => (x2: RuntimeValue) => [name, x1, x2];
   }
   if (arity === 3) {
-    return (x1: RuntimeValue) => (x2: RuntimeValue) => (x3: RuntimeValue) => [
+    return (x1: RuntimeValue) => (x2: RuntimeValue) => (x3: RuntimeValue) => [name, x1, x2, x3];
+  }
+  if (arity === 4) {
+    return (x1: RuntimeValue) => (x2: RuntimeValue) => (x3: RuntimeValue) => (x4: RuntimeValue) => [
       name,
       x1,
       x2,
       x3,
+      x4,
     ];
-  }
-  if (arity === 4) {
-    return (x1: RuntimeValue) =>
-    (x2: RuntimeValue) =>
-    (x3: RuntimeValue) =>
-    (x4: RuntimeValue) => [name, x1, x2, x3, x4];
   }
   if (arity === 5) {
     return (x1: RuntimeValue) =>
@@ -401,11 +360,7 @@ const executeDataDeclaration = (
 
   ast.declarations.forEach((d) => {
     if (env.type.data(d.name.name) !== undefined) {
-      throw new DuplicateDataDeclarationException(
-        env.src,
-        d.name.name,
-        d.name.location,
-      );
+      throw new DuplicateDataDeclarationException(env.src, d.name.name, d.name.location);
     }
 
     const adt = new DataDefinition(env.src, d.name.name, d.parameters, []);
@@ -419,10 +374,7 @@ const executeDataDeclaration = (
     const parameters = new Set(d.parameters);
 
     d.constructors.forEach((c) => {
-      adt.addConstructor(
-        c.name,
-        c.parameters.map((t) => translateType(t, env, parameters)),
-      );
+      adt.addConstructor(c.name, c.parameters.map((t) => translateType(t, env, parameters)));
     });
 
     adts.push(adt);
@@ -438,10 +390,7 @@ const executeDataDeclaration = (
         c.name,
         new Scheme(
           adt.parameters,
-          c.args.reduceRight(
-            (acc: Type, t: Type) => new TArr(t, acc),
-            constructorResultType,
-          ),
+          c.args.reduceRight((acc: Type, t: Type) => new TArr(t, acc), constructorResultType),
         ),
       );
 
@@ -454,25 +403,13 @@ const executeDataDeclaration = (
   return [adts, env];
 };
 
-const executeTypeAliasDeclaration = (
-  ast: TypeAliasDeclaration,
-  env: Env,
-): Env => {
+const executeTypeAliasDeclaration = (ast: TypeAliasDeclaration, env: Env): Env => {
   const typ = translateType(ast.typ, env, new Set(ast.parameters));
 
-  return {
-    ...env,
-    type: env.type.addAlias(
-      ast.name,
-      new Scheme(ast.parameters, typ),
-    ),
-  };
+  return { ...env, type: env.type.addAlias(ast.name, new Scheme(ast.parameters, typ)) };
 };
 
-const executeImportStatement = (
-  ast: ImportStatement,
-  env: Env,
-): Env => {
+const executeImportStatement = (ast: ImportStatement, env: Env): Env => {
   const imports = importPackage(ast.from, env);
 
   switch (ast.items.type) {
@@ -482,11 +419,7 @@ const executeImportStatement = (
         let type = env.type;
         imports.values.forEach(([v, t], n) => {
           if (runtime.has(n)) {
-            throw new ImportNameAlreadyDeclaredException(
-              env.src,
-              n,
-              ast.from.location,
-            );
+            throw new ImportNameAlreadyDeclaredException(env.src, n, ast.from.location);
           }
 
           runtime.bind(n, v);
@@ -501,22 +434,14 @@ const executeImportStatement = (
           if (type.findAlias(name) === undefined) {
             type = type.addAlias(name, imports.types.findAlias(name)!);
           } else {
-            throw new ImportNameAlreadyDeclaredException(
-              env.src,
-              name,
-              ast.from.location,
-            );
+            throw new ImportNameAlreadyDeclaredException(env.src, name, ast.from.location);
           }
         });
 
         return { ...env, runtime, type };
       } else {
         if (env.runtime.has(ast.items.as.name)) {
-          throw new ImportNameAlreadyDeclaredException(
-            env.src,
-            ast.items.as.name,
-            ast.items.as.location,
-          );
+          throw new ImportNameAlreadyDeclaredException(env.src, ast.items.as.name, ast.items.as.location);
         }
         const runtime = env.runtime.clone();
         let type = env.type;
@@ -538,37 +463,20 @@ const executeImportStatement = (
           if (adt === undefined) {
             const alias = imports.types.findAlias(name.name);
             if (alias === undefined) {
-              throw new UnknownImportNameException(
-                env.src,
-                name.name,
-                name.location,
-                importNames(imports),
-              );
+              throw new UnknownImportNameException(env.src, name.name, name.location, importNames(imports));
             } else if (type.findAlias(name.name) !== undefined) {
-              throw new ImportNameAlreadyDeclaredException(
-                env.src,
-                name.name,
-                name.location,
-              );
+              throw new ImportNameAlreadyDeclaredException(env.src, name.name, name.location);
             }
             type = type.addAlias(name.name, alias);
           } else {
             if (type.data(adt.name) !== undefined) {
-              throw new ImportNameAlreadyDeclaredException(
-                env.src,
-                name.name,
-                name.location,
-              );
+              throw new ImportNameAlreadyDeclaredException(env.src, name.name, name.location);
             }
             type = type.addData(adt);
 
             adt.constructors.forEach((c) => {
               if (runtime.has(c.name)) {
-                throw new ImportNameAlreadyDeclaredException(
-                  env.src,
-                  name.name,
-                  name.location,
-                );
+                throw new ImportNameAlreadyDeclaredException(env.src, name.name, name.location);
               }
               const v = imports.values.get(c.name)!;
               runtime.bind(c.name, v[0]);
@@ -579,21 +487,12 @@ const executeImportStatement = (
           const item = imports.values.get(name.name);
 
           if (item === undefined) {
-            throw new UnknownImportNameException(
-              env.src,
-              name.name,
-              name.location,
-              importNames(imports),
-            );
+            throw new UnknownImportNameException(env.src, name.name, name.location, importNames(imports));
           }
           const n = as ?? name;
 
           if (runtime.has(n.name)) {
-            throw new ImportNameAlreadyDeclaredException(
-              env.src,
-              n.name,
-              n.location,
-            );
+            throw new ImportNameAlreadyDeclaredException(env.src, n.name, n.location);
           }
 
           runtime.bind(n.name, item[0]);
@@ -627,32 +526,20 @@ const executeElement = (
     }
     default: {
       const pump = createFresh();
-      const [constraints, type, newTypeEnv] = inferExpression(
-        e,
-        env,
-        new Constraints(),
-        pump,
-      );
+      const [constraints, type, newTypeEnv] = inferExpression(e, env, new Constraints(), pump);
       const subst = constraints.solve(pump);
       const newType = type.apply(subst);
 
       const [value, newRuntime] = executeExpression(e, env.runtime);
 
-      return [value, newType, {
-        ...env,
-        runtime: newRuntime,
-        type: newTypeEnv.type,
-      }];
+      return [value, newType, { ...env, runtime: newRuntime, type: newTypeEnv.type }];
     }
   }
 };
 
 type ExecuteResult = [Array<[RuntimeValue, Type | undefined]>, Env];
 
-const executeProgram = (
-  program: Program,
-  env: Env,
-): ExecuteResult => {
+const executeProgram = (program: Program, env: Env): ExecuteResult => {
   const results: Array<[RuntimeValue, Type | undefined]> = [];
 
   for (const element of program) {
@@ -664,14 +551,9 @@ const executeProgram = (
   return [results, env];
 };
 
-export const execute = (input: string, env: Env): ExecuteResult =>
-  executeProgram(parse(env.src, input), env);
+export const execute = (input: string, env: Env): ExecuteResult => executeProgram(parse(env.src, input), env);
 
-const readTextFile = (
-  src: Src,
-  path: string,
-  location: Location.Location,
-): string => {
+const readTextFile = (src: Src, path: string, location: Location.Location): string => {
   try {
     return Deno.readTextFileSync(path);
   } catch (_e) {
@@ -710,23 +592,9 @@ export const importPackage = (
     const importValues: ImportValues = new Map();
     let env = emptyTypeEnv;
 
-    const program = readTextFile(
-      referencedFrom.src,
-      urn,
-      importFileName.location,
-    );
-
-    const initialImportEnv = defaultEnv(
-      src,
-      referencedFrom.preludeSrc,
-      referencedFrom.imports,
-    );
-
-    const [ast, result, resultEnv] = parseExecute(
-      src,
-      program,
-      initialImportEnv,
-    );
+    const program = readTextFile(referencedFrom.src, urn, importFileName.location);
+    const initialImportEnv = defaultEnv(src, referencedFrom.preludeSrc, referencedFrom.imports);
+    const [ast, result, resultEnv] = parseExecute(src, program, initialImportEnv);
 
     ast.forEach((e, i) => {
       switch (e.type) {
@@ -752,26 +620,14 @@ export const importPackage = (
             if (d.visibility === Visibility.Public) {
               d.constructors.forEach((c) => {
                 const constructorScheme = resultEnv.type.scheme(c.name)!;
-                const constructorType = constructorScheme.instantiate(
-                  createFresh(),
-                );
+                const constructorType = constructorScheme.instantiate(createFresh());
 
-                importValues.set(c.name, [
-                  resultEnv.runtime.get(c.name),
-                  constructorType,
-                ]);
+                importValues.set(c.name, [resultEnv.runtime.get(c.name), constructorType]);
                 env = env.extend(c.name, constructorScheme);
               });
               env = env.addData(resultEnv.type.data(d.name.name)!);
             } else if (d.visibility === Visibility.Opaque) {
-              env = env.addData(
-                new DataDefinition(
-                  src,
-                  d.name.name,
-                  d.parameters,
-                  [],
-                ),
-              );
+              env = env.addData(new DataDefinition(src, d.name.name, d.parameters, []));
             }
           });
           break;
@@ -787,12 +643,7 @@ export const importPackage = (
                   if (adt === undefined) {
                     const alias = imports.types.findAlias(name.name);
                     if (alias === undefined) {
-                      throw new UnknownImportNameException(
-                        src,
-                        name.name,
-                        name.location,
-                        importNames(imports),
-                      );
+                      throw new UnknownImportNameException(src, name.name, name.location, importNames(imports));
                     }
                     env = env.addAlias(name.name, alias);
                   } else {
@@ -808,12 +659,7 @@ export const importPackage = (
                   const item = imports.values.get(name.name);
 
                   if (item === undefined) {
-                    throw new UnknownImportNameException(
-                      src,
-                      name.name,
-                      name.location,
-                      importNames(imports),
-                    );
+                    throw new UnknownImportNameException(src, name.name, name.location, importNames(imports));
                   }
 
                   const n = as ?? name;
@@ -838,15 +684,10 @@ export const importPackage = (
     importEnv[urn] = r;
     return r;
   } else if (env === loadingImport) {
-    throw new CyclicImportException(
-      referencedFrom.src,
-      importFileName.name,
-      importFileName.location,
-    );
+    throw new CyclicImportException(referencedFrom.src, importFileName.name, importFileName.location);
   } else {
     return env;
   }
 };
 
-const startsWithUppercase = (str: string) =>
-  str.length > 0 && str.charCodeAt(0) >= 65 && str.charCodeAt(0) <= 90;
+const startsWithUppercase = (str: string) => str.length > 0 && str.charCodeAt(0) >= 65 && str.charCodeAt(0) <= 90;
