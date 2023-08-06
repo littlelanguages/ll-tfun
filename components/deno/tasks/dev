@@ -17,7 +17,7 @@ build_parser() {
             ../${LANGUAGE}/Grammar.llgd || exit 1
 
         echo "---| formatting built parser"
-        deno fmt ./parser/*.ts || exit 1
+        deno fmt --line-width=120 --indent-width=2 ./parser/*.ts || exit 1
     )
 }
 
