@@ -438,8 +438,7 @@ export const mkParser = <
 
   const isToken = (ttoken: TToken): boolean => currentToken() === ttoken;
 
-  const isTokens = (ttokens: Array<TToken>): boolean =>
-    ttokens.includes(currentToken());
+  const isTokens = (ttokens: Array<TToken>): boolean => ttokens.includes(currentToken());
 
   const currentToken = (): TToken => scanner.current()[0];
 
@@ -731,8 +730,7 @@ export const mkParser = <
     factor: function (): T_Factor {
       if (isToken(TToken.LParen)) {
         const a1: Token = matchToken(TToken.LParen);
-        let a2: [T_Expression, Array<[Token, T_Expression]>] | undefined =
-          undefined;
+        let a2: [T_Expression, Array<[Token, T_Expression]>] | undefined = undefined;
 
         if (
           isTokens([
@@ -870,8 +868,7 @@ export const mkParser = <
         return visitor.visitFactor12(a1, a2, a3, a4, a5, a6);
       } else if (isToken(TToken.LBracket)) {
         const a1: Token = matchToken(TToken.LBracket);
-        let a2: [T_Expression, Array<[Token, T_Expression]>] | undefined =
-          undefined;
+        let a2: [T_Expression, Array<[Token, T_Expression]>] | undefined = undefined;
 
         if (
           isTokens([
@@ -1186,8 +1183,7 @@ export const mkParser = <
             const a2t2t: [Token, T_Pattern] = [a2t2t1, a2t2t2];
             a2t2 = a2t2t;
           }
-          const a2t3: Array<[Token, Token, [Token, T_Pattern] | undefined]> =
-            [];
+          const a2t3: Array<[Token, Token, [Token, T_Pattern] | undefined]> = [];
 
           while (isToken(TToken.Comma)) {
             const a2t3t1: Token = matchToken(TToken.Comma);
@@ -1334,8 +1330,7 @@ export const mkParser = <
           const a2t: [Token, Token] = [a2t1, a2t2];
           a2 = a2t;
         }
-        const a3: Array<(T_TermType | [Token, [Token, Token] | undefined])> =
-          [];
+        const a3: Array<(T_TermType | [Token, [Token, Token] | undefined])> = [];
 
         while (
           isTokens([
@@ -1398,8 +1393,7 @@ export const mkParser = <
         return visitor.visitTermType1(matchToken(TToken.LowerIdentifier));
       } else if (isToken(TToken.LParen)) {
         const a1: Token = matchToken(TToken.LParen);
-        let a2: [T_TypeType, Array<[Token, T_TypeType]>] | undefined =
-          undefined;
+        let a2: [T_TypeType, Array<[Token, T_TypeType]>] | undefined = undefined;
 
         if (
           isTokens([
