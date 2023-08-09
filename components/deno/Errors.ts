@@ -109,6 +109,23 @@ export class FileNotFoundException extends Error {
   }
 }
 
+export class GeneralException extends Error {
+  message: string;
+  // deno-lint-ignore no-explicit-any
+  object: any;
+
+  // deno-lint-ignore no-explicit-any
+  constructor(message: string, object: any) {
+    super();
+    this.message = message;
+    this.object = object;
+  }
+
+  toString(): string {
+    return `General Exception: ${this.message}: ${JSON.stringify(this.object, null, 0)}`;
+  }
+}
+
 export class UnknownLabelException extends Error {
   label: string;
   type1: Type;

@@ -46,6 +46,7 @@ export class TAlias extends Type {
   name: string;
   args: Array<Type>;
   scheme: Scheme;
+  _resolved: Type | undefined;
 
   constructor(name: string, args: Array<Type>, scheme: Scheme, position: Position | undefined = undefined) {
     super(position);
@@ -77,9 +78,13 @@ export class TAlias extends Type {
   }
 
   resolve(): Type {
-    const bindings = new Map(this.scheme.names.map((n, i) => [n, this.args[i]]));
+    if (this._resolved === undefined) {
+      const bindings = new Map(this.scheme.names.map((n, i) => [n, this.args[i]]));
 
-    return this.scheme.type.apply(new Subst(bindings));
+      this._resolved = this.scheme.type.apply(new Subst(bindings));
+    }
+
+    return this._resolved;
   }
 
   atPosition(position: Position): Type {
@@ -179,6 +184,20 @@ export class TRowEmpty extends Type {
   }
 }
 
+const stripNameFromRecord = (name: string, row: Type): Type => {
+  if (row instanceof TRowExtend) {
+    if (row.name === name) {
+      return stripNameFromRecord(name, row.row);
+    } else {
+      return new TRowExtend(row.name, row.type, stripNameFromRecord(name, row.row));
+    }
+  } else if (row instanceof TAlias) {
+    return stripNameFromRecord(name, row.resolve());
+  } else {
+    return row;
+  }
+};
+
 export class TRowExtend extends Type {
   name: string;
   type: Type;
@@ -188,7 +207,7 @@ export class TRowExtend extends Type {
     super(position);
     this.name = name;
     this.type = type;
-    this.row = row;
+    this.row = stripNameFromRecord(name, row);
   }
 
   apply(s: Subst): Type {

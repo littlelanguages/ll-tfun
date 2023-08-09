@@ -264,11 +264,10 @@ Deno.test("Data Declaration - match", () => {
 });
 
 Deno.test("Error - add visibility ot non-toplevel declaration", () => {
-  assertError("let x = let y* = 10 in y + y", {
-    type: "VisibilityModifierError",
-    name: "y",
-    Visibility: 0,
-  });
+  assertError(
+    "let x = let y* = 10 in y + y",
+    'General Exception: VisibilityModifierError: {"name":"y","Visibility":0}',
+  );
   assertExecute("let x* = let y = 10 in y + y", [["x = 20: Int"]]);
 });
 

@@ -1,3 +1,4 @@
+import { GeneralException } from "./Errors.ts";
 import { RuntimeValue } from "./Values.ts";
 
 type RuntimeEnvBindings = { [key: string]: RuntimeValue };
@@ -23,7 +24,7 @@ export class Env {
     const v = this.bindings[name];
 
     if (v === undefined) {
-      throw { type: "UnknownName", name };
+      throw new GeneralException("UnknownRuntimeName", { name });
     } else {
       return v;
     }

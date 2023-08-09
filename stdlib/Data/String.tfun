@@ -1,3 +1,11 @@
+let at* (i: Int) (s: String): Maybe Char =
+  builtin "Data.String.at" i s ;
+
+let atElse* (d: Char) (i: Int) (s: String): Char =
+  match at i s with
+  | Just c -> c
+  | Nothing -> d ;
+
 let length* (s: String): Int =
   builtin "Data.String.length" s ;
 

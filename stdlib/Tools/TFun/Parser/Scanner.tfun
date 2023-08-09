@@ -1,1 +1,107 @@
-import Location*, combine* from "./Location.tfun"
+import * as Char from "../../../Data/Char.tfun" ;
+import * as String from "../../../Data/String.tfun" ;
+import Location*, combine*, toString as locationToString* from "./Location.tfun" ;
+
+data Token* =
+    UpperIdentifier (String) Location
+  | LowerIdentifier (String) Location
+  | LiteralChar (Char) Location
+  | LiteralString (String) Location
+  | LiteralInt (Int) Location
+  | As Location
+  | Comma Location
+  | EOS Location
+  | ERROR (String) Location
+  ;
+
+type Scanner = {
+  input: String,
+  inputLength: Int,
+  offset: Int
+};
+
+let fromString* (input: String): Scanner =
+  { input: input
+  , inputLength: String.length input
+  , offset: 0
+  } ;
+
+let atEnd (scanner: Scanner): Bool =
+  scanner.offset >= scanner.inputLength ;
+
+let char0 = Char.fromInt 0 ;
+
+let currentCharacter (scanner: Scanner): Char =
+  if (atEnd scanner)
+    char0
+  else
+    String.atElse char0 scanner.offset scanner.input ;
+
+let skipCharacter (scanner: Scanner): Scanner =
+  if (atEnd scanner)
+    scanner
+  else
+    { offset: scanner.offset + 1 | scanner } ;
+
+let nextCharacter (scanner: Scanner): (Scanner * Char) =
+  if (atEnd scanner)
+    (scanner, char0)
+  else
+    ( skipCharacter scanner
+    , currentCharacter scanner
+    ) ;
+
+let skipWhile (predicate: Char -> Bool) (scanner: Scanner): Scanner =
+  let rec loop (scanner: Scanner): Scanner =
+    if (predicate (currentCharacter scanner))
+      loop (skipCharacter scanner)
+    else
+      scanner
+  in
+  loop scanner ;
+
+let isWhitespace* (c: Char): Bool =
+  let cv = Char.toInt c
+  in cv /= 0 && cv <= 32 ;
+
+let skipWhitespace* =
+  skipWhile isWhitespace ;
+
+let locationRange start end =
+  Range { line: 0, column: 0, offset: start } { line: 0, column: 0, offset: end } ;
+
+let locationAt scanner =
+  Point { line: 0, column: 0, offset: scanner.offset } ;
+ 
+let matchUpperIdentifier (scanner: Scanner): (Scanner * Token) =
+  let startOffset = scanner.offset
+  and scannerp = skipCharacter scanner |> skipWhile Char.isAlpha
+  and endOffset = scannerp.offset
+  in
+    ( scannerp
+    , UpperIdentifier (String.slice startOffset endOffset scanner.input) (locationRange startOffset endOffset)
+    ) ;
+
+let next* (scanner: Scanner): (Scanner * Token) =
+  let scannerp = skipWhitespace scanner
+  in
+    if (atEnd scannerp)
+      (scanner, EOS (Point { line: 0, column: 0, offset: scannerp.offset }))
+    else
+      let c = currentCharacter scannerp
+      in
+        if (Char.isUpper c)
+          matchUpperIdentifier scannerp
+--      else if (Char.isLower c)
+--        match lowerIdentifier scannerp
+--      else if (c == Char.fromInt 39)
+--        match literalChar scannerp
+--      else if (c == Char.fromInt 34)
+--        match literalString scannerp
+--      else if (Char.isDigit c)
+--        match literalInt scannerp
+        else
+          match c with
+          | ',' -> (skipCharacter scannerp, Comma (locationAt scannerp))
+          | _ -> (skipCharacter scannerp, ERROR (Char.toString c) (locationAt scannerp))
+

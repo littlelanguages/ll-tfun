@@ -104,7 +104,7 @@ export class XAssertHandler implements Handler {
           expected: "True: Bool",
           actual: executeAssertBlockResult.error,
         };
-      }
+        }
     } catch (e) {
       return { type: "Failure", expected: "", actual: e.toString() };
     }

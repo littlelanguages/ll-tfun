@@ -98,7 +98,9 @@ if (Deno.args.length === 0) {
   }
 } else if (Deno.args.length === 1) {
   try {
-    execute(Deno.readTextFileSync(Deno.args[0]), mkDefaultEnv());
+    const env = mkDefaultEnv();
+    env.src = home.newSrc(Deno.args[0]);
+    execute(Deno.readTextFileSync(Deno.args[0]), env);
   } catch (e) {
     console.log(e.toString());
   }
