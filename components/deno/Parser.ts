@@ -1049,8 +1049,10 @@ const visitor: Visitor<
     a3: Token,
   ): Pattern => {
     const nilPattern: Pattern = {
-      type: "PVar",
-      name: "Nil",
+      type: "PCons",
+      qualifier: undefined,
+      name: { name: "Nil", location: combine(a1[1], a3[1]) },
+      args: [],
       location: combine(a1[1], a3[1]),
     };
     if (a2 === undefined) {
@@ -1370,3 +1372,8 @@ const trimLocation = (a: any): any => {
 //   "  let rec helper m =",
 //   "     if (n == m) Nil else Cons m (helper m + 1)",
 //   "   in helper 0"].join("\n"))), null, 2));
+
+// console.log(JSON.stringify(trimLocation(parse(home, ["let rec takeWhile p l =",
+//   "  match l with",
+//   "  | [] -> Nil",
+//   "  | Cons x xs -> if (p x) (Cons x (takeWhile p xs)) else Nil"].join("\n"))), null, 2));
