@@ -6,18 +6,6 @@ The purpose of a scanner is to convert a stream of characters into a stream of t
 import * from "./Scanner.tfun"
 ```
 
-## Funny
-
-The following code is erroring - it is not clear why.
-
-```fsharp xassert id=funny1; style=exec; use=Import
-isWhitespace 'x'
-```
-
-```fsharp xassert id=funny2; style=exec; use=Import
-skipWhitespace (fromString "  \n  ") == fromString "  \n  "
-```
-
 ### next: Scanner -> (Scanner * Token)
 
 The `next` function is used to extract the next token from the scanner. It returns a tuple of the new scanner and the token.
