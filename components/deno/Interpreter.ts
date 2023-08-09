@@ -3,6 +3,7 @@ import {
   CyclicImportException,
   DuplicateDataDeclarationException,
   FileNotFoundException,
+  GeneralException,
   ImportNameAlreadyDeclaredException,
   UnknownImportNameException,
 } from "./Errors.ts";
@@ -144,6 +145,9 @@ const evaluate = (expr: Expression, runtimeEnv: Runtime.Env): RuntimeValue => {
           };
         case "Data.String.append":
           return (a: string) => (b: string) => a + b;
+        case "Data.String.at":
+          return (i: number) => (s: string) =>
+            (i < s.length) ? runtimeEnv.get("Just")(mkChar(s[i])) : runtimeEnv.get("Nothing");
         case "Data.String.indexOf":
           return (n: string) => (s: string) => {
             const i = s.indexOf(n);
@@ -166,7 +170,7 @@ const evaluate = (expr: Expression, runtimeEnv: Runtime.Env): RuntimeValue => {
         case "Text.Regex.split":
           return (r: RegExp) => (s: string) => arrayToList(s.split(r), runtimeEnv);
         default:
-          throw new Error(`Unknown builtin ${expr.name}`);
+          throw new GeneralException("Unknown builtin", { name: expr.name });
       }
     case "If":
       return evaluate(expr.guard, runtimeEnv) ? evaluate(expr.then, runtimeEnv) : evaluate(expr.else, runtimeEnv);
@@ -198,7 +202,7 @@ const evaluate = (expr: Expression, runtimeEnv: Runtime.Env): RuntimeValue => {
           return evaluate(c.expr, newEnv);
         }
       }
-      throw new Error("Match failed");
+      throw new GeneralException("MatchFailed", { expr });
     }
     case "Op":
       switch (expr.op) {
@@ -301,11 +305,10 @@ const executeValueDeclaration = (
 
   expr.declarations.forEach((d) => {
     if (!toplevel && d.visibility !== Visibility.None) {
-      throw {
-        type: "VisibilityModifierError",
+      throw new GeneralException("VisibilityModifierError", {
         name: d.name,
         Visibility: d.visibility,
-      };
+      });
     }
 
     const value = evaluate(d.expr, newRuntimeEnv);
@@ -505,7 +508,7 @@ const executeImportStatement = (ast: ImportStatement, env: Env): Env => {
       return { ...env, runtime, type };
     }
     default:
-      throw new Error("TODO: Interpreter: Import statement not yet supported");
+      throw new GeneralException("NotImplemented", { ast });
   }
 };
 
