@@ -1,4 +1,5 @@
 import * as Char from "../../../Data/Char.tfun" ;
+import * as Int from "../../../Data/Integer.tfun" ;
 import * as String from "../../../Data/String.tfun" ;
 import Location*, combine*, toString as locationToString* from "./Location.tfun" ;
 
@@ -17,13 +18,17 @@ data Token* =
 type Scanner = {
   input: String,
   inputLength: Int,
-  offset: Int
+  offset: Int,
+  column: Int,
+  line: Int
 };
 
 let fromString* (input: String): Scanner =
   { input: input
   , inputLength: String.length input
   , offset: 0
+  , column: 1
+  , line: 1
   } ;
 
 let atEnd (scanner: Scanner): Bool =
@@ -40,8 +45,10 @@ let currentCharacter (scanner: Scanner): Char =
 let skipCharacter (scanner: Scanner): Scanner =
   if (atEnd scanner)
     scanner
+  else if (currentCharacter scanner == '\n')
+    { offset: scanner.offset + 1, column: 1, line: scanner.line + 1 | scanner }
   else
-    { offset: scanner.offset + 1 | scanner } ;
+    { offset: scanner.offset + 1, column: scanner.column + 1 | scanner } ;
 
 let nextCharacter (scanner: Scanner): (Scanner * Char) =
   if (atEnd scanner)
@@ -51,57 +58,75 @@ let nextCharacter (scanner: Scanner): (Scanner * Char) =
     , currentCharacter scanner
     ) ;
 
-let skipWhile (predicate: Char -> Bool) (scanner: Scanner): Scanner =
-  let rec loop (scanner: Scanner): Scanner =
+let locationRange (start: Scanner) (end: Scanner): Location =
+  Range { line: start.line, column: start.column, offset: start.offset } { line: end.line, column: end.column, offset: end.offset } ;
+
+let locationAt (scanner: Scanner): Location =
+  Point { line: scanner.line, column: scanner.column, offset: scanner.offset } ;
+ 
+let skipWhile (predicate: Char -> Bool) (scanner: Scanner) (previous: Scanner): (Scanner * Location) =
+  let rec loop (scanner: Scanner) (previous: Scanner): (Scanner * Location) =
     if (predicate (currentCharacter scanner))
-      loop (skipCharacter scanner)
+      loop (skipCharacter scanner) scanner
     else
-      scanner
+      (scanner, locationAt previous)
   in
-  loop scanner ;
+  loop scanner previous;
 
 let isWhitespace* (c: Char): Bool =
   let cv = Char.toInt c
   in cv /= 0 && cv <= 32 ;
 
-let skipWhitespace* =
-  skipWhile isWhitespace ;
+let fst t =
+  match t with
+  | (a, _) -> a ;
 
-let locationRange start end =
-  Range { line: 0, column: 0, offset: start } { line: 0, column: 0, offset: end } ;
+let snd t =
+  match t with
+  | (_, b) -> b ;
 
-let locationAt scanner =
-  Point { line: 0, column: 0, offset: scanner.offset } ;
- 
-let matchUpperIdentifier (scanner: Scanner): (Scanner * Token) =
-  let startOffset = scanner.offset
-  and scannerp = skipCharacter scanner |> skipWhile Char.isAlpha
-  and endOffset = scannerp.offset
+let skipWhitespace* scanner =
+  skipWhile isWhitespace scanner scanner |> fst ;
+
+let matchOnPredicate (scanner: Scanner) (predicate: Char -> Bool) (constructor: String -> (Location -> Token)): (Scanner * Token) =
+  let startLocation = locationAt scanner
+  and skipWhileResult = skipCharacter scanner |> skipWhile predicate scanner
+  and scannerp = skipWhileResult |> fst
+  and endLocation = skipWhileResult |> snd
   in
     ( scannerp
-    , UpperIdentifier (String.slice startOffset endOffset scanner.input) (locationRange startOffset endOffset)
+    , constructor (String.slice scanner.offset scannerp.offset scanner.input) (combine startLocation endLocation)
     ) ;
 
 let next* (scanner: Scanner): (Scanner * Token) =
   let scannerp = skipWhitespace scanner
   in
     if (atEnd scannerp)
-      (scanner, EOS (Point { line: 0, column: 0, offset: scannerp.offset }))
+      (scanner, EOS (locationAt scannerp))
     else
       let c = currentCharacter scannerp
       in
         if (Char.isUpper c)
-          matchUpperIdentifier scannerp
---      else if (Char.isLower c)
---        match lowerIdentifier scannerp
---      else if (c == Char.fromInt 39)
---        match literalChar scannerp
+          matchOnPredicate scannerp Char.isAlpha UpperIdentifier
+        else if (Char.isLower c)
+          matchOnPredicate scannerp Char.isAlpha LowerIdentifier 
+        else if (Char.isDigit c)
+          matchOnPredicate scannerp Char.isDigit (\t l = LiteralInt (Int.fromStringElse 0 t) l)
 --      else if (c == Char.fromInt 34)
---        match literalString scannerp
---      else if (Char.isDigit c)
---        match literalInt scannerp
+--        matchLiteralString scannerp
         else
           match c with
           | ',' -> (skipCharacter scannerp, Comma (locationAt scannerp))
-          | _ -> (skipCharacter scannerp, ERROR (Char.toString c) (locationAt scannerp))
+          | _ -> (skipCharacter scannerp, ERROR (Char.toString c) (locationAt scannerp)) ;
 
+let toString* token =
+  match token with
+  | UpperIdentifier v l -> "UpperIdentifier " ++ v ++ " " ++ locationToString l
+  | LowerIdentifier v l -> "LowerIdentifier " ++ v ++ " " ++ locationToString l
+  | LiteralChar v l -> "LiteralChar " ++ Char.toString v ++ " " ++ locationToString l
+  | LiteralString v l -> "LiteralString " ++ v ++ " " ++ locationToString l
+  | LiteralInt v l -> "LiteralInt " ++ Int.toString v ++ " " ++ locationToString l
+  | As l -> "as " ++ locationToString l
+  | Comma l -> "',' " ++ locationToString l
+  | EOS l -> "EOS " ++ locationToString l
+  | ERROR v l -> "ERROR " ++ v ++ " " ++ locationToString l

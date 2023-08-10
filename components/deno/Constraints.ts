@@ -30,7 +30,7 @@ const unifies = (t1: Type, t2: Type, pump: Pump): Unifier => {
   if (t1 instanceof TRowEmpty && t2 instanceof TRowEmpty) {
     return emptyUnifier;
   }
-  if (t1 instanceof TRowExtend) {
+  if (t1 instanceof TRowExtend && (t2 instanceof TRowEmpty || t2 instanceof TRowExtend || t2 instanceof TAlias)) {
     const rewriteRow = (row: Type): [Type, Type] | undefined => {
       if (row instanceof TRowEmpty) {
         throw new UnknownLabelException(t1.name, t1, t2);

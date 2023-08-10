@@ -13,12 +13,16 @@ The `next` function is used to extract the next token from the scanner. It retur
 In order to work through the scenarios we need to define a few helper functions.
 
 ```fsharp xassert id=tokens; style=exec; use=Import
+import * as List from "../../../Data/List.tfun" ;
+
 let tokens input = 
   let rec loop scanner = 
     match next scanner with
     | (_, EOS _) -> []
     | (scanner, token) -> token :: loop scanner
-  in fromString input |> loop
+  in fromString input |> loop ;
+
+let tokenStrings input = tokens input |> List.map toString
 ```
 
 #### Scenario: Empty Input
@@ -33,12 +37,34 @@ tokens "" == []
 tokens "    \n  \n   \n  " == []
 ```
 
+#### Scenario: Literal Int
+
+```fsharp xassert id=nextLiteralInt; use=Import, tokens
+tokenStrings "123" == ["LiteralInt 123 1:1-3"]
+tokenStrings "  123  " == ["LiteralInt 123 1:3-5"]
+tokenStrings "  123  4  " == ["LiteralInt 123 1:3-5", "LiteralInt 4 1:8"]
+```
+
+#### Scenario: Lower Identifier
+
+```fsharp xassert id=nextLowerIdentifier; use=Import, tokens
+tokenStrings "hello" == ["LowerIdentifier hello 1:1-5"]
+tokenStrings "  hello  " == ["LowerIdentifier hello 1:3-7"]
+tokenStrings "  hello  world  " == ["LowerIdentifier hello 1:3-7", "LowerIdentifier world 1:10-14"]
+```
+
+#### Scenario: Symbols
+
+```fsharp xassert id=nextSymbols; use=Import, tokens
+tokenStrings "," == ["',' 1:1"]
+```
+
 #### Scenario: Upper Identifier
 
 ```fsharp xassert id=nextUpperIdentifier; use=Import, tokens
-tokens "Hello" == [UpperIdentifier "Hello" (Range { column: 0, line: 0, offset: 0 } { column: 0, line: 0, offset: 5 })]
-tokens "  Hello  " == [UpperIdentifier "Hello" (Range { column: 0, line: 0, offset: 2 } { column: 0, line: 0, offset: 7 })]
-tokens "  Hello  World  " == [UpperIdentifier "Hello" (Range { column: 0, line: 0, offset: 2 } { column: 0, line: 0, offset: 7 }), UpperIdentifier "World" (Range { column: 0, line: 0, offset: 9 } { column: 0, line: 0, offset: 14 })]
+tokenStrings "Hello" == ["UpperIdentifier Hello 1:1-5"]
+tokenStrings "  Hello  " == ["UpperIdentifier Hello 1:3-7"]
+tokenStrings "  Hello  World  " == ["UpperIdentifier Hello 1:3-7", "UpperIdentifier World 1:10-14"]
 ```
 
 ## See also

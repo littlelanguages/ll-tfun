@@ -1,5 +1,10 @@
 let fromString* (s: String): Maybe Int =
   builtin "Data.Integer.fromString" s ;
 
+let fromStringElse* (d: Int) (s: String): Int =
+  match fromString s with
+  | Just v -> v
+  | Nothing -> d ;
+
 let toString* (n: Int): String =
   builtin "Data.Integer.toString" n
