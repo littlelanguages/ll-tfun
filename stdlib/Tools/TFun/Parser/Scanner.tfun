@@ -58,9 +58,6 @@ let nextCharacter (scanner: Scanner): (Scanner * Char) =
     , currentCharacter scanner
     ) ;
 
-let locationRange (start: Scanner) (end: Scanner): Location =
-  Range { line: start.line, column: start.column, offset: start.offset } { line: end.line, column: end.column, offset: end.offset } ;
-
 let locationAt (scanner: Scanner): Location =
   Point { line: scanner.line, column: scanner.column, offset: scanner.offset } ;
  
