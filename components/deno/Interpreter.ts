@@ -163,6 +163,16 @@ const evaluate = (expr: Expression, runtimeEnv: Runtime.Env): RuntimeValue => {
           return (s: string) => s.split("").reverse().join("");
         case "Data.String.slice":
           return (start: number) => (end: number) => (s: string) => s.slice(start, end);
+        case "System.IO.Console.print":
+          return (s: string) => {
+            console.log(s);
+            return null;
+          };
+        case "System.IO.Console.printLn":
+          return (s: string) => {
+            console.log(s);
+            return null;
+          };
         case "Text.Regex.literal":
           return literal;
         case "Text.Regex.parse":

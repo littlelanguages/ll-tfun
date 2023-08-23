@@ -105,7 +105,7 @@ export const valueToString = (v: RuntimeValue): string => {
     return "()";
   }
   if (typeof v === "string") {
-    return `"${v.replaceAll('"', '\\"')}"`;
+    return `"${v.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("\n", "\\n")}"`;
   }
   if (typeof v === "boolean") {
     return v ? "True" : "False";

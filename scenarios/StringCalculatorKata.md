@@ -31,7 +31,7 @@ let add input =
                 { separator: separator
                       |> String.dropLeft 1
                       |> String.dropRight 1
-                      |> RE.split (RE.parse "\]\[") 
+                      |> RE.split (RE.parse "\\]\\[") 
                       |> List.map RE.literal 
                       |> List.join "|" 
                       |> RE.parse
@@ -51,15 +51,16 @@ let add input =
           |> List.map Integer.fromString
           |> List.map (Maybe.withDefault 0)
   and negative n = n < 0
-   in if (List.any negative numbers)
-        numbers
-          |> List.filter negative
-          |> Error
-      else
-        numbers
-          |> List.filter (\n = n < 1001)
-          |> List.sum
-          |> Okay
+  in 
+    if (List.any negative numbers)
+      numbers
+        |> List.filter negative
+        |> Error
+    else
+      numbers
+        |> List.filter (\n = n < 1001)
+        |> List.sum
+        |> Okay
 ```
 
 ## TDD Scenarios

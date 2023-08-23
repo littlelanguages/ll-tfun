@@ -404,8 +404,28 @@ const stringToOps = new Map<string, Op>([
   ["/", Op.Divide],
 ]);
 
-export const transformLiteralString = (s: string): string =>
-  s.substring(1, s.length - 1).replaceAll('\\"', '"').replaceAll("\\n", "\n");
+export const transformLiteralString = (s: string): string => {
+  let result = s.substring(1, s.length - 1);
+  let idx = 0;
+
+  while (true) {
+    if (idx >= result.length) {
+      return result;
+    }
+    if (result[idx] === "\\") {
+      const c = result[idx + 1];
+
+      if (c === "n") {
+        result = result.substring(0, idx) + "\n" + result.substring(idx + 2);
+      } else if (c === "0") {
+        result = result.substring(0, idx) + "\0" + result.substring(idx + 2);
+      } else {
+        result = result.substring(0, idx) + c + result.substring(idx + 2);
+      }
+    }
+    idx += 1;
+  }
+};
 
 export const transformLiteralChar = (s: string): number => {
   if (s.length === 3) {

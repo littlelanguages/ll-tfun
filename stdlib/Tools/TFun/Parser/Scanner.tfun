@@ -1,6 +1,7 @@
 import * as Char from "../../../Data/Char.tfun" ;
 import * as Int from "../../../Data/Integer.tfun" ;
 import * as String from "../../../Data/String.tfun" ;
+import * as Console from "../../../System/IO/Console.tfun" ;
 import Location*, combine*, toString as locationToString* from "./Location.tfun" ;
 
 data Token* =
@@ -93,35 +94,71 @@ let matchOnPredicate (scanner: Scanner) (predicate: Char -> Bool) (constructor: 
     , constructor (String.slice scanner.offset scannerp.offset scanner.input) (combine startLocation endLocation)
     ) ;
 
-let rec literalStringStringLoop (literal: String) (scanner: Scanner) : Maybe (Scanner * Location * String) =
+let matchCharacter char scanner =
+  let c = currentCharacter scanner
+  in
+    if (c == char)
+      skipCharacter scanner |> Just
+    else
+      Nothing ;
+
+let matchLiteralChar scanner =
+  let startLocation = locationAt scanner
+  and scannerp = skipCharacter scanner
+  and matchClosingQuote c scannerp =
+    match matchCharacter '\'' scannerp with
+    | Nothing -> (scannerp, ERROR "Unterminated char literal" startLocation)
+    | Just scannerp2 -> (scannerp2, LiteralChar c (combine startLocation (locationAt scannerp)))
+  in
+    match nextCharacter scannerp with
+    | (scannerp2, '\0') -> (scannerp2, ERROR "Unterminated char literal" startLocation)
+    | (scannerp2, '\\') ->
+      let scannerp3 = skipCharacter scannerp2
+      and cp = currentCharacter scannerp2
+      in
+        if (cp == 'n')
+          matchClosingQuote '\n' scannerp3
+        else if (cp == '\\')
+          matchClosingQuote '\\' scannerp3
+        else if (cp == '\'')
+          matchClosingQuote '\'' scannerp3
+        else if (cp == '0')
+          matchClosingQuote '\0' scannerp3
+        else
+          (scannerp3, ERROR "Invalid literal char escape sequence" startLocation)
+    | (scannerp2, c) ->
+      matchClosingQuote c scannerp2 ;
+
+let rec literalStringLoop (literal: String) (scanner: Scanner): Maybe (Scanner * Location * String) =
   if (atEnd scanner)
     Nothing
   else
     let c = currentCharacter scanner
+    and scannerp = skipCharacter scanner
     in
-      if (c == Char.fromInt 34)
-        (scanner |> skipCharacter, locationAt scanner, literal) |> Just
-      else if (c == Char.fromInt 92)
-        let scannerp = skipCharacter scanner
-        and cp = currentCharacter scannerp
+      if (c == '"')
+        (scannerp, locationAt scanner, literal) |> Just
+      else if (c == '\\')
+        let cp = currentCharacter scannerp
+        and scannerp2 = skipCharacter scannerp
         in
-          if (cp == 'n')
-            skipCharacter scannerp |> literalStringStringLoop (literal ++ "\n")
+          if (cp == '"')
+            literalStringLoop (literal ++ "\"") scannerp2
+          else if (cp == 'n')
+            literalStringLoop (literal ++ "\n") scannerp2
           else if (cp == '\\')
-            skipCharacter scannerp |> literalStringStringLoop (literal ++ "\\")
-          else if (cp == '"')
-            skipCharacter scannerp |> literalStringStringLoop (literal ++ "\"")
+            literalStringLoop (literal ++ "\\") scannerp2
           else
             Nothing
       else
-        skipCharacter scanner |> literalStringStringLoop (literal ++ Char.toString c) ;
+        literalStringLoop (literal ++ Char.toString c) scannerp;
 
 let matchLiteralString scanner =
   let startLocation = locationAt scanner
   and scannerp = skipCharacter scanner
   in
-    match literalStringStringLoop "" scannerp with
-    | Nothing -> (scannerp , ERROR "Unterminated string literal" startLocation)
+    match literalStringLoop "" scannerp with
+    | Nothing -> (scannerp , ERROR "Illegal string literal" startLocation)
     | Just (scannerp2, endLocation, literal) -> (scannerp2, LiteralString literal (combine startLocation endLocation)) ;
 
 let next* (scanner: Scanner): (Scanner * Token) =
@@ -138,8 +175,10 @@ let next* (scanner: Scanner): (Scanner * Token) =
           matchOnPredicate scannerp Char.isAlpha LowerIdentifier 
         else if (Char.isDigit c)
           matchOnPredicate scannerp Char.isDigit (\t l = LiteralInt (Int.fromStringElse 0 t) l)
-        else if (c == Char.fromInt 34)
+        else if (c == '"')
           matchLiteralString scannerp
+        else if (c == '\'')
+          matchLiteralChar scannerp
         else
           match c with
           | ',' -> (skipCharacter scannerp, Comma (locationAt scannerp))

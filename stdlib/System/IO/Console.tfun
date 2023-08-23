@@ -1,0 +1,11 @@
+let print* (s: String): () = 
+  builtin "System.IO.Console.print" s ;
+
+let printLn* (s: String): () = 
+  builtin "System.IO.Console.printLn" s ;
+
+let rawValue* (s: a): String = 
+  builtin "System.IO.Console.rawValue" s ;
+
+let prettyValue* (s: a): String = 
+  builtin "System.IO.Console.prettyValue" s
