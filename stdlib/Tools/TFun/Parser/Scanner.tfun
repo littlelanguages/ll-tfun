@@ -34,13 +34,11 @@ let fromString* (input: String): Scanner =
 let atEnd (scanner: Scanner): Bool =
   scanner.offset >= scanner.inputLength ;
 
-let char0 = Char.fromInt 0 ;
-
 let currentCharacter (scanner: Scanner): Char =
   if (atEnd scanner)
-    char0
+    '\0'
   else
-    String.atElse char0 scanner.offset scanner.input ;
+    String.atElse '\0' scanner.offset scanner.input ;
 
 let skipCharacter (scanner: Scanner): Scanner =
   if (atEnd scanner)
@@ -52,7 +50,7 @@ let skipCharacter (scanner: Scanner): Scanner =
 
 let nextCharacter (scanner: Scanner): (Scanner * Char) =
   if (atEnd scanner)
-    (scanner, char0)
+    (scanner, '\0')
   else
     ( skipCharacter scanner
     , currentCharacter scanner

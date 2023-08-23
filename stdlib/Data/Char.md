@@ -6,16 +6,18 @@ Functions for working with characters. Character literals are enclosed in a pair
 import * from "./Char.tfun"
 ```
 
-A `Char` is a single ASCII character (8 bits). Unicode characters are not supported.  Char literals, other than `'\n'`, are not supported and need to be created using the function `fromInt`.
+A `Char` is a single ASCII character (8 bits). Unicode characters are not supported.  Char literals, other than `'\0'` and `'\n'`, are not supported and need to be created using the function `fromInt`.
 
 ```fsharp xt id=literalValue
 'a' ;
 '\'' ;
+'\0' ;
 '\n' ;
 '\\'
 ---
 'a': Char
 '\'': Char
+'\0': Char
 '\n': Char
 '\\': Char
 ```

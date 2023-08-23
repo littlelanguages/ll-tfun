@@ -414,6 +414,9 @@ export const transformLiteralChar = (s: string): number => {
   if (s[2] === "n") {
     return 10;
   }
+  if (s[2] === "0") {
+    return 0;
+  }
   return s[2].charCodeAt(0);
 };
 
