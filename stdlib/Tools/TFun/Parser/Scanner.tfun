@@ -1,5 +1,7 @@
 import * as Char from "../../../Data/Char.tfun" ;
 import * as Int from "../../../Data/Integer.tfun" ;
+import * as List from "../../../Data/List.tfun" ;
+import * as Maybe from "../../../Data/Maybe.tfun" ;
 import * as String from "../../../Data/String.tfun" ;
 import * as Console from "../../../System/IO/Console.tfun" ;
 import Location*, combine*, toString as locationToString* from "./Location.tfun" ;
@@ -23,6 +25,10 @@ type Scanner = {
   column: Int,
   line: Int
 };
+
+let keywords = [
+  ("as", As)
+] ;
 
 let fromString* (input: String): Scanner =
   { input: input
@@ -84,7 +90,7 @@ let snd t =
 let skipWhitespace* scanner =
   skipWhile isWhitespace scanner scanner |> fst ;
 
-let matchOnPredicate (scanner: Scanner) (predicate: Char -> Bool) (constructor: String -> (Location -> Token)): (Scanner * Token) =
+let matchOnPredicate (scanner: Scanner) (predicate: Char -> Bool) (constructor: String -> (Location -> a)): (Scanner * a) =
   let startLocation = locationAt scanner
   and skipWhileResult = skipCharacter scanner |> skipWhile predicate scanner
   and scannerp = skipWhileResult |> fst
@@ -172,7 +178,14 @@ let next* (scanner: Scanner): (Scanner * Token) =
         if (Char.isUpper c)
           matchOnPredicate scannerp Char.isAlpha UpperIdentifier
         else if (Char.isLower c)
-          matchOnPredicate scannerp Char.isAlpha LowerIdentifier 
+          let matched = matchOnPredicate scannerp Char.isAlpha (\t l = { text: t, location: l })
+          and scannerp = matched |> fst
+          and identifier = matched |> snd
+          in
+            List.find (\keyword = (fst keyword) == identifier.text) keywords
+              |> Maybe.map (\keyword = (scannerp, (snd keyword) identifier.location))
+              |> Maybe.withDefault (scannerp, LowerIdentifier identifier.text identifier.location)
+            
         else if (Char.isDigit c)
           matchOnPredicate scannerp Char.isDigit (\t l = LiteralInt (Int.fromStringElse 0 t) l)
         else if (c == '"')

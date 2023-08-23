@@ -37,10 +37,16 @@ tokens "" == []
 tokens "    \n  \n   \n  " == []
 ```
 
+#### Scenario: Keywords
+
+```fsharp xassert id=nextKeywords; use=Import, tokens
+tokenStrings "as" == ["as 1:1-2"]
+```
+
 #### Scenario: Literal Char
 
 ```fsharp xassert id=nextLiteralChar; use=Import, tokens
-tokenStrings "'1'" == ["LiteralChar 1 1:1-3"]
+tokenStrings "'a'" == ["LiteralChar a 1:1-3"]
 tokenStrings "'\\''" == ["LiteralChar ' 1:1-4"]
 ```
 
