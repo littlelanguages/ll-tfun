@@ -6,20 +6,9 @@ import * as Maybe from "../../../Data/Maybe.tfun" ;
 import * as String from "../../../Data/String.tfun" ;
 import * as Console from "../../../System/IO/Console.tfun" ;
 import Location*, combine*, toString as locationToString* from "./Location.tfun" ;
+import Token*, toString* from "./Token.tfun" ;
 
-data Token* =
-    UpperIdentifier (String) Location
-  | LowerIdentifier (String) Location
-  | LiteralChar (Char) Location
-  | LiteralString (String) Location
-  | LiteralInt (Int) Location
-  | As Location
-  | Comma Location
-  | EOS Location
-  | ERROR (String) Location
-  ;
-
-type Scanner = {
+type Scanner* = {
   input: String,
   inputLength: Int,
   offset: Int,
@@ -30,6 +19,8 @@ type Scanner = {
 let keywords: Dict.Dict String (Location -> Token) = 
   Dict.fromList 
     [ ("as", As)
+    , ("False", TFalse)
+    , ("True", TTrue)
     ] ;
 
 let fromString* (input: String): Scanner =
@@ -40,7 +31,7 @@ let fromString* (input: String): Scanner =
   , line: 1
   } ;
 
-let atEnd (scanner: Scanner): Bool =
+let atEnd* (scanner: Scanner): Bool =
   scanner.offset >= scanner.inputLength ;
 
 let currentCharacter (scanner: Scanner): Char =
@@ -169,6 +160,15 @@ let matchLiteralString scanner =
     | Nothing -> (scannerp , ERROR "Illegal string literal" startLocation)
     | Just (scannerp2, endLocation, literal) -> (scannerp2, LiteralString literal (combine startLocation endLocation)) ;
 
+let matchIdentifier identifierConstructor scanner =
+  let matched = matchOnPredicate scanner Char.isAlpha (\t l = { text: t, location: l })
+  and scannerp = matched |> fst
+  and identifier = matched |> snd
+  in
+    Dict.get identifier.text keywords
+      |> Maybe.map (\constructor = (scannerp, constructor identifier.location))
+      |> Maybe.withDefault (scannerp, identifierConstructor identifier.text identifier.location) ;
+
 let next* (scanner: Scanner): (Scanner * Token) =
   let scannerp = skipWhitespace scanner
   in
@@ -178,16 +178,9 @@ let next* (scanner: Scanner): (Scanner * Token) =
       let c = currentCharacter scannerp
       in
         if (Char.isUpper c)
-          matchOnPredicate scannerp Char.isAlpha UpperIdentifier
+          matchIdentifier UpperIdentifier scannerp
         else if (Char.isLower c)
-          let matched = matchOnPredicate scannerp Char.isAlpha (\t l = { text: t, location: l })
-          and scannerp = matched |> fst
-          and identifier = matched |> snd
-          in
-            Dict.get identifier.text keywords
-              |> Maybe.map (\constructor = (scannerp, constructor identifier.location))
-              |> Maybe.withDefault (scannerp, LowerIdentifier identifier.text identifier.location)
-            
+          matchIdentifier LowerIdentifier scannerp
         else if (Char.isDigit c)
           matchOnPredicate scannerp Char.isDigit (\t l = LiteralInt (Int.fromStringElse 0 t) l)
         else if (c == '"')
@@ -199,14 +192,8 @@ let next* (scanner: Scanner): (Scanner * Token) =
           | ',' -> (skipCharacter scannerp, Comma (locationAt scannerp))
           | _ -> (skipCharacter scannerp, ERROR (Char.toString c) (locationAt scannerp)) ;
 
-let toString* token =
-  match token with
-  | UpperIdentifier v l -> "UpperIdentifier " ++ v ++ " " ++ locationToString l
-  | LowerIdentifier v l -> "LowerIdentifier " ++ v ++ " " ++ locationToString l
-  | LiteralChar v l -> "LiteralChar " ++ Char.toString v ++ " " ++ locationToString l
-  | LiteralString v l -> "LiteralString " ++ v ++ " " ++ locationToString l
-  | LiteralInt v l -> "LiteralInt " ++ Int.toString v ++ " " ++ locationToString l
-  | As l -> "as " ++ locationToString l
-  | Comma l -> "',' " ++ locationToString l
-  | EOS l -> "EOS " ++ locationToString l
-  | ERROR v l -> "ERROR " ++ v ++ " " ++ locationToString l
+let skip* (scanner: Scanner): Scanner =
+  next scanner |> fst ;
+
+let peek* (scanner: Scanner): Token =
+  next scanner |> snd

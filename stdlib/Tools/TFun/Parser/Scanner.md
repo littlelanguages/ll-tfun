@@ -40,7 +40,7 @@ tokens "    \n  \n   \n  " == []
 #### Scenario: Keywords
 
 ```fsharp xassert id=nextKeywords; use=Import, tokens
-tokenStrings "as" == ["as 1:1-2"]
+tokenStrings "as False True" == ["as 1:1-2", "False 1:4-8", "True 1:10-13"]
 ```
 
 #### Scenario: Literal Char

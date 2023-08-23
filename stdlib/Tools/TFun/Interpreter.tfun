@@ -1,0 +1,14 @@
+import * as Errors from "./Errors.tfun" ;
+import * as Parser from "./Parser.tfun" ;
+import * as Result from "../../Data/Result.tfun" ;
+
+data Value* =
+    VBool Bool ;
+
+let executeExpression* (e: Parser.Expression): Result Errors.Errors Value =
+  match e with
+  | Parser.LBool b _ -> VBool b |> Okay
+  | _ -> Errors.NotYetImplemented "executeExpression" |> Error ;
+
+let parseAndExecute* (s: String): Result Errors.Errors Value =
+  Parser.parseText s |> Result.andThen executeExpression

@@ -131,7 +131,7 @@ fun List<T: Stringable>.toString: String =
   "[" + this.join + "]"
 ```
 
-I can go further an introduce the idea of a `Foldable` trait.
+I can go further and introduce the idea of a `Foldable` trait.
 
 ```
 trait Foldable<T>
@@ -180,8 +180,8 @@ string that starts with a comma. We can fix this by introducing a `Stringable` t
 
 What about a thing that has a `length`?
 
-What about iteration? We have two traits to get this working - firstly the container to iterate over and then the
-iterator itself.
+What about iteration? We have two traits to get this working - firstly a container to iterate over and then the iterator
+itself.
 
 ```
 trait Iterable<T>
@@ -230,20 +230,22 @@ All that is now left is to implement `iterator` over a generic list.
 
 ```
 fun List<T>.iterator(): Iterator<T> =
-  { _state: this
-  , next: () -> 
+  { _state!: this
+    next: () -> 
       match _state with
       | Nil -> Nothing
       | Cons x xs -> 
-          _state = xs
+          _state! := xs
           Just x
+    clone: () -> 
+      { _state: _state! | self }
   }
 ```
 
 With this we can now test out using a REPL.
 
 ```
-> val x = [1, 2, 3, 4, 5]
+> let x = [1, 2, 3, 4, 5]
 x: List<Int>
 
 > x.length()
@@ -264,4 +266,4 @@ step. This piece requires more thinking but the principle seems sound. The impli
 above is brought into scope but the `Iterable` or `length` and `sum` are not, then the program will fail to compile.
 This is because traits are not universal facts but rather contextual.
 
-This is weird.
+This seems a little weird but, after some reflection, makes sense.

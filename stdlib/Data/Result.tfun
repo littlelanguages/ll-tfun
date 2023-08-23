@@ -4,4 +4,9 @@
 let map* (f: b -> c) (r: Result a b) : Result a c = 
   match r with 
   | Okay ok -> Okay (f ok)
-  | Error err -> Error err 
+  | Error err -> Error err ;
+
+let andThen* (f: b -> Result a c) (r: Result a b) : Result a c = 
+  match r with 
+  | Okay ok -> f ok
+  | Error err -> Error err

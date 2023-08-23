@@ -1,0 +1,31 @@
+import * as Char from "../../../Data/Char.tfun" ;
+import * as Int from "../../../Data/Integer.tfun" ;
+
+import Location, combine, toString as locationToString* from "./Location.tfun" ;
+
+data Token* =
+    UpperIdentifier (String) Location
+  | LowerIdentifier (String) Location
+  | LiteralChar (Char) Location
+  | LiteralString (String) Location
+  | LiteralInt (Int) Location
+  | As Location
+  | TFalse Location
+  | TTrue Location
+  | Comma Location
+  | EOS Location
+  | ERROR (String) Location ;
+
+let toString* token =
+  match token with
+  | UpperIdentifier v l -> "UpperIdentifier " ++ v ++ " " ++ locationToString l
+  | LowerIdentifier v l -> "LowerIdentifier " ++ v ++ " " ++ locationToString l
+  | LiteralChar v l -> "LiteralChar " ++ Char.toString v ++ " " ++ locationToString l
+  | LiteralString v l -> "LiteralString " ++ v ++ " " ++ locationToString l
+  | LiteralInt v l -> "LiteralInt " ++ Int.toString v ++ " " ++ locationToString l
+  | As l -> "as " ++ locationToString l
+  | TFalse l -> "False " ++ locationToString l
+  | TTrue l -> "True " ++ locationToString l
+  | Comma l -> "',' " ++ locationToString l
+  | EOS l -> "EOS " ++ locationToString l
+  | ERROR v l -> "ERROR " ++ v ++ " " ++ locationToString l

@@ -1,0 +1,7 @@
+import Location from "./Parser/Location.tfun" ;
+import Token from "./Parser/Token.tfun" ;
+
+data Errors* =
+    LexicalError (String) Location
+  | NotYetImplemented String
+  | SyntaxError (Token) (List String)

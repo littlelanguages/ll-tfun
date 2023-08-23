@@ -1,7 +1,7 @@
 import { Program } from "../deno/Parser.ts";
 import { defaultEnv, Env, parseExecute } from "../deno/Interpreter.ts";
 import { home, Src } from "../deno/Src.ts";
-import { RuntimeValue } from "../deno/Values.ts";
+import { RuntimeValue, valueToString } from "../deno/Values.ts";
 import { Handler, TestResult } from "./Runner.ts";
 import { executeCodeBlock } from "./XTHandler.ts";
 
@@ -37,7 +37,7 @@ const executeAssertBlock = (
         );
 
         if (typeof result !== "boolean" || !result) {
-          return { type: "Error", expression, ast, error: result, env };
+          return { type: "Error", expression, ast, error: valueToString(result), env };
         }
       } catch (e) {
         return { type: "Error", expression, ast: undefined, error: e, env };
