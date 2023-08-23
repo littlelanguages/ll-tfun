@@ -67,6 +67,14 @@ tokenStrings "  Hello  " == ["UpperIdentifier Hello 1:3-7"]
 tokenStrings "  Hello  World  " == ["UpperIdentifier Hello 1:3-7", "UpperIdentifier World 1:10-14"]
 ```
 
+### toString: Token -> String
+
+The `toString` function is used to convert a token into a string. This is useful for debugging and error reporting.
+
+```fsharp xassert id=toString; style=exec; use=Import
+toString (LowerIdentifier "hello" (Range {line: 1, column: 1, offset: 2} {line:1, column: 5, offset: 6})) == "LowerIdentifier hello 1:1-5"
+```
+
 ## See also
 
 - [Location](./Location.md) is responsible for keeping track of the current position in the source file. It is used by the scanner to keep track of the location of tokens and is a critical ingredient in useful error reporting.
