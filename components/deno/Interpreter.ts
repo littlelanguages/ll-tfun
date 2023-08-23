@@ -46,6 +46,7 @@ import {
   mkTuple,
   RuntimeValue,
   tupleComponent,
+  valueToString,
   VChar,
 } from "./Values.ts";
 import * as Location from "https://raw.githubusercontent.com/littlelanguages/scanpiler-deno-lib/0.1.1/location.ts";
@@ -130,6 +131,26 @@ const evaluate = (expr: Expression, runtimeEnv: Runtime.Env): RuntimeValue => {
           return (c: VChar) => c.value;
         case "Data.Char.toString":
           return (c: VChar) => String.fromCharCode(c.value);
+        case "Data.Dict.fromList":
+          return (xs: RuntimeValue) => {
+            const result = new Map<string, [RuntimeValue, RuntimeValue]>();
+
+            while (xs[0] !== "Nil") {
+              const x = xs[1];
+              const key = tupleComponent(x, 0);
+              const value = tupleComponent(x, 1);
+
+              result.set(valueToString(key), [key, value]);
+              xs = xs[2];
+            }
+            return result;
+          };
+        case "Data.Dict.get":
+          return (key: string) => (dict: Map<string, [RuntimeValue, RuntimeValue]>) => {
+            const result = dict.get(valueToString(key));
+
+            return result === undefined ? runtimeEnv.get("Nothing") : runtimeEnv.get("Just")(result[1]);
+          };
         case "Data.Integer.fromString":
           return (s: string) => {
             const n = parseInt(s, 10);

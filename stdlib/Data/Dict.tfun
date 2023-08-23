@@ -1,0 +1,7 @@
+data Dict- key value = Dict key value ;
+
+let fromList* (items: List (key * value)): Dict key value =
+  builtin "Data.Dict.fromList" items ;
+
+let get* (key: key) (dict: Dict key value): Maybe value =
+  builtin "Data.Dict.get" key dict

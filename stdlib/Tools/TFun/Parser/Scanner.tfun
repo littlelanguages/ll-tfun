@@ -1,4 +1,5 @@
 import * as Char from "../../../Data/Char.tfun" ;
+import * as Dict from "../../../Data/Dict.tfun" ;
 import * as Int from "../../../Data/Integer.tfun" ;
 import * as List from "../../../Data/List.tfun" ;
 import * as Maybe from "../../../Data/Maybe.tfun" ;
@@ -26,9 +27,10 @@ type Scanner = {
   line: Int
 };
 
-let keywords = [
-  ("as", As)
-] ;
+let keywords: Dict.Dict String (Location -> Token) = 
+  Dict.fromList 
+    [ ("as", As)
+    ] ;
 
 let fromString* (input: String): Scanner =
   { input: input
@@ -182,8 +184,8 @@ let next* (scanner: Scanner): (Scanner * Token) =
           and scannerp = matched |> fst
           and identifier = matched |> snd
           in
-            List.find (\keyword = (fst keyword) == identifier.text) keywords
-              |> Maybe.map (\keyword = (scannerp, (snd keyword) identifier.location))
+            Dict.get identifier.text keywords
+              |> Maybe.map (\constructor = (scannerp, constructor identifier.location))
               |> Maybe.withDefault (scannerp, LowerIdentifier identifier.text identifier.location)
             
         else if (Char.isDigit c)

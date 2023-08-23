@@ -162,6 +162,27 @@ export const valueToString = (v: RuntimeValue): string => {
   if (v instanceof RegExp) {
     return v.toString();
   }
+  if (v instanceof Map) {
+    let count = 0;
+
+    const result: Array<string> = [];
+    result.push("{ ");
+    for (const [key, value] of v) {
+      if (count > 0) {
+        result.push(", ");
+      }
+      count++;
+      if (count > 20) {
+        result.push("...");
+        break;
+      }
+      result.push(`${key} => ${valueToString(value[1])}`);
+    }
+
+    result.push(" }");
+
+    return result.join("");
+  }
   if (typeof v === "object") {
     const fields = Object.entries(v).sort();
 
