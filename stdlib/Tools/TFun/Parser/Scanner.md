@@ -45,6 +45,21 @@ tokenStrings "  123  " == ["LiteralInt 123 1:3-5"]
 tokenStrings "  123  4  " == ["LiteralInt 123 1:3-5", "LiteralInt 4 1:8"]
 ```
 
+#### Scenario: Literal String
+
+```fsharp xassert id=nextLiteralString; use=Import, tokens
+tokenStrings "\"hello\"" == ["LiteralString hello 1:1-7"]
+tokenStrings "  \"hello\"  " == ["LiteralString hello 1:3-9"]
+tokenStrings "  \"hello\"  \"world\"  " == ["LiteralString hello 1:3-9", "LiteralString world 1:12-18"]
+```
+
+Literal strings also support escape sequences as demonstrated below.
+
+```fsharp xassert id=nextLiteralStringEscape; use=Import, tokens
+tokenStrings "\"[\\"]\"" == ["LiteralString [\"] 1:1-6"]
+tokenStrings "\"[\\]\"" == ["LiteralString [\\] 1:1-6"]
+```
+
 #### Scenario: Lower Identifier
 
 ```fsharp xassert id=nextLowerIdentifier; use=Import, tokens

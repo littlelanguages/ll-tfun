@@ -93,6 +93,37 @@ let matchOnPredicate (scanner: Scanner) (predicate: Char -> Bool) (constructor: 
     , constructor (String.slice scanner.offset scannerp.offset scanner.input) (combine startLocation endLocation)
     ) ;
 
+let rec literalStringStringLoop (literal: String) (scanner: Scanner) : Maybe (Scanner * Location * String) =
+  if (atEnd scanner)
+    Nothing
+  else
+    let c = currentCharacter scanner
+    in
+      if (c == Char.fromInt 34)
+        (scanner |> skipCharacter, locationAt scanner, literal) |> Just
+      else if (c == Char.fromInt 92)
+        let scannerp = skipCharacter scanner
+        and cp = currentCharacter scannerp
+        in
+          if (cp == 'n')
+            skipCharacter scannerp |> literalStringStringLoop (literal ++ "\n")
+          else if (cp == '\\')
+            skipCharacter scannerp |> literalStringStringLoop (literal ++ "\\")
+          else if (cp == '"')
+            skipCharacter scannerp |> literalStringStringLoop (literal ++ "\"")
+          else
+            Nothing
+      else
+        skipCharacter scanner |> literalStringStringLoop (literal ++ Char.toString c) ;
+
+let matchLiteralString scanner =
+  let startLocation = locationAt scanner
+  and scannerp = skipCharacter scanner
+  in
+    match literalStringStringLoop "" scannerp with
+    | Nothing -> (scannerp , ERROR "Unterminated string literal" startLocation)
+    | Just (scannerp2, endLocation, literal) -> (scannerp2, LiteralString literal (combine startLocation endLocation)) ;
+
 let next* (scanner: Scanner): (Scanner * Token) =
   let scannerp = skipWhitespace scanner
   in
@@ -107,8 +138,8 @@ let next* (scanner: Scanner): (Scanner * Token) =
           matchOnPredicate scannerp Char.isAlpha LowerIdentifier 
         else if (Char.isDigit c)
           matchOnPredicate scannerp Char.isDigit (\t l = LiteralInt (Int.fromStringElse 0 t) l)
---      else if (c == Char.fromInt 34)
---        matchLiteralString scannerp
+        else if (c == Char.fromInt 34)
+          matchLiteralString scannerp
         else
           match c with
           | ',' -> (skipCharacter scannerp, Comma (locationAt scannerp))
