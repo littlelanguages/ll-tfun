@@ -1204,7 +1204,7 @@ const visitor: Visitor<
       Array.isArray(a)
         ? a[1] === undefined
           ? mkTypeConstructor(undefined, undefined, a[0][2], a[0][1], [])
-          : mkTypeConstructor(a[0][2], a[0][1], a[1][0][2], a[1][0][1], [])
+          : mkTypeConstructor(a[0][2], a[0][1], a[1][1][2], a[1][1][1], [])
         : a
     );
 
