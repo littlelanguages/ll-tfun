@@ -1,0 +1,10 @@
+import * as Scanner from "./Scanner.tfun" ;
+import * from "../Errors.tfun" ;
+
+type ParserResult* a = (Scanner.Scanner * Result Errors a) ;
+
+let skip* (f: Scanner.Token -> a) (scanner: Scanner.Scanner): ParserResult a =
+  (Scanner.next scanner, f scanner.token |> Okay) ;
+
+let syntaxError* (expected: List String) (scanner: Scanner.Scanner): ParserResult a =
+  (scanner, SyntaxError scanner.token expected |> Error)

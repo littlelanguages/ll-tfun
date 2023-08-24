@@ -1,16 +1,15 @@
 import * as Scanner from "./Parser/Scanner.tfun" ;
 import * from "./Errors.tfun" ;
+import * as ParserC from "./Parser/ParserC.tfun" ;
 
 data Expression* =
     LBool (Bool) Scanner.Location ;
 
-type ParserResult = (Scanner.Scanner * Result Errors Expression) ;
-
-let factor (scanner: Scanner.Scanner): ParserResult =
-  match scanner.token with
-  | Scanner.TFalse l -> (Scanner.next scanner, LBool False l |> Okay)
-  | Scanner.TTrue l ->  (Scanner.next scanner, LBool True l |> Okay)
-  | _ -> (scanner, SyntaxError scanner.token ["False", "True"] |> Error) ;
+let factor (scanner: Scanner.Scanner): ParserC.ParserResult Expression =
+  match scanner.token.typ with
+  | Scanner.TFalse -> ParserC.skip (\token = LBool False token.location) scanner
+  | Scanner.TTrue -> ParserC.skip (\token = LBool True token.location) scanner
+  | _ -> ParserC.syntaxError ["False", "True"] scanner ;
     
 let parse* (scanner: Scanner.Scanner): Result Errors Expression =
   match factor scanner with

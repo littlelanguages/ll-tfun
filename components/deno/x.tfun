@@ -1,12 +1,12 @@
 import * from "../../stdlib/Tools/TFun/Parser/Scanner.tfun" ;
-import * as P from "../../stdlib/Tools/TFun/Parser.tfun" ;
+-- import * as P from "../../stdlib/Tools/TFun/Parser.tfun" ;
 import * as List from "../../stdlib/Data/List.tfun" ;
 
 let tokens input = 
-  let rec loop scanner = 
-    match scanner.token with
-    | EOS _ -> []
-    | token -> token :: loop (next scanner)
+  let rec loop scanner =
+    match scanner.token.typ with
+    | EOS -> []
+    | _ -> scanner.token :: loop (next scanner)
   in 
     fromString input |> loop ;
 

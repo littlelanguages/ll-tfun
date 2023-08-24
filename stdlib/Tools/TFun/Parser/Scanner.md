@@ -16,10 +16,10 @@ In order to work through the scenarios we need to define a few helper functions.
 import * as List from "../../../Data/List.tfun" ;
 
 let tokens input = 
-  let rec loop scanner = 
-    match scanner.token with
-    | EOS _ -> []
-    | token -> token :: loop (next scanner)
+  let rec loop scanner =
+    match scanner.token.typ with
+    | EOS -> []
+    | _ -> scanner.token :: loop (next scanner)
   in 
     fromString input |> loop ;
 
@@ -47,8 +47,8 @@ tokenStrings "as False True" == ["as 1:1-2", "False 1:4-8", "True 1:10-13"]
 #### Scenario: Literal Char
 
 ```fsharp xassert id=nextLiteralChar; use=Import, tokens
-tokenStrings "'a'" == ["LiteralChar a 1:1-3"]
-tokenStrings "'\\''" == ["LiteralChar ' 1:1-4"]
+tokenStrings "'a'" == ["LiteralChar 'a' 1:1-3"]
+tokenStrings "'\\''" == ["LiteralChar '\\'' 1:1-4"]
 ```
 
 #### Scenario: Literal Int
@@ -62,16 +62,16 @@ tokenStrings "  123  4  " == ["LiteralInt 123 1:3-5", "LiteralInt 4 1:8"]
 #### Scenario: Literal String
 
 ```fsharp xassert id=nextLiteralString; use=Import, tokens
-tokenStrings "\"hello\"" == ["LiteralString hello 1:1-7"]
-tokenStrings "  \"hello\"  " == ["LiteralString hello 1:3-9"]
-tokenStrings "  \"hello\"  \"world\"  " == ["LiteralString hello 1:3-9", "LiteralString world 1:12-18"]
+tokenStrings "\"hello\"" == ["LiteralString \"hello\" 1:1-7"]
+tokenStrings "  \"hello\"  " == ["LiteralString \"hello\" 1:3-9"]
+tokenStrings "  \"hello\"  \"world\"  " == ["LiteralString \"hello\" 1:3-9", "LiteralString \"world\" 1:12-18"]
 ```
 
 Literal strings also support escape sequences as demonstrated below.
 
 ```fsharp xassert id=nextLiteralStringEscape; use=Import, tokens
-tokenStrings "\"[\\\"]\"" == ["LiteralString [\"] 1:1-6"]
-tokenStrings "\"[\\\\]\"" == ["LiteralString [\\] 1:1-6"]
+tokenStrings "\"[\\\"]\"" == ["LiteralString \"[\\\"]\" 1:1-6"]
+tokenStrings "\"[\\\\]\"" == ["LiteralString \"[\\\\]\" 1:1-6"]
 ```
 
 #### Scenario: Lower Identifier
@@ -101,7 +101,7 @@ tokenStrings "  Hello  World  " == ["UpperIdentifier Hello 1:3-7", "UpperIdentif
 The `toString` function is used to convert a token into a string. This is useful for debugging and error reporting.
 
 ```fsharp xassert id=toString; style=exec; use=Import
-toString (LowerIdentifier "hello" (Range {line: 1, column: 1, offset: 2} {line:1, column: 5, offset: 6})) == "LowerIdentifier hello 1:1-5"
+toString { typ: LowerIdentifier, lexeme: "hello", location: Range {line: 1, column: 1, offset: 2} {line:1, column: 5, offset: 6} } == "LowerIdentifier hello 1:1-5"
 ```
 
 ## See also
