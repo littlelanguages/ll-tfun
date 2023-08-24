@@ -14,3 +14,13 @@ import * from "./Interpreter.tfun"
 parseAndExecute "True" == Okay (VBool True)
 parseAndExecute "False" == Okay (VBool False)
 ```
+
+### Int
+
+```fsharp xassert id=literalInt; use=Import
+parseAndExecute "0" == Okay (VInt 0)
+parseAndExecute "-0" == Okay (VInt 0)
+parseAndExecute "123" == Okay (VInt 123)
+parseAndExecute "-123" == Okay (VInt -123)
+```
+

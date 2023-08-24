@@ -3,7 +3,7 @@
 Functions for working with Integers.
 
 ```fsharp xassert id=Import; style=exec
-import * from "./Integer.tfun"
+import * from "./Int.tfun"
 ```
 
 An `Int` is a 64-bit signed integer. Integer literals are written as a sequence of digits.

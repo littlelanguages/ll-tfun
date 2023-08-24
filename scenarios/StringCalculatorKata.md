@@ -9,7 +9,7 @@ course, to use it to verify that the `tfun` implementation is working as
 expected.
 
 ```fsharp xassert id=StringCalculatorKata; style=exec
-import * as Integer from "../stdlib/Data/Integer.tfun" ;
+import * as Int from "../stdlib/Data/Int.tfun" ;
 import * as List from "../stdlib/Data/List.tfun" ;
 import * as Maybe from "../stdlib/Data/Maybe.tfun" ;
 import * as Result from "../stdlib/Data/Result.tfun" ;
@@ -48,7 +48,7 @@ let add input =
   and numbers = 
         content.input
           |> RE.split content.separator
-          |> List.map Integer.fromString
+          |> List.map Int.fromString
           |> List.map (Maybe.withDefault 0)
   and negative n = n < 0
   in 

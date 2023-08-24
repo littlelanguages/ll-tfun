@@ -1,3 +1,5 @@
+import * as Int from "../../Data/Int.tfun" ;
+import * as Maybe from "../../Data/Maybe.tfun" ;
 import * from "../../Data/Tuple.tfun" ;
 import * as Scanner from "./Parser/Scanner.tfun" ;
 import * from "./Errors.tfun" ;
@@ -5,12 +7,14 @@ import * as ParserC from "./Parser/ParserC.tfun" ;
 import * from "./Parser/Token.tfun" ;
 
 data Expression* =
-    LBool (Bool) Scanner.Location ;
+    LBool (Bool) Scanner.Location
+  | LInt (Int) Scanner.Location ;
 
 let factor (scanner: Scanner.Scanner): ParserC.ParserResult Expression =
   match scanner.token.typ with
   | Scanner.TFalse -> ParserC.skipToken (\token = LBool False token.location) scanner
   | Scanner.TTrue -> ParserC.skipToken (\token = LBool True token.location) scanner
+  | Scanner.LiteralInt -> ParserC.skipToken (\token = LInt (Int.fromString token.lexeme |> Maybe.withDefault 0) token.location) scanner
   | _ -> ParserC.syntaxError [TFalse, TTrue] scanner ;
     
 let parse* (scanner: Scanner.Scanner): Result Errors Expression =

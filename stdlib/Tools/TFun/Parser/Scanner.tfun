@@ -1,6 +1,6 @@
 import * as Char from "../../../Data/Char.tfun" ;
 import * as Dict from "../../../Data/Dict.tfun" ;
-import * as Int from "../../../Data/Integer.tfun" ;
+import * as Int from "../../../Data/Int.tfun" ;
 import * as List from "../../../Data/List.tfun" ;
 import * as Maybe from "../../../Data/Maybe.tfun" ;
 import * as String from "../../../Data/String.tfun" ;
@@ -76,7 +76,7 @@ let skipWhitespace* scanner =
 
 let matchOnPredicate (scanner: Scanner) (predicate: Char -> Bool) (constructor: String -> (Location -> a)): (Scanner * a) =
   let startLocation = locationAt scanner
-  and skipWhileResult = skipCharacter scanner |> skipWhile predicate scanner
+  and skipWhileResult = skipWhile predicate (skipCharacter scanner) scanner
   and scannerp = skipWhileResult |> fst
   and endLocation = skipWhileResult |> snd
   in
@@ -180,6 +180,14 @@ let next* (scanner: Scanner): Scanner =
           matchLiteralChar scannerp
         else
           match c with
+          | '-' ->
+            let scannerp2 = skipCharacter scannerp
+            and cp = currentCharacter scannerp2
+            in
+              if (Char.isDigit cp)
+                matchLiteralInt scannerp
+              else
+                assignToken Minus (locationAt scannerp) "," (skipCharacter scannerp)
           | ',' -> assignToken Comma (locationAt scannerp) "," (skipCharacter scannerp)
           | _ -> assignToken ERROR (locationAt scannerp) (Char.toString c) (skipCharacter scannerp) ;
 

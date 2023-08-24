@@ -1,5 +1,5 @@
 import * as Char from "../../../Data/Char.tfun" ;
-import * as Int from "../../../Data/Integer.tfun" ;
+import * as Int from "../../../Data/Int.tfun" ;
 
 import Location, combine, toString as locationToString* from "./Location.tfun" ;
 
@@ -9,10 +9,14 @@ data TokenType* =
   | LiteralChar
   | LiteralString
   | LiteralInt
-  | As
   | TFalse
   | TTrue
+
+  | As
+  
   | Comma
+  | Minus
+
   | EOS
   | ERROR ;
 
@@ -32,10 +36,11 @@ let toString* token =
     | LiteralChar -> "LiteralChar " ++ lexeme ++ " " ++ location
     | LiteralString -> "LiteralString " ++ lexeme ++ " " ++ location
     | LiteralInt -> "LiteralInt " ++ lexeme ++ " " ++ location
-    | As -> "as " ++ location
     | TFalse -> "False " ++ location
     | TTrue -> "True " ++ location
+    | As -> "as " ++ location
     | Comma -> "',' " ++ location
+    | Minus -> "'-' " ++ location
     | EOS -> "EOS " ++ location
     | ERROR -> "ERROR " ++ lexeme ++ " " ++ location ;
 
@@ -46,9 +51,10 @@ let tokenTypeToString* typ =
   | LiteralChar -> "LiteralChar"
   | LiteralString -> "LiteralString"
   | LiteralInt -> "LiteralInt"
-  | As -> "as"
   | TFalse -> "False"
   | TTrue -> "True"
+  | As -> "as"
   | Comma -> "','"
+  | Minus -> "'-'"
   | EOS -> "EOS"
   | ERROR -> "ERROR"

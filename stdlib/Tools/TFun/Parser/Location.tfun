@@ -1,4 +1,4 @@
-import * as Int from "../../../Data/Integer.tfun" ;
+import * as Int from "../../../Data/Int.tfun" ;
 
 type PointRecord = { line: Int, column: Int, offset: Int } ;
 

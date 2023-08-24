@@ -56,7 +56,7 @@ tokenStrings "'\\''" == ["LiteralChar '\\'' 1:1-4"]
 ```fsharp xassert id=nextLiteralInt; use=Import, tokens
 tokenStrings "123" == ["LiteralInt 123 1:1-3"]
 tokenStrings "  123  " == ["LiteralInt 123 1:3-5"]
-tokenStrings "  123  4  " == ["LiteralInt 123 1:3-5", "LiteralInt 4 1:8"]
+tokenStrings "  123  4  -8" == ["LiteralInt 123 1:3-5", "LiteralInt 4 1:8", "LiteralInt -8 1:11-12"]
 ```
 
 #### Scenario: Literal String

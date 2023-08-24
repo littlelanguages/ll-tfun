@@ -3,11 +3,13 @@ import * as Parser from "./Parser.tfun" ;
 import * as Result from "../../Data/Result.tfun" ;
 
 data Value* =
-    VBool Bool ;
+    VBool Bool
+  | VInt Int;
 
 let executeExpression* (e: Parser.Expression): Result Errors.Errors Value =
   match e with
   | Parser.LBool b _ -> VBool b |> Okay
+  | Parser.LInt i _ -> VInt i |> Okay
   | _ -> Errors.NotYetImplemented "executeExpression" |> Error ;
 
 let parseAndExecute* (s: String): Result Errors.Errors Value =
