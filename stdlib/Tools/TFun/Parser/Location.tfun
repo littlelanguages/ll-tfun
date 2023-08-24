@@ -22,7 +22,7 @@ let upper (loc: Location): PointRecord =
   | Point p -> p
   | Range _ p -> p ;
 
-let combine* (loc1: Location) (loc2: Location) : Location =
+let combine* (loc1: Location) (loc2: Location): Location =
   if (loc1 == loc2)
     loc1
   else

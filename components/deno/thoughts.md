@@ -267,3 +267,61 @@ above is brought into scope but the `Iterable` or `length` and `sum` are not, th
 This is because traits are not universal facts but rather contextual.
 
 This seems a little weird but, after some reflection, makes sense.
+
+This all seems perhaps a little too weird. What would be a middle ground:
+
+- tfun +
+- destruction on declaration
+- var side effects
+- record fields can be declared as mutable
+- tuple patterns
+- indent based syntax
+- exception handling - not having it is annoying
+
+Issue with deno - it is slow! Option 2 - Kotlin or Zigg. Zigg would be super fast. Kotlin would be a little slower but I
+understand it better and the memory management is MUCH simpler. Zigg will build on my laptop whilst Kotlin will not.
+Kotlin has an source level debugger which Zigg doesn't...
+
+What about removing the curried functions and rather adopting an old fashioned procedural style.
+
+```
+fun fold(f: (S, T) -> S, s: S, xs: List<T>): S =
+  match xs with
+  | Nil -> s
+  | Cons x xs -> fold(f, f(s, x), xs)
+```
+
+This is a little more verbose but it is also a little more familiar. It also means that we can now introduce a `sum`
+function.
+
+```
+let sum(xs: List<Int>): Int =
+  let compose(s: Int, x: Int): Int = s + x
+
+  fold(compose, 0, xs)
+```
+
+An even more traditional style would be to introduce a `for` loop.
+
+```
+let sum(xs: List<Int>): Int =
+  var s := 0
+
+  for x in xs
+    s += x
+  s
+```
+
+Is there anyway to start to introduce ADT based methods?
+
+```
+data List<T> = Nil | Cons T List<T>
+
+let List<T>.fold(f: (S, T) -> S, s: S): S =
+  match this with
+  | Nil -> s
+  | Cons x xs -> xs.fold(f, f(s, x))
+
+let List<Int>.sum(): Int =
+  this.fold(fun (s, x) = s + x, 0)
+```
