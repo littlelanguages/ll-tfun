@@ -106,18 +106,14 @@ let matchLiteralChar (scanner: Scanner): Scanner =
     | (scannerp2, '\0') -> { token: ERROR "Unterminated char literal" startLocation | scannerp2 }
     | (scannerp2, '\\') ->
       let scannerp3 = skipCharacter scannerp2
-      and cp = currentCharacter scannerp2
       in
-        if (cp == 'n')
-          matchClosingQuote '\n' scannerp3
-        else if (cp == '\\')
-          matchClosingQuote '\\' scannerp3
-        else if (cp == '\'')
-          matchClosingQuote '\'' scannerp3
-        else if (cp == '0')
-          matchClosingQuote '\0' scannerp3
-        else
-          { token: ERROR "Invalid literal char escape sequence" startLocation | scannerp3 }
+        ( match currentCharacter scannerp2 with
+          | 'n' -> matchClosingQuote '\n' scannerp3
+          | '\\' -> matchClosingQuote '\\' scannerp3
+          | '\'' -> matchClosingQuote '\'' scannerp3
+          | '0' -> matchClosingQuote '\0' scannerp3
+          | _ -> { token: ERROR "Invalid literal char escape sequence" startLocation | scannerp3 }
+        )
     | (scannerp2, c) ->
       matchClosingQuote c scannerp2 ;
 
@@ -131,17 +127,13 @@ let rec literalStringLoop (literal: String) (scanner: Scanner): Maybe (Scanner *
       if (c == '"')
         (scannerp, locationAt scanner, literal) |> Just
       else if (c == '\\')
-        let cp = currentCharacter scannerp
-        and scannerp2 = skipCharacter scannerp
+        let scannerp2 = skipCharacter scannerp
         in
-          if (cp == '"')
-            literalStringLoop (literal ++ "\"") scannerp2
-          else if (cp == 'n')
-            literalStringLoop (literal ++ "\n") scannerp2
-          else if (cp == '\\')
-            literalStringLoop (literal ++ "\\") scannerp2
-          else
-            Nothing
+          match currentCharacter scannerp with
+          | '"' -> literalStringLoop (literal ++ "\"") scannerp2
+          | 'n' -> literalStringLoop (literal ++ "\n") scannerp2
+          | '\\' -> literalStringLoop (literal ++ "\\") scannerp2
+          | _ -> Nothing
       else
         literalStringLoop (literal ++ Char.toString c) scannerp;
 
