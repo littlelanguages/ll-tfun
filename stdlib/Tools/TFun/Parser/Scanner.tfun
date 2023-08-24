@@ -4,6 +4,7 @@ import * as Int from "../../../Data/Integer.tfun" ;
 import * as List from "../../../Data/List.tfun" ;
 import * as Maybe from "../../../Data/Maybe.tfun" ;
 import * as String from "../../../Data/String.tfun" ;
+import * from "../../../Data/Tuple.tfun" ;
 import * as Console from "../../../System/IO/Console.tfun" ;
 import Location*, combine*, toString as locationToString* from "./Location.tfun" ;
 import Token*, TokenType*, toString* from "./Token.tfun" ;
@@ -64,14 +65,6 @@ let skipWhile (predicate: Char -> Bool) (scanner: Scanner) (previous: Scanner): 
 let isWhitespace* (c: Char): Bool =
   let cv = Char.toInt c
   in cv /= 0 && cv <= 32 ;
-
-let fst (t: (a * b)): a =
-  match t with
-  | (a, _) -> a ;
-
-let snd (t: (a * b)): b =
-  match t with
-  | (_, b) -> b ;
 
 let assignToken (typ: TokenType) (location: Location) (lexeme: String) (scanner: Scanner): Scanner =
   let token = { typ: typ, location: location, lexeme: lexeme }

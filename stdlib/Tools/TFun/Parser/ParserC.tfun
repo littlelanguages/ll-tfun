@@ -1,10 +1,27 @@
 import * as Scanner from "./Scanner.tfun" ;
 import * from "../Errors.tfun" ;
+import TokenType from "./Token.tfun" ;
 
 type ParserResult* a = (Scanner.Scanner * Result Errors a) ;
+type Parser* a = Scanner.Scanner -> ParserResult a ;
 
-let skip* (f: Scanner.Token -> a) (scanner: Scanner.Scanner): ParserResult a =
+let skipToken* (f: Scanner.Token -> a) (scanner: Scanner.Scanner): ParserResult a =
   (Scanner.next scanner, f scanner.token |> Okay) ;
 
-let syntaxError* (expected: List String) (scanner: Scanner.Scanner): ParserResult a =
-  (scanner, SyntaxError scanner.token expected |> Error)
+let matchIgnoreToken* (t: TokenType) (scanner: Scanner.Scanner): ParserResult () =
+  if (scanner.token.typ == t)
+    (Scanner.next scanner, Okay ())
+  else
+    (scanner, SyntaxError scanner.token [t] |> Error) ;
+
+let syntaxError* (expected: List TokenType) (scanner: Scanner.Scanner): ParserResult a =
+  (scanner, SyntaxError scanner.token expected |> Error) ;
+
+let seq2* (p1: Parser a) (p2: Parser b) (f: a -> (b -> c)) (scanner: Scanner.Scanner): ParserResult c =
+  match p1 scanner with
+  | (scannerp, Okay a) ->
+      ( match p2 scannerp with
+        | (scannerpp, Okay b) -> (scannerpp, f a b |> Okay)
+        | (scannerpp, Error error) -> (scannerpp, Error error)
+      )
+  | (scannerp, Error error) -> (scannerp, Error error)

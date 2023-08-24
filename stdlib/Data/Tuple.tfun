@@ -1,0 +1,7 @@
+let fst* (t: (a * b)): a =
+  match t with
+  | (a, _) -> a ;
+
+let snd* (t: (a * b)): b =
+  match t with
+  | (_, b) -> b

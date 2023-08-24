@@ -37,4 +37,18 @@ let toString* token =
     | TTrue -> "True " ++ location
     | Comma -> "',' " ++ location
     | EOS -> "EOS " ++ location
-    | ERROR -> "ERROR " ++ lexeme ++ " " ++ location
+    | ERROR -> "ERROR " ++ lexeme ++ " " ++ location ;
+
+let tokenTypeToString* typ =
+  match typ with
+  | UpperIdentifier -> "UpperIdentifier"
+  | LowerIdentifier -> "LowerIdentifier"
+  | LiteralChar -> "LiteralChar"
+  | LiteralString -> "LiteralString"
+  | LiteralInt -> "LiteralInt"
+  | As -> "as"
+  | TFalse -> "False"
+  | TTrue -> "True"
+  | Comma -> "','"
+  | EOS -> "EOS"
+  | ERROR -> "ERROR"
