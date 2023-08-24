@@ -13,7 +13,8 @@ type Scanner* = {
   inputLength: Int,
   offset: Int,
   column: Int,
-  line: Int
+  line: Int,
+  token: Token
 };
 
 let keywords: Dict.Dict String (Location -> Token) = 
@@ -22,14 +23,6 @@ let keywords: Dict.Dict String (Location -> Token) =
     , ("False", TFalse)
     , ("True", TTrue)
     ] ;
-
-let fromString* (input: String): Scanner =
-  { input: input
-  , inputLength: String.length input
-  , offset: 0
-  , column: 1
-  , line: 1
-  } ;
 
 let atEnd* (scanner: Scanner): Bool =
   scanner.offset >= scanner.inputLength ;
@@ -72,11 +65,11 @@ let isWhitespace* (c: Char): Bool =
   let cv = Char.toInt c
   in cv /= 0 && cv <= 32 ;
 
-let fst t =
+let fst (t: (a * b)): a =
   match t with
   | (a, _) -> a ;
 
-let snd t =
+let snd (t: (a * b)): b =
   match t with
   | (_, b) -> b ;
 
@@ -101,16 +94,16 @@ let matchCharacter char scanner =
     else
       Nothing ;
 
-let matchLiteralChar scanner =
+let matchLiteralChar (scanner: Scanner): Scanner =
   let startLocation = locationAt scanner
   and scannerp = skipCharacter scanner
   and matchClosingQuote c scannerp =
     match matchCharacter '\'' scannerp with
-    | Nothing -> (scannerp, ERROR "Unterminated char literal" startLocation)
-    | Just scannerp2 -> (scannerp2, LiteralChar c (combine startLocation (locationAt scannerp)))
+    | Nothing -> { token: ERROR "Unterminated char literal" startLocation | scannerp }
+    | Just scannerp2 -> { token: LiteralChar c (combine startLocation (locationAt scannerp)) | scannerp2 }
   in
     match nextCharacter scannerp with
-    | (scannerp2, '\0') -> (scannerp2, ERROR "Unterminated char literal" startLocation)
+    | (scannerp2, '\0') -> { token: ERROR "Unterminated char literal" startLocation | scannerp2 }
     | (scannerp2, '\\') ->
       let scannerp3 = skipCharacter scannerp2
       and cp = currentCharacter scannerp2
@@ -124,7 +117,7 @@ let matchLiteralChar scanner =
         else if (cp == '0')
           matchClosingQuote '\0' scannerp3
         else
-          (scannerp3, ERROR "Invalid literal char escape sequence" startLocation)
+          { token: ERROR "Invalid literal char escape sequence" startLocation | scannerp3 }
     | (scannerp2, c) ->
       matchClosingQuote c scannerp2 ;
 
@@ -157,23 +150,23 @@ let matchLiteralString scanner =
   and scannerp = skipCharacter scanner
   in
     match literalStringLoop "" scannerp with
-    | Nothing -> (scannerp , ERROR "Illegal string literal" startLocation)
-    | Just (scannerp2, endLocation, literal) -> (scannerp2, LiteralString literal (combine startLocation endLocation)) ;
+    | Nothing -> { token: ERROR "Illegal string literal" startLocation | scannerp }
+    | Just (scannerp2, endLocation, literal) -> { token: LiteralString literal (combine startLocation endLocation) | scannerp2 } ;
 
-let matchIdentifier identifierConstructor scanner =
+let matchIdentifier (identifierConstructor: String -> (Location -> Token)) (scanner: Scanner): Scanner =
   let matched = matchOnPredicate scanner Char.isAlpha (\t l = { text: t, location: l })
   and scannerp = matched |> fst
   and identifier = matched |> snd
   in
-    Dict.get identifier.text keywords
-      |> Maybe.map (\constructor = (scannerp, constructor identifier.location))
-      |> Maybe.withDefault (scannerp, identifierConstructor identifier.text identifier.location) ;
+    match Dict.get identifier.text keywords with
+    | Just constructor -> { token: constructor identifier.location | scannerp }
+    | Nothing -> { token: identifierConstructor identifier.text identifier.location | scannerp } ;
 
-let next* (scanner: Scanner): (Scanner * Token) =
+let next* (scanner: Scanner): Scanner =
   let scannerp = skipWhitespace scanner
   in
     if (atEnd scannerp)
-      (scanner, EOS (locationAt scannerp))
+      { token: EOS (locationAt scannerp) | scanner }
     else
       let c = currentCharacter scannerp
       in
@@ -182,18 +175,23 @@ let next* (scanner: Scanner): (Scanner * Token) =
         else if (Char.isLower c)
           matchIdentifier LowerIdentifier scannerp
         else if (Char.isDigit c)
-          matchOnPredicate scannerp Char.isDigit (\t l = LiteralInt (Int.fromStringElse 0 t) l)
+          let mr = matchOnPredicate scannerp Char.isDigit (\t l = LiteralInt (Int.fromStringElse 0 t) l)
+          in
+            { token: snd mr | fst mr }
         else if (c == '"')
           matchLiteralString scannerp
         else if (c == '\'')
           matchLiteralChar scannerp
         else
           match c with
-          | ',' -> (skipCharacter scannerp, Comma (locationAt scannerp))
-          | _ -> (skipCharacter scannerp, ERROR (Char.toString c) (locationAt scannerp)) ;
+          | ',' -> { token: Comma (locationAt scannerp) | skipCharacter scannerp }
+          | _ -> { token: ERROR (Char.toString c) (locationAt scannerp) | skipCharacter scannerp } ;
 
-let skip* (scanner: Scanner): Scanner =
-  next scanner |> fst ;
-
-let peek* (scanner: Scanner): Token =
-  next scanner |> snd
+let fromString* (input: String): Scanner =
+  { input: input
+  , inputLength: String.length input
+  , offset: 0
+  , column: 1
+  , line: 1
+  , token: EOS (Point { line: 1, column: 1, offset: 0 })
+  } |> next

@@ -7,12 +7,10 @@ data Expression* =
 type ParserResult = (Scanner.Scanner * Result Errors Expression) ;
 
 let factor (scanner: Scanner.Scanner): ParserResult =
-  let next = Scanner.peek scanner
-  in
-    match next with
-    | Scanner.TFalse l -> (Scanner.skip scanner, LBool False l |> Okay)
-    | Scanner.TTrue l ->  (Scanner.skip scanner, LBool True l |> Okay)
-    | _ -> (scanner, SyntaxError next ["False", "True"] |> Error) ;
+  match scanner.token with
+  | Scanner.TFalse l -> (Scanner.next scanner, LBool False l |> Okay)
+  | Scanner.TTrue l ->  (Scanner.next scanner, LBool True l |> Okay)
+  | _ -> (scanner, SyntaxError scanner.token ["False", "True"] |> Error) ;
     
 let parse* (scanner: Scanner.Scanner): Result Errors Expression =
   match factor scanner with
@@ -20,7 +18,7 @@ let parse* (scanner: Scanner.Scanner): Result Errors Expression =
       if (Scanner.atEnd scannerp)
         expression |> Okay
       else
-        SyntaxError (Scanner.peek scannerp) ["EOS"] |> Error
+        SyntaxError scannerp.token ["EOS"] |> Error
   | (scanner, Error error) -> Error error ;
 
 let parseText* (text: String): Result Errors Expression =

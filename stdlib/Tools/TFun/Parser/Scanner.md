@@ -17,10 +17,11 @@ import * as List from "../../../Data/List.tfun" ;
 
 let tokens input = 
   let rec loop scanner = 
-    match next scanner with
-    | (_, EOS _) -> []
-    | (scanner, token) -> token :: loop scanner
-  in fromString input |> loop ;
+    match scanner.token with
+    | EOS _ -> []
+    | token -> token :: loop (next scanner)
+  in 
+    fromString input |> loop ;
 
 let tokenStrings input = tokens input |> List.map toString
 ```
@@ -28,13 +29,13 @@ let tokenStrings input = tokens input |> List.map toString
 #### Scenario: Empty Input
 
 ```fsharp xassert id=nextEmptyInput; use=Import, tokens
-tokens "" == []
+tokenStrings "" == []
 ```
 
 #### Scenario: Whitespace
 
 ```fsharp xassert id=nextWhitespace; use=Import, tokens
-tokens "    \n  \n   \n  " == []
+tokenStrings "    \n  \n   \n  " == []
 ```
 
 #### Scenario: Keywords
